@@ -19,6 +19,8 @@
 package app
 
 import (
+	"flag"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 
@@ -38,12 +40,16 @@ other components interact, such as kstone-controller, kstone-dashboard.`,
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defer klog.Flush()
 			if err := Run(); err != nil {
 				return err
 			}
 			return nil
 		},
 	}
+
+	klog.InitFlags(nil)
+	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 
 	return cmd
 }

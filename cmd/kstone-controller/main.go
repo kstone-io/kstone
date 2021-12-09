@@ -47,6 +47,9 @@ func main() {
 		etcdinspectioncontroller.NewEtcdInspectionControllerCommand(out),
 	)
 
+	klog.InitFlags(nil)
+	defer klog.Flush()
+
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 	err := flags.Parse(os.Args[1:])
 	if err != nil {
