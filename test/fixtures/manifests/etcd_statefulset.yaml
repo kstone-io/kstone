@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: etcd-test
+  labels:
+    app: etcd-test
+spec:
+  serviceName: etcd-test
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etcd-test
+  template:
+    metadata:
+      name: etcd-test
+      labels:
+        app: etcd-test
+    spec:
+      containers:
+        - name: etcd
+          image: bitnami/etcd:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 2380
+              name: peer
+            - containerPort: 2379
+              name: client
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          env:
+            - name: ALLOW_NONE_AUTHENTICATION
+              value: "yes"
+            - name: INITIAL_CLUSTER_SIZE
+              value: "3"
+            - name: SET_NAME
+              value: etcd

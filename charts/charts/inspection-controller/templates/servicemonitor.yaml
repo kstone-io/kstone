@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "inspection-controller.fullname" . }}
+  labels:
+    {{- include "inspection-controller.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - port: http
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      app: inspection-controller

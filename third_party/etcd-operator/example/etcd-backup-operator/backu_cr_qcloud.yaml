@@ -1,0 +1,12 @@
+apiVersion: "etcd.database.coreos.com/v1beta2"
+kind: "EtcdBackup"
+metadata:
+  name: etcd-backup-TIMESTAMP
+spec:
+  etcdEndpoints: ["http://localhost:2379"]
+  storageType: COS
+  cos:
+    # The format of "path" must be: "<s3-bucket-name>/<path-to-backup-file>"
+    # e.g: "mybucket/etcd.backup"
+    path: bucket-test.cos.ap-shanghai.myqcloud.com/cos-test/TIMESTAMP
+    cosSecret: cos-secret

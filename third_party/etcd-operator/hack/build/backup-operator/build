@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+source hack/lib/build.sh
+
+if ! which go > /dev/null; then
+	echo "golang needs to be installed"
+	exit 1
+fi
+
+GIT_SHA=`git rev-parse --short HEAD || echo "GitNotFound"`
+
+gitHash="github.com/coreos/etcd-operator/version.GitSHA=${GIT_SHA}"
+
+go_ldflags="-X ${gitHash}"
+
+bin_dir="$(pwd)/_output/bin"
+mkdir -p ${bin_dir} || true
+
+GO_BUILD_FLAGS="$@" go_build backup-operator

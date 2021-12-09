@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcd-test
+  name: etcd-test-headless
+  namespace: default
+spec:
+  clusterIP: None
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: client
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: peer
+  selector:
+    app: etcd-test
+  sessionAffinity: None
+  type: ClusterIP
