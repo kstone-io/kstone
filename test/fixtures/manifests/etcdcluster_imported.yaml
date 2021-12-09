@@ -1,0 +1,72 @@
+apiVersion: kstone.tkestack.io/v1alpha1
+kind: EtcdCluster
+metadata:
+  annotations:
+    certName: kstone/cls-test
+    extClientURL: >-
+      10.206.16.63:2379->10.1.2.3:12861,10.206.16.86:2379->10.1.2.3:12730,10.206.16.140:2379->10.1.2.3:12105
+    featureGates: monitor=true,consistency=true,healthy=true,request=true,backup=false
+    importedAddr: https://10.1.2.3:12846
+    kubernetes: 'true'
+  creationTimestamp: '2021-08-12T08:18:10Z'
+  generation: 152228
+  labels:
+    backup: 'false'
+    clusterType: imported
+    consistency: 'true'
+    etcdName: cls-test
+    healthy: 'true'
+    monitor: 'true'
+    request: 'true'
+  name: cls-test
+  namespace: kstone
+  resourceVersion: '31278498'
+  uid: 9e9ddd34-9c92-4aee-bc3d-68d1a223cd13
+spec:
+  affinity: {}
+  authConfig: {}
+  clusterType: imported
+  description: cls-test
+  diskSize: 50
+  diskType: ssd
+  name: cls-test
+  size: 3
+  totalCpu: 4
+  totalMem: 8
+  version: ''
+status:
+  featureGatesStatus:
+    consistency: done
+    healthy: done
+    monitor: done
+    request: done
+  members:
+    - clientUrl: https://10.206.16.86:2379
+      endpoint: 10.206.16.86
+      extensionClientUrl: https://10.1.2.3:12730
+      memberId: '71412298143718490'
+      name: 10.206.16.86
+      port: '2379'
+      role: Follower
+      status: Running
+      version: 3.4.9
+    - clientUrl: https://10.206.16.63:2379
+      endpoint: 10.206.16.63
+      extensionClientUrl: https://10.1.2.3:12861
+      memberId: '8991984052334821064'
+      name: 10.206.16.63
+      port: '2379'
+      role: Leader
+      status: Running
+      version: 3.4.9
+    - clientUrl: https://10.206.16.140:2379
+      endpoint: 10.206.16.140
+      extensionClientUrl: https://10.1.2.3:12105
+      memberId: '17985372337265212585'
+      name: 10.206.16.140
+      port: '2379'
+      role: Follower
+      status: Running
+      version: 3.4.9
+  phase: Running
+  serviceName: https://10.1.2.3:12846

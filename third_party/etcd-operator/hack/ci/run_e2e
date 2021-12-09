@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+kubectl version
+
+: ${TEST_NAMESPACE:?"Need to set TEST_NAMESPACE"}
+: ${TEST_S3_BUCKET:?"Need to set TEST_S3_BUCKET"}
+: ${TEST_AWS_SECRET:?"Need to set TEST_AWS_SECRET"}
+
+# Default values for e2e and upgrade test envs
+GIT_VERSION=$(git rev-parse HEAD)
+OPERATOR_IMAGE=${OPERATOR_IMAGE:-"gcr.io/coreos-k8s-scale-testing/etcd-operator:${GIT_VERSION}"}
+E2E_TEST_SELECTOR=${E2E_TEST_SELECTOR:-""}
+
+UPGRADE_TEST_SELECTOR=${UPGRADE_TEST_SELECTOR:-""}
+UPGRADE_FROM=${UPGRADE_FROM:-"quay.io/coreos/etcd-operator:latest"}
+UPGRADE_TO=${UPGRADE_TO:-"quay.io/coreos/etcd-operator:dev"}
+
+function finish {
+  sudo chown -R "$(whoami)" ./
+}
+trap finish EXIT
+
+hack/ci/get_dep
+
+BUILD_IMAGE=${BUILD_IMAGE:-true}
+if [[ ${BUILD_IMAGE} == "true" ]]; then
+  gcloud docker -a
+  hack/build/build
+  IMAGE=${OPERATOR_IMAGE} hack/build/docker_push
+fi
+
+BUILD_E2E=${BUILD_E2E:-true}
+if [[ ${BUILD_E2E} == "true" ]]; then
+  TEST_IMAGE=${TEST_IMAGE:-"gcr.io/coreos-k8s-scale-testing/etcd-operator-e2e:${GIT_VERSION}"}
+  gcloud docker -a
+  TEST_IMAGE=${TEST_IMAGE} hack/build/e2e/docker_push
+fi
+
+echo "TEST_NAMESPACE: ${TEST_NAMESPACE}"
+echo "OPERATOR_IMAGE: ${OPERATOR_IMAGE}"
+echo "TEST_IMAGE: ${TEST_IMAGE}"
+
+if [ -z "${PASSES-}" ]; then
+  echo "No PASSES specified. Skipping tests"
+  exit 0
+fi
+
+# Generate test-pod spec
+export TEST_POD_SPEC=${PWD}/test/pod/test-pod-spec.yaml
+export POD_NAME=${POD_NAME:-"e2e-testing"}
+
+sed -e "s|<POD_NAME>|${POD_NAME}|g" \
+    -e "s|<TEST_IMAGE>|${TEST_IMAGE}|g" \
+    -e "s|<PASSES>|${PASSES}|g" \
+    -e "s|<OPERATOR_IMAGE>|${OPERATOR_IMAGE}|g" \
+    -e "s|<E2E_TEST_SELECTOR>|${E2E_TEST_SELECTOR}|g" \
+    -e "s|<TEST_S3_BUCKET>|${TEST_S3_BUCKET}|g" \
+    -e "s|<TEST_AWS_SECRET>|${TEST_AWS_SECRET}|g" \
+    -e "s|<UPGRADE_TEST_SELECTOR>|${UPGRADE_TEST_SELECTOR}|g" \
+    -e "s|<UPGRADE_FROM>|${UPGRADE_FROM}|g" \
+    -e "s|<UPGRADE_TO>|${UPGRADE_TO}|g" \
+    test/pod/test-pod-templ.yaml > ${TEST_POD_SPEC}
+
+# Run test-pod
+test/pod/run-test-pod

@@ -1,0 +1,29 @@
+apiVersion: kstone.tkestack.io/v1alpha1
+kind: EtcdInspection
+metadata:
+  creationTimestamp: "2021-08-12T08:20:14Z"
+  generation: 1
+  labels:
+    backup: "false"
+    clusterType: imported
+    consistency: "true"
+    healthy: "true"
+    monitor: "true"
+    request: "true"
+    version: ""
+  name: cls-nct19fao-consistency
+  namespace: kstone
+  ownerReferences:
+    - apiVersion: kstone.tkestack.io/v1alpha1
+      kind: EtcdCluster
+      name: cls-nct19fao
+      uid: 9e9ddd34-9c92-4aee-bc3d-68d1a223cd13
+  resourceVersion: "25607735"
+  selfLink: /apis/kstone.tkestack.io/v1alpha1/namespaces/kstone/etcdinspections/cls-nct19fao-consistency
+  uid: 2ec87c96-0937-4a26-8b5f-bac1c5a57901
+spec:
+  clusterName: cls-nct19fao
+  intervalInSecond: 0
+  inspectionType: consistency
+status:
+  updatedAt: "2021-08-12T08:20:14Z"

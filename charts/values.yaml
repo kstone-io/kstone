@@ -1,0 +1,49 @@
+# Default values for kstone.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "kstone"
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    service.cloud.tencent.com/direct-access: 'false'
+    kubernetes.io/ingress.class: qcloud
+#    # lb info
+#    service.kubernetes.io/tke-existed-lbid: ${lb-id}
+#    kubernetes.io/ingress.existLbId: ${lb-id}
+#    kubernetes.io/ingress.subnetId: ${subnet-id}
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          backend:
+            serviceName: dashboard
+            servicePort: 80
+        - path: /apis
+          pathType: ImplementationSpecific
+          backend:
+            serviceName: dashboard-api
+            servicePort: 80
+        - path: /grafana
+          pathType: ImplementationSpecific
+          backend:
+            serviceName: grafana
+            servicePort: 80
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+crd:
+  create: true

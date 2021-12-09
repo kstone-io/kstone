@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etcd-backup-operator
+  namespace: kstone
+  labels:
+    app: etcd-backup-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etcd-backup-operator
+  template:
+    metadata:
+      labels:
+        app: etcd-backup-operator
+    spec:
+      serviceAccountName: kstone-controller
+      containers:
+        - name: etcd-backup-operator
+          image: ccr.ccs.tencentyun.com/ccs-dev/etcd-operator:v1.0.4
+          imagePullPolicy: Always
+          command:
+            - etcd-backup-operator
+          env:
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name

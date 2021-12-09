@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  3.4.9: |
+    image: ccr.ccs.tencentyun.com/ccs-dev/etcd:v3.4.9
+  3.4.13: |
+    image: ccr.ccs.tencentyun.com/ccs-dev/etcd:v3.4.13
+kind: ConfigMap
+metadata:
+  labels:
+    cloud.tencent.com/kstone-config-name: etcd-version-global-config
+    cloud.tencent.com/kstone-config-version: 0.0.1
+  name: etcd-version-global-config
+  namespace: {{ .Release.Namespace }}
