@@ -29,8 +29,11 @@ import (
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
 func NewAPIServerCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "kstone-apiserver",
-		Long: ``,
+		Use: "kstone-apiserver",
+		Long: `The Kstone API server validates and configures data
+for the api objects which include etcdinspections, etcdclusters, and others.
+The API Server services REST operations and provides the frontend to the 
+other components interact, such as kstone-controller, kstone-dashboard.`,
 
 		// stop printing usage when the command errors
 		SilenceUsage: true,
