@@ -72,7 +72,7 @@ func (c *EtcdInspectionCommand) Run() error {
 		return err
 	}
 
-	kubeClient, clustetClient, kubeInformerFactory, informerFactory, err := k8s.GenerateInformer(config, c.labelSelector)
+	kubeClient, clusterClient, kubeInformerFactory, informerFactory, err := k8s.GenerateInformer(config, c.labelSelector)
 	if err != nil {
 		klog.Fatalf("Error generate informer: %v", err)
 		return err
@@ -81,7 +81,7 @@ func (c *EtcdInspectionCommand) Run() error {
 	controller := etcdinspection.NewEtcdInspectionController(
 		util.NewSimpleClientBuilder(c.kubeconfig),
 		kubeClient,
-		clustetClient,
+		clusterClient,
 		informerFactory.Kstone().V1alpha1().EtcdInspections(),
 	)
 	// notice that there is no need to run Start methods in a separate goroutine.
