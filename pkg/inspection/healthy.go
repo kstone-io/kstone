@@ -26,7 +26,7 @@ import (
 	"tkestack.io/kstone/pkg/inspection/metrics"
 )
 
-// AddHealthyTask adds etcdinspection for cheking the health of etcd
+// AddHealthyTask adds health check tasks.
 func (c *Server) AddHealthyTask(cluster *kstoneapiv1.EtcdCluster, cruiseType string) error {
 	task, err := c.initInspectionTask(cluster, cruiseType)
 	if err != nil {
