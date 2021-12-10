@@ -29,11 +29,13 @@ const (
 	AnnoImportedURI = "importedAddr"
 )
 
+// EtcdClusterImported is the etcd cluster imported from kstone-dashboard
 type EtcdClusterImported struct {
 	name    kstoneapiv1.EtcdClusterType
 	cluster *kstoneapiv1.EtcdCluster
 }
 
+// init registers an imported etcd cluster provider
 func init() {
 	clusterprovider.RegisterEtcdClusterFactory(
 		kstoneapiv1.EtcdClusterImported,
@@ -43,6 +45,7 @@ func init() {
 	)
 }
 
+// NewEtcdClusterImported generates imported etcd provider
 func NewEtcdClusterImported(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
 	return &EtcdClusterImported{
 		name:    kstoneapiv1.EtcdClusterImported,
@@ -90,6 +93,7 @@ func (c *EtcdClusterImported) Equal() (bool, error) {
 	return true, nil
 }
 
+// Status gets the imported etcd cluster status
 func (c *EtcdClusterImported) Status(tlsConfig *transport.TLSInfo) (kstoneapiv1.EtcdClusterStatus, error) {
 	status := c.cluster.Status
 
