@@ -23,7 +23,7 @@ import (
 	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 )
 
-// EtcdClusterProvider interface of etcd cluster provider
+// EtcdClusterProvider is an abstract, pluggable interface for etcd clusters.
 type EtcdClusterProvider interface {
 	// BeforeCreate does some things before creating the cluster
 	BeforeCreate() error
