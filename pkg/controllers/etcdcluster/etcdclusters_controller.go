@@ -423,7 +423,7 @@ func (c *ClusterController) GetFeatureProvider(name string) (featureprovider.Fea
 
 func (c *ClusterController) getDesiredAction(
 	cluster *kstonev1alpha1.EtcdCluster,
-	provider clusterprovider.EtcdClusterProvider,
+	provider clusterprovider.Cluster,
 ) (kstonev1alpha1.EtcdClusterPhase, error) {
 	if len(cluster.Status.Conditions) == 0 {
 		return kstonev1alpha1.EtcdCluterCreating, nil
@@ -484,7 +484,7 @@ func (c *ClusterController) generateConditions(
 
 func (c *ClusterController) handleClusterCreate(
 	cluster *kstonev1alpha1.EtcdCluster,
-	provider clusterprovider.EtcdClusterProvider,
+	provider clusterprovider.Cluster,
 ) (*kstonev1alpha1.EtcdCluster, error) {
 	cluster.Status.Conditions = c.generateConditions(
 		cluster.Status.Conditions,
@@ -524,7 +524,7 @@ func (c *ClusterController) handleClusterCreate(
 
 func (c *ClusterController) handleClusterUpdate(
 	cluster *kstonev1alpha1.EtcdCluster,
-	provider clusterprovider.EtcdClusterProvider,
+	provider clusterprovider.Cluster,
 ) (*kstonev1alpha1.EtcdCluster, error) {
 	cluster.Status.Conditions = c.generateConditions(
 		cluster.Status.Conditions,
@@ -565,7 +565,7 @@ func (c *ClusterController) handleClusterUpdate(
 // if not equal, updates etcdclusters.etcd.tkestack.io
 func (c *ClusterController) handleClusterStatus(
 	cluster *kstonev1alpha1.EtcdCluster,
-	provider clusterprovider.EtcdClusterProvider,
+	provider clusterprovider.Cluster,
 ) (*kstonev1alpha1.EtcdCluster, error) {
 	// Check and update Cluster Status
 	annotations := cluster.ObjectMeta.Annotations

@@ -37,13 +37,13 @@ type EtcdClusterImported struct {
 func init() {
 	clusterprovider.RegisterEtcdClusterFactory(
 		kstoneapiv1.EtcdClusterImported,
-		func(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.EtcdClusterProvider, error) {
+		func(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
 			return NewEtcdClusterImported(cluster)
 		},
 	)
 }
 
-func NewEtcdClusterImported(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.EtcdClusterProvider, error) {
+func NewEtcdClusterImported(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
 	return &EtcdClusterImported{
 		name:    kstoneapiv1.EtcdClusterImported,
 		cluster: cluster,
