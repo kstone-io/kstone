@@ -27,7 +27,7 @@ import (
 	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 )
 
-type EtcdFactory func(cluster *kstoneapiv1.EtcdCluster) (EtcdClusterProvider, error)
+type EtcdFactory func(cluster *kstoneapiv1.EtcdCluster) (Cluster, error)
 
 var (
 	mutex     sync.Mutex
@@ -51,7 +51,7 @@ func RegisterEtcdClusterFactory(name kstoneapiv1.EtcdClusterType, factory EtcdFa
 func GetEtcdClusterProvider(
 	name kstoneapiv1.EtcdClusterType,
 	cluster *kstoneapiv1.EtcdCluster,
-) (EtcdClusterProvider, error) {
+) (Cluster, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	f, found := providers[name]

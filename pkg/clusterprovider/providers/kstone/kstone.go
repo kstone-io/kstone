@@ -54,14 +54,14 @@ type EtcdClusterKstone struct {
 func init() {
 	clusterprovider.RegisterEtcdClusterFactory(
 		providerName,
-		func(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.EtcdClusterProvider, error) {
+		func(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
 			return NewEtcdClusterKstone(cluster)
 		},
 	)
 }
 
 // NewEtcdClusterKstone generates etcd-operator provider
-func NewEtcdClusterKstone(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.EtcdClusterProvider, error) {
+func NewEtcdClusterKstone(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
 	return &EtcdClusterKstone{
 		name:    providerName,
 		cluster: cluster,
