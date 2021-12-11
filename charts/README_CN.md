@@ -4,14 +4,31 @@
 
 ## 1 资源准备
 
-- 申请 [TKE](https://cloud.tencent.com/product/tke) 集群。
+- 申请 [TKE](https://cloud.tencent.com/product/tke) 集群或搭建 [minikube](https://minikube.sigs.k8s.io/docs/start/) 集群。
 - 环境要求：
   - Worker 4C8G以上配置。
   - 可访问待管理的目标etcd。
 
-## 2 部署
+## 2 搭建 minikube 集群(可选)
 
-### 2.1 修改Helm配置
+#### 步骤一：
+- 安装 minikube（以 Linux amd64 为例）
+  - 版本要求：低于 1.20.x
+```shell
+VERSION=v1.20.0
+curl -LO https://storage.googleapis.com/minikube/releases/${VERSION}/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
+
+#### 步骤二：
+- 为 `minikube kubectl` 命令设置别名
+```shell
+alias kubectl="minikube kubectl --"
+```
+
+## 3 部署
+
+### 3.1 修改Helm配置
 
 #### 步骤一：
 
@@ -67,7 +84,7 @@ kube:
   - $token为即将部署的TKE集群的访问凭证TOKEN。
   - $token需要具备访问集群范围所有资源的权限。
 
-### 2.2 安装
+### 3.2 安装
 
 ``` shell
 cd kstone-charts
@@ -77,7 +94,7 @@ kubectl create ns kstone
 helm install kstone . -n kstone
 ```
 
-### 2.3 更新
+### 3.3 更新
 
 ``` shell
 cd kstone-charts
@@ -85,7 +102,7 @@ cd kstone-charts
 helm upgrade kstone . -n kstone
 ```
 
-### 2.4 卸载
+### 3.4 卸载
 
 ``` shell
 helm uninstall kstone -n kstone
