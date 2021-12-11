@@ -4,6 +4,9 @@
 
 ## 1 Preparation
 
+- Prerequisites
+  - Kubernetes version is between 1.14 and 1.20.
+  - The version of Prometheus Operator is v0.49.0.
 - Apply for a cluster from [TKE](https://cloud.tencent.com/product/tke) or install [minikube](https://minikube.sigs.k8s.io/docs/start/).
 - Requirements：
   - Worker >= 4 vCPU 8 GB of Memory.
@@ -44,7 +47,7 @@ cd ./charts
 - Modify Setting:
 
 ``` yaml
-// kstone-charts/values.yaml
+// charts/values.yaml
 
 ingress:
   enabled: true
@@ -75,7 +78,7 @@ Delete the following configurations:
 - Fill in the TOKEN of the cluster to deploy.
 
 ``` yaml
-// kstone-charts/charts/dashboard-api/values.yaml
+// charts/charts/dashboard-api/values.yaml
 
 kube:
   token: $token
@@ -86,10 +89,15 @@ kube:
   - $token is the access credential TOKEN of the TKE cluster to be deployed.
   - $token needs to have access to all resources in the cluster.
 
+#### Step 3: Using the existing Prometheus Operator (optional)
+
+- Set `replica=0` in the file `charts/charts/kube-prometheus-stack/values.yaml`.
+- Modify the file: `charts/charts/grafana/templates/configmap.yaml`, replace `http://{{ .Release.Name }}-prometheus-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090` to the query URL from the existing Prometheus Operator.
+
 ### 3.2 Install
 
 ``` shell
-cd kstone-charts
+cd charts
 
 kubectl create ns kstone
 
@@ -99,7 +107,7 @@ helm install kstone . -n kstone
 ### 3.3 Update
 
 ``` shell
-cd kstone-charts
+cd charts
 
 helm upgrade kstone . -n kstone
 ```

@@ -4,6 +4,9 @@
 
 ## 1 资源准备
 
+- 前置条件
+  - Kubernetes集群版本在1.14和1.20之间。
+  - Prometheus-Operator版本为v0.49.0。
 - 申请 [TKE](https://cloud.tencent.com/product/tke) 集群或搭建 [minikube](https://minikube.sigs.k8s.io/docs/start/) 集群。
 - 环境要求：
   - Worker 4C8G以上配置。
@@ -42,7 +45,7 @@ cd ./charts
 - 修改配置：
 
 ``` yaml 
-// kstone-charts/values.yaml
+// charts/values.yaml
 
 ingress:
   enabled: true
@@ -73,7 +76,7 @@ ingress:
 - 填入运行集群的TOKEN。
 
 ``` yaml
-// kstone-charts/charts/dashboard-api/values.yaml
+// charts/charts/dashboard-api/values.yaml
 
 kube:
   token: $token
@@ -84,10 +87,15 @@ kube:
   - $token为即将部署的TKE集群的访问凭证TOKEN。
   - $token需要具备访问集群范围所有资源的权限。
 
+#### 第三步：使用已部署的Prometheus Operator（可选）
+
+- 将文件`charts/charts/kube-prometheus-stack/values.yaml`中的副本数`replica`配置为0。
+- 使用已部署的Prometheus Operator提供的查询URL替换文件`charts/charts/grafana/templates/configmap.yaml`中的`http://{{ .Release.Name }}-prometheus-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090`
+
 ### 3.2 安装
 
 ``` shell
-cd kstone-charts
+cd charts
 
 kubectl create ns kstone
 
@@ -97,7 +105,7 @@ helm install kstone . -n kstone
 ### 3.3 更新
 
 ``` shell
-cd kstone-charts
+cd charts
 
 helm upgrade kstone . -n kstone
 ```
