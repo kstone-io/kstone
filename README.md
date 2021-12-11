@@ -63,6 +63,16 @@ cd kstone
 make
 ```
 
+## Contact
+
+For any question or support, feel free to contact us via:
+- Join [#Kstone Slack channel](https://join.slack.com/t/w1639233173-qqx590963/shared_invite/zt-109muo6i9-0kTUQphSVFlwOSW7CgtrGw)
+- Join WeChat Group Discussion
+
+<div align="center">
+  <img src="docs/images/wechat-group.png" width=20% title="Kstone WeChat group">
+</div>
+
 ## Community
 
 * You are encouraged to communicate most things via GitHub [issues](https://github.com/tkestack/kstone/issues/new/choose) or [pull requests](https://github.com/tkestack/kstone/pulls).
