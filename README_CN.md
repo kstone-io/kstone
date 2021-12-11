@@ -78,6 +78,16 @@ cd kstone
 make
 ```
 
+## 联系方式
+
+如果您有任何疑问或需要支持，请随时与我们联系：
+- [Slack](https://join.slack.com/t/w1639233173-qqx590963/shared_invite/zt-109muo6i9-0kTUQphSVFlwOSW7CgtrGw)
+- 微信群
+
+<div align="center">
+  <img src="docs/images/wechat-group.png" width=20% title="Kstone WeChat group">
+</div>
+
 ## 社区
 
 欢迎大家提交issue和pull request来一起完善、提升Kstone。
