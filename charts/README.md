@@ -4,14 +4,33 @@
 
 ## 1 Preparation
 
-- Apply for a cluster of [TKE](https://cloud.tencent.com/product/tke).
+- Apply for a cluster from [TKE](https://cloud.tencent.com/product/tke) or install [minikube](https://minikube.sigs.k8s.io/docs/start/).
 - Requirements：
   - Worker >= 4 vCPU 8 GB of Memory.
   - Can access the managed etcd.
+  
+## 2 Install minikube (optional)
 
-## 2 Deploy
+#### Step 1：
 
-### 2.1 Modify Helm Configuration
+- Install minikube (e.g. Linux amd64)
+  - Requirements：version <= 1.20.x
+```shell
+VERSION=v1.20.0
+curl -LO https://storage.googleapis.com/minikube/releases/${VERSION}/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
+
+#### Step 2：
+
+- Alias `minikube kubectl`
+```shell
+alias kubectl="minikube kubectl --"
+```
+
+## 3 Deploy
+
+### 3.1 Modify Helm Configuration
 
 #### Step 1：
 
@@ -67,7 +86,7 @@ kube:
   - $token is the access credential TOKEN of the TKE cluster to be deployed.
   - $token needs to have access to all resources in the cluster.
 
-### 2.2 Install
+### 3.2 Install
 
 ``` shell
 cd kstone-charts
@@ -77,7 +96,7 @@ kubectl create ns kstone
 helm install kstone . -n kstone
 ```
 
-### 2.3 Update
+### 3.3 Update
 
 ``` shell
 cd kstone-charts
@@ -85,7 +104,7 @@ cd kstone-charts
 helm upgrade kstone . -n kstone
 ```
 
-### 2.4 Uninstall
+### 3.4 Uninstall
 
 ``` shell
 helm uninstall kstone -n kstone
