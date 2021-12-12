@@ -12,7 +12,7 @@
   - In the environments mentioned above, only the corresponding ingress rules need to be configured.
 - Requirements：
   - For production environment (recommended): Worker >= 4 vCPU 8 GB of Memory.
-  - For demo environment (minimum): Worker >= 2 vCPU 2 GB of Memory.
+  - For test environment (minimum): Worker >= 2 vCPU 2 GB of Memory.
   - Can access the managed etcd.
   
 ## 2 Install on TKE
