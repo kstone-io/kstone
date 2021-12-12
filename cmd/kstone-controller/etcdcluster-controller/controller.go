@@ -20,6 +20,7 @@ package etcdclustercontroller
 
 import (
 	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -34,10 +35,11 @@ import (
 )
 
 type EtcdClusterCommand struct {
-	out           io.Writer
-	kubeconfig    string
-	masterURL     string
-	labelSelector string
+	out                       io.Writer
+	kubeconfig                string
+	masterURL                 string
+	labelSelector             string
+	clusterProviderConfigFile string
 }
 
 // NewEtcdClusterControllerCommand creates a *cobra.Command object with default parameters
@@ -74,7 +76,12 @@ func (c *EtcdClusterCommand) Run() error {
 		return err
 	}
 
-	err = clusterprovider.Init(config)
+	clusterProviderConfigFile, err := os.OpenFile(c.clusterProviderConfigFile, os.O_RDONLY, 0)
+	if err != nil {
+		klog.Fatalf("failed to read provisioning provider: %v", err)
+		return err
+	}
+	err = clusterprovider.ClusterProviderInit(clusterProviderConfigFile)
 	if err != nil {
 		klog.Fatalf("Error to init cluster provider helper: %v", err)
 		return err
@@ -124,5 +131,11 @@ func (c *EtcdClusterCommand) AddFlags(fs *pflag.FlagSet) {
 		"labelSelector",
 		"",
 		"The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.",
+	)
+	fs.StringVar(
+		&c.clusterProviderConfigFile,
+		"cluster-provider-config-file",
+		"",
+		"The file path of the cluster provider configuration. Notice: the format must be yaml",
 	)
 }

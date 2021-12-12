@@ -20,8 +20,6 @@ package clusterprovider
 
 import (
 	"fmt"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 	"strconv"
 	"strings"
 
@@ -32,18 +30,18 @@ import (
 	"tkestack.io/kstone/pkg/etcd"
 )
 
-var DynamicClient dynamic.Interface
-
-// Init inits DynamicClient
-// TODO: fix me,remove DynamicClient
-func Init(config *rest.Config) error {
-	client, err := dynamic.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-	DynamicClient = client
-	return nil
-}
+//var DynamicClient dynamic.Interface
+//
+//// Init inits DynamicClient
+//// TODO: fix me,remove DynamicClient
+//func Init(config *rest.Config) error {
+//	client, err := dynamic.NewForConfig(config)
+//	if err != nil {
+//		return err
+//	}
+//	DynamicClient = client
+//	return nil
+//}
 
 // GetStorageMemberEndpoints get member of cluster status
 func GetStorageMemberEndpoints(cluster *kstoneapiv1.EtcdCluster) []string {
