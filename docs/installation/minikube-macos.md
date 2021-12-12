@@ -3,11 +3,12 @@
 ## 1 Preparation
 
 - Prerequisites
-    - Kubernetes version is between 1.14 and 1.20.
-    - The version of Prometheus Operator is v0.49.0.
+  - Kubernetes version is between 1.14 and 1.20.
+  - The version of Prometheus Operator is v0.49.0.
 - Requirements：
-    - Worker >= 2 vCPU 2 GB of Memory.
-    - Can access the managed etcd.
+  - For production environment (recommended): Worker >= 4 vCPU 8 GB of Memory.
+  - For test environment (minimum): Worker >= 2 vCPU 2 GB of Memory.
+  - Can access the managed etcd.
 
 ## 2 Install Minikube
 
@@ -91,15 +92,27 @@ kube:
 
 ### 3.2 Install
 
-- Install Kstone
+- Create kstone namespace
 
 ``` shell
-cd charts
-
 kubectl create ns kstone
-
-helm install kstone . -n kstone
 ```
+- Helm install for production environment
+
+```shell
+cd charts/
+helm install kstone . -n kstone -f values.yaml
+```
+
+or
+
+- Helm install for test environment
+
+```shell
+cd charts/
+helm install kstone . -n kstone -f values.test.yaml
+```
+
 - Create Ingress Rule
   
 ```shell
@@ -156,10 +169,22 @@ kubectl port-forward deployment/ingress-nginx-controller 8080:80 --namespace ing
 
 ### 3.3 Update
 
+- Helm upgrade for production environment
+
 ``` shell
 cd charts
 
-helm upgrade kstone . -n kstone
+helm upgrade kstone . -n kstone -f values.yaml
+```
+
+or
+
+- Helm upgrade for test environment
+
+``` shell
+cd charts
+
+helm upgrade kstone . -n kstone -f values.test.yaml
 ```
 
 ### 3.4 Uninstall
