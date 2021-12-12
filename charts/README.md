@@ -7,124 +7,20 @@
 - Prerequisites
   - Kubernetes version is between 1.14 and 1.20.
   - The version of Prometheus Operator is v0.49.0.
-- Apply for a cluster from [TKE](https://cloud.tencent.com/product/tke) or install [minikube](https://minikube.sigs.k8s.io/docs/start/).
+- Apply for a cluster from [TKE](https://cloud.tencent.com/product/tke) or install [Minikube](https://minikube.sigs.k8s.io/docs/start/).
+  - Kstone supports deploy in various cloud vendors and bare k8s cluster environments
+  - In the environments mentioned above, only the corresponding ingress rules need to be configured.
 - Requirements：
-  - Worker >= 4 vCPU 8 GB of Memory.
+  - For production environment (recommended): Worker >= 4 vCPU 8 GB of Memory.
+  - For demo environment (minimum): Worker >= 2 vCPU 2 GB of Memory.
   - Can access the managed etcd.
   
-## 2 Install minikube (optional)
+## 2 Install on TKE
 
-#### Step 1：
+[Kstone installation on TKE](../docs/installation/tke.md)
 
-- Install minikube (e.g. Linux amd64)
-  - Requirements：version <= 1.20.x
-```shell
-VERSION=v1.20.0
-curl -LO https://storage.googleapis.com/minikube/releases/${VERSION}/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube
-```
+## 3 Install on Minikube
 
-#### Step 2：
+[Kstone installation on Minikube(Mac OS X)](../docs/installation/minikube-macos.md)
 
-- Alias `minikube kubectl`
-```shell
-alias kubectl="minikube kubectl --"
-```
-
-## 3 Deploy
-
-### 3.1 Modify Helm Configuration
-
-#### Step 1：
-
-- Download Helm Repo:
-
-``` shell
-git clone git@github.com:tkestack/kstone.git
-cd ./charts
-```
-
-- Modify Setting:
-
-``` yaml
-// charts/values.yaml
-
-ingress:
-  enabled: true
-  className: ""
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    service.cloud.tencent.com/direct-access: 'false'
-    kubernetes.io/ingress.class: qcloud
-    service.kubernetes.io/tke-existed-lbid: $lb
-    kubernetes.io/ingress.existLbId: $lb
-    kubernetes.io/ingress.subnetId: $subnet
-```
-
-Method 1: Use existing LB
-
-Refer to the above configuration and fill in the $lb and $subnet under the same VPC of the TKE cluster.
-
-Method 2: Do not use existing LB
-
-Delete the following configurations:
-
-- ingress.annotations.service.kubernetes.io/tke-existed-lbid
-- kubernetes.io/ingress.existLbId
-- kubernetes.io/ingress.subnetId
-
-#### Step 2：
-
-- Fill in the TOKEN of the cluster to deploy.
-
-``` yaml
-// charts/charts/dashboard-api/values.yaml
-
-kube:
-  token: $token
-  target: kubernetes.default.svc.cluster.local:443
-```
-
-- Requirements：
-  - $token is the access credential TOKEN of the TKE cluster to be deployed.
-  - $token needs to have access to all resources in the cluster.
-
-#### Step 3: Using the existing Prometheus Operator (optional)
-
-- Set `replica=0` in the file `charts/charts/kube-prometheus-stack/values.yaml`.
-- Modify the file: `charts/charts/grafana/templates/configmap.yaml`, replace `http://{{ .Release.Name }}-prometheus-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090` to the query URL from the existing Prometheus Operator.
-
-### 3.2 Install
-
-``` shell
-cd charts
-
-kubectl create ns kstone
-
-helm install kstone . -n kstone
-```
-
-### 3.3 Update
-
-``` shell
-cd charts
-
-helm upgrade kstone . -n kstone
-```
-
-### 3.4 Uninstall
-
-``` shell
-helm uninstall kstone -n kstone
-
-kubectl delete crd alertmanagerconfigs.monitoring.coreos.com
-kubectl delete crd alertmanagers.monitoring.coreos.com
-kubectl delete crd podmonitors.monitoring.coreos.com
-kubectl delete crd probes.monitoring.coreos.com
-kubectl delete crd prometheuses.monitoring.coreos.com
-kubectl delete crd prometheusrules.monitoring.coreos.com
-kubectl delete crd servicemonitors.monitoring.coreos.com
-kubectl delete crd thanosrulers.monitoring.coreos.com
-kubectl delete crd etcdclusters.kstone.tkestack.io
-kubectl delete crd etcdinspections.kstone.tkestack.io
-```
+[Kstone installation on Minikube(Linux amd64)](../docs/installation/minikube-amd64.md)
