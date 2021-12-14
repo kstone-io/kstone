@@ -248,18 +248,16 @@ func (c *ClusterController) handleClusterManagement(cluster *kstonev1alpha1.Etcd
 	error,
 ) {
 	// Get cluster provider
-	provider, err := clusterprovider.GetEtcdClusterProvider(cluster.Spec.ClusterType, cluster)
+	provider, err := c.GetEtcdClusterProvider(cluster.Spec.ClusterType)
 	if err != nil {
 		klog.Errorf("failed to get cluster provider %s, err is %v, cluster is %s",
 			cluster.Spec.ClusterType, err, cluster.Name)
 		return cluster, err
 	}
-
 	nextAction, err := c.getDesiredAction(cluster, provider)
 	if err != nil {
 		return cluster, err
 	}
-
 	switch nextAction {
 	case kstonev1alpha1.EtcdCluterCreating:
 		cluster, err = c.handleClusterCreate(cluster, provider)
@@ -416,6 +414,17 @@ func (c *ClusterController) GetFeatureProvider(name string) (featureprovider.Fea
 	return feature, nil
 }
 
+func (c *ClusterController) GetEtcdClusterProvider(name kstonev1alpha1.EtcdClusterType) (clusterprovider.Cluster, error) {
+	ctx := &clusterprovider.ClusterContext{
+		Clientbuilder: c.clientbuilder,
+	}
+	cluster, err := clusterprovider.GetEtcdClusterProvider(name, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
+
 func (c *ClusterController) getDesiredAction(
 	cluster *kstonev1alpha1.EtcdCluster,
 	provider clusterprovider.Cluster,
@@ -438,7 +447,7 @@ func (c *ClusterController) getDesiredAction(
 		}
 	}
 
-	equal, err := provider.Equal()
+	equal, err := provider.Equal(cluster)
 	if err != nil {
 		klog.Errorf("failed to check if the cluster is equal, err is %v,cluster is %s", err, cluster.Name)
 		return kstonev1alpha1.EtcdClusterUnknown, err
@@ -490,21 +499,21 @@ func (c *ClusterController) handleClusterCreate(
 
 	conditionIndex := len(cluster.Status.Conditions) - 1
 
-	err := provider.BeforeCreate()
+	err := provider.BeforeCreate(cluster)
 	if err != nil {
 		klog.Errorf("failed to do something before create, err is %v, cluster is %s", err, cluster.Name)
 		cluster.Status.Conditions[conditionIndex].Reason = err.Error()
 		return cluster, err
 	}
 
-	err = provider.Create()
+	err = provider.Create(cluster)
 	if err != nil {
 		klog.Errorf("failed to create, err is %v, cluster is %s", err, cluster.Name)
 		cluster.Status.Conditions[conditionIndex].Reason = err.Error()
 		return cluster, err
 	}
 
-	err = provider.AfterCreate()
+	err = provider.AfterCreate(cluster)
 	if err != nil {
 		klog.Errorf("failed to do something after create, err is %v, cluster is %s", err, cluster.Name)
 		cluster.Status.Conditions[conditionIndex].Reason = err.Error()
@@ -529,21 +538,21 @@ func (c *ClusterController) handleClusterUpdate(
 	cluster.Status.Phase = kstonev1alpha1.EtcdClusterUpdating
 	conditionIndex := len(cluster.Status.Conditions) - 1
 
-	err := provider.BeforeUpdate()
+	err := provider.BeforeUpdate(cluster)
 	if err != nil {
 		klog.Errorf("failed to do something before update, err is %v, cluster is %s", err, cluster.Name)
 		cluster.Status.Conditions[conditionIndex].Reason = err.Error()
 		return cluster, err
 	}
 
-	err = provider.Update()
+	err = provider.Update(cluster)
 	if err != nil {
 		klog.Errorf("failed to update, err is %v, cluster is %s", err, cluster.Name)
 		cluster.Status.Conditions[conditionIndex].Reason = err.Error()
 		return cluster, err
 	}
 
-	err = provider.AfterUpdate()
+	err = provider.AfterUpdate(cluster)
 	if err != nil {
 		klog.Errorf("failed to do something after update, err is %v, cluster is %s", err, cluster.Name)
 		cluster.Status.Conditions[conditionIndex].Reason = err.Error()
@@ -575,7 +584,7 @@ func (c *ClusterController) handleClusterStatus(
 		return cluster, err
 	}
 
-	status, err := provider.Status(tlsConfig)
+	status, err := provider.Status(tlsConfig, cluster)
 	if err != nil {
 		c.recorder.Eventf(
 			cluster,
