@@ -20,6 +20,10 @@ package clusterprovider
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"sigs.k8s.io/yaml"
 	"sync"
 
 	"k8s.io/klog/v2"
@@ -29,13 +33,20 @@ import (
 
 type EtcdFactory func(cluster *kstoneapiv1.EtcdCluster) (Cluster, error)
 
+type ConfigInitFunc func(interface{}) error
+
+type Config map[kstoneapiv1.EtcdClusterType]interface{}
+
 var (
 	mutex     sync.Mutex
 	providers = make(map[kstoneapiv1.EtcdClusterType]EtcdFactory)
+
+	configs         Config
+	configInitFuncs = make(map[kstoneapiv1.EtcdClusterType]ConfigInitFunc)
 )
 
 // RegisterEtcdClusterFactory registers the specified cluster provider
-func RegisterEtcdClusterFactory(name kstoneapiv1.EtcdClusterType, factory EtcdFactory) {
+func RegisterEtcdClusterFactory(name kstoneapiv1.EtcdClusterType, config interface{}, initFunc ConfigInitFunc, factory EtcdFactory) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -45,6 +56,8 @@ func RegisterEtcdClusterFactory(name kstoneapiv1.EtcdClusterType, factory EtcdFa
 
 	klog.V(2).Infof("register etcdCluster provider %s", name)
 	providers[name] = factory
+	configs[name] = config
+	configInitFuncs[name] = initFunc
 }
 
 // GetEtcdClusterProvider gets the specified cluster provider
@@ -61,4 +74,29 @@ func GetEtcdClusterProvider(
 		return nil, errors.New("fatal error,etcd cluster provider not found")
 	}
 	return f(cluster)
+}
+
+// ClusterProviderInit gets the specified cluster provider
+func ClusterProviderInit(config io.Reader) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	src, err := ioutil.ReadAll(config)
+	if err != nil {
+		return err
+	}
+	cfg := make(Config, 0)
+	if err := yaml.Unmarshal(src, cfg); err != nil {
+		return err
+	}
+
+	for k, fn := range configInitFuncs {
+		if fn == nil {
+			continue
+		}
+		if err := fn(cfg[k]); err != nil {
+			return fmt.Errorf("failed to init %v cluster provider", k)
+		}
+	}
+	return nil
 }

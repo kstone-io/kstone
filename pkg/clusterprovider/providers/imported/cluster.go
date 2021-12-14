@@ -39,6 +39,8 @@ type EtcdClusterImported struct {
 func init() {
 	clusterprovider.RegisterEtcdClusterFactory(
 		kstoneapiv1.EtcdClusterImported,
+		nil,
+		nil,
 		func(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
 			return NewEtcdClusterImported(cluster)
 		},
