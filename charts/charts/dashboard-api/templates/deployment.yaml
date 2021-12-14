@@ -45,7 +45,7 @@ spec:
             {{- toYaml .Values.prodResources | nindent 12 }}
             {{- else }}
             {{- toYaml .Values.testResources | nindent 12 }}
-            {{- end } }
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
