@@ -30,9 +30,13 @@ const (
 	ProviderName = string(kstoneapiv1.KStoneFeatureRequest)
 )
 
+var (
+	once     sync.Once
+	instance *FeatureRequest
+)
+
 type FeatureRequest struct {
 	name       string
-	once       sync.Once
 	inspection *inspection.Server
 	ctx        *featureprovider.FeatureContext
 }
@@ -41,26 +45,29 @@ func init() {
 	featureprovider.RegisterFeatureFactory(
 		ProviderName,
 		func(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-			return NewFeatureRequest(ctx)
+			return initFeatureRequestInstance(ctx)
 		},
 	)
 }
 
-func NewFeatureRequest(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-	return &FeatureRequest{
-		name: ProviderName,
-		ctx:  ctx,
-	}, nil
+func initFeatureRequestInstance(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
+	var err error
+	once.Do(func() {
+		instance = &FeatureRequest{
+			name: ProviderName,
+			ctx:  ctx,
+		}
+		err = instance.init()
+	})
+	return instance, err
 }
 
-func (c *FeatureRequest) Init() error {
+func (c *FeatureRequest) init() error {
 	var err error
-	c.once.Do(func() {
-		c.inspection = &inspection.Server{
-			Clientbuilder: c.ctx.Clientbuilder,
-		}
-		err = c.inspection.Init()
-	})
+	c.inspection = &inspection.Server{
+		Clientbuilder: c.ctx.Clientbuilder,
+	}
+	err = c.inspection.Init()
 	return err
 }
 

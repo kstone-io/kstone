@@ -357,11 +357,6 @@ func (c *ClusterController) handleClusterFeature(cluster *kstonev1alpha1.EtcdClu
 			continue
 		}
 
-		if err = feature.Init(); err != nil {
-			klog.Errorf("failed to init feature %s provider, err is %v", name, err)
-			continue
-		}
-
 		if !feature.Equal(cluster) {
 			klog.V(4).Infof("skip feature %s,no changed, cluster is %s", name, cluster.Name)
 			continue
