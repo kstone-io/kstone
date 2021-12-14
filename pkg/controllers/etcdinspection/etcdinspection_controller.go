@@ -248,9 +248,5 @@ func (c *InspectionController) doInspectionTask(etcdinspection *kstonev1alpha1.E
 	if err != nil {
 		return err
 	}
-	if err = feature.Init(); err != nil {
-		klog.Errorf("failed to init feature %s provider, err is %v", inspectionType, err)
-		return err
-	}
 	return feature.Do(etcdinspection)
 }

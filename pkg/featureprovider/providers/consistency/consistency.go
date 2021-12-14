@@ -30,10 +30,14 @@ const (
 	ProviderName = string(kstoneapiv1.KStoneFeatureConsistency)
 )
 
+var (
+	once     sync.Once
+	instance *FeatureConsistency
+)
+
 type FeatureConsistency struct {
 	name       string
 	inspection *inspection.Server
-	once       sync.Once
 	ctx        *featureprovider.FeatureContext
 }
 
@@ -41,26 +45,29 @@ func init() {
 	featureprovider.RegisterFeatureFactory(
 		ProviderName,
 		func(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-			return NewFeatureConsistency(ctx)
+			return initFeatureConsistencyInstance(ctx)
 		},
 	)
 }
 
-func NewFeatureConsistency(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-	return &FeatureConsistency{
-		name: ProviderName,
-		ctx:  ctx,
-	}, nil
+func initFeatureConsistencyInstance(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
+	var err error
+	once.Do(func() {
+		instance = &FeatureConsistency{
+			name: ProviderName,
+			ctx:  ctx,
+		}
+		err = instance.init()
+	})
+	return instance, err
 }
 
-func (c *FeatureConsistency) Init() error {
+func (c *FeatureConsistency) init() error {
 	var err error
-	c.once.Do(func() {
-		c.inspection = &inspection.Server{
-			Clientbuilder: c.ctx.Clientbuilder,
-		}
-		err = c.inspection.Init()
-	})
+	c.inspection = &inspection.Server{
+		Clientbuilder: c.ctx.Clientbuilder,
+	}
+	err = c.inspection.Init()
 	return err
 }
 
