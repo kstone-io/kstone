@@ -80,7 +80,8 @@ kube:
 
 #### Step 3: Using the existing Prometheus Operator (optional)
 
-- Set `replica=0` in the file `charts/charts/kube-prometheus-stack/values.yaml`.
+- Set `prometheusOperator.enabled=false` in the file `charts/charts/kube-prometheus-stack/values.yaml`.
+- Set `prometheus.enabled=false` in the file `charts/charts/kube-prometheus-stack/values.yaml`.
 - Modify the file: `charts/charts/grafana/templates/configmap.yaml`, replace `http://{{ .Release.Name }}-prometheus-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090` to the query URL from the existing Prometheus Operator.
 
 ### 2.2 Install
