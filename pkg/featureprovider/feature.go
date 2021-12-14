@@ -24,9 +24,6 @@ import (
 )
 
 type Feature interface {
-	// Init inits the feature provider
-	Init() error
-
 	// Equal checks whether the feature needs to be updated
 	Equal(cluster *v1alpha1.EtcdCluster) bool
 
