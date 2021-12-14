@@ -30,10 +30,14 @@ const (
 	ProviderName = string(kstoneapiv1.KStoneFeatureBackup)
 )
 
-type Feature struct {
+var (
+	once     sync.Once
+	instance *FeatureBackup
+)
+
+type FeatureBackup struct {
 	name      string
 	backupSvr *backup.Server
-	once      sync.Once
 	ctx       *featureprovider.FeatureContext
 }
 
@@ -41,37 +45,40 @@ func init() {
 	featureprovider.RegisterFeatureFactory(
 		ProviderName,
 		func(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-			return NewProviderBackup(ctx), nil
+			return initFeatureBackupInstance(ctx)
 		},
 	)
 }
 
-func NewProviderBackup(ctx *featureprovider.FeatureContext) featureprovider.Feature {
-	return &Feature{
-		name: ProviderName,
-		ctx:  ctx,
-	}
+func initFeatureBackupInstance(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
+	var err error
+	once.Do(func() {
+		instance = &FeatureBackup{
+			name: ProviderName,
+			ctx:  ctx,
+		}
+		err = instance.init()
+	})
+	return instance, err
 }
 
-func (bak *Feature) Init() error {
+func (bak *FeatureBackup) init() error {
 	var err error
-	bak.once.Do(func() {
-		bak.backupSvr = &backup.Server{
-			Clientbuilder: bak.ctx.Clientbuilder,
-		}
-		err = bak.backupSvr.Init()
-	})
+	bak.backupSvr = &backup.Server{
+		Clientbuilder: bak.ctx.Clientbuilder,
+	}
+	err = bak.backupSvr.Init()
 	return err
 }
 
-func (bak *Feature) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
+func (bak *FeatureBackup) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
 	return bak.backupSvr.Equal(cluster)
 }
 
-func (bak *Feature) Sync(cluster *kstoneapiv1.EtcdCluster) error {
+func (bak *FeatureBackup) Sync(cluster *kstoneapiv1.EtcdCluster) error {
 	return bak.backupSvr.SyncEtcdBackup(cluster)
 }
 
-func (bak *Feature) Do(inspection *kstoneapiv1.EtcdInspection) error {
+func (bak *FeatureBackup) Do(inspection *kstoneapiv1.EtcdInspection) error {
 	return nil
 }
