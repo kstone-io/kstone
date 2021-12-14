@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/diff"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/dynamic"
 	clientset "k8s.io/client-go/kubernetes"
 	fake "k8s.io/client-go/kubernetes/fake"
 	restclient "k8s.io/client-go/rest"
@@ -57,6 +58,7 @@ const (
 type ClientBuilder interface {
 	ConfigOrDie() *restclient.Config
 	ClientOrDie() clientset.Interface
+	DynamicClientOrDie() dynamic.Interface
 }
 
 func NewSimpleClientBuilder(kubeconfig string) ClientBuilder {
@@ -87,6 +89,15 @@ func (s simpleClientBuilder) ClientOrDie() clientset.Interface {
 	return client
 }
 
+func (s simpleClientBuilder) DynamicClientOrDie() dynamic.Interface {
+	clientConfig := s.ConfigOrDie()
+	client, err := dynamic.NewForConfig(clientConfig)
+	if err != nil {
+		klog.Fatal(err)
+	}
+	return client
+}
+
 func NewFakeClientBuilder() ClientBuilder {
 	builder := &fakeClientBuilder{
 		client: fake.NewSimpleClientset([]runtime.Object{}...),
@@ -105,6 +116,11 @@ func (f fakeClientBuilder) ConfigOrDie() *restclient.Config {
 
 func (f fakeClientBuilder) ClientOrDie() clientset.Interface {
 	return f.client
+}
+
+func (f fakeClientBuilder) DynamicClientOrDie() dynamic.Interface {
+	// TODO: implement it and add controllers unit test
+	return nil
 }
 
 // CheckAction verifies that expected and actual actions are equal and both have

@@ -27,11 +27,11 @@ import (
 	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 )
 
-type EtcdFactory func(cluster *kstoneapiv1.EtcdCluster) (Cluster, error)
+type EtcdFactory func(cluster *ClusterContext) (Cluster, error)
 
 var (
-	mutex     sync.Mutex
-	providers = make(map[kstoneapiv1.EtcdClusterType]EtcdFactory)
+	mutex                sync.Mutex
+	EtcdClusterProviders = make(map[kstoneapiv1.EtcdClusterType]EtcdFactory)
 )
 
 // RegisterEtcdClusterFactory registers the specified cluster provider
@@ -39,26 +39,26 @@ func RegisterEtcdClusterFactory(name kstoneapiv1.EtcdClusterType, factory EtcdFa
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if _, found := providers[name]; found {
+	if _, found := EtcdClusterProviders[name]; found {
 		klog.V(2).Infof("etcdcluster provider %s was registered twice", name)
 	}
 
 	klog.V(2).Infof("register etcdCluster provider %s", name)
-	providers[name] = factory
+	EtcdClusterProviders[name] = factory
 }
 
 // GetEtcdClusterProvider gets the specified cluster provider
 func GetEtcdClusterProvider(
 	name kstoneapiv1.EtcdClusterType,
-	cluster *kstoneapiv1.EtcdCluster,
+	ctx *ClusterContext,
 ) (Cluster, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	f, found := providers[name]
+	f, found := EtcdClusterProviders[name]
 
 	klog.V(1).Infof("get provider name %s,status:%t", name, found)
 	if !found {
 		return nil, errors.New("fatal error,etcd cluster provider not found")
 	}
-	return f(cluster)
+	return f(ctx)
 }

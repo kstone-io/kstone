@@ -26,7 +26,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	klog "k8s.io/klog/v2"
 
-	"tkestack.io/kstone/pkg/clusterprovider"
 	"tkestack.io/kstone/pkg/controllers/etcdcluster"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/k8s"
@@ -71,12 +70,6 @@ func (c *EtcdClusterCommand) Run() error {
 	config, err := clientcmd.BuildConfigFromFlags(c.masterURL, c.kubeconfig)
 	if err != nil {
 		klog.Fatalf("Error to build kube config: %v", err)
-		return err
-	}
-
-	err = clusterprovider.Init(config)
-	if err != nil {
-		klog.Fatalf("Error to init cluster provider helper: %v", err)
 		return err
 	}
 

@@ -19,6 +19,8 @@
 package imported
 
 import (
+	"sync"
+
 	"go.etcd.io/etcd/client/pkg/v3/transport"
 	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/clusterprovider"
@@ -29,80 +31,90 @@ const (
 	AnnoImportedURI = "importedAddr"
 )
 
+var (
+	once     sync.Once
+	instance *EtcdClusterImported
+)
+
 // EtcdClusterImported is the etcd cluster imported from kstone-dashboard
 type EtcdClusterImported struct {
-	name    kstoneapiv1.EtcdClusterType
-	cluster *kstoneapiv1.EtcdCluster
+	name kstoneapiv1.EtcdClusterType
+	ctx  *clusterprovider.ClusterContext
 }
 
 // init registers an imported etcd cluster provider
 func init() {
 	clusterprovider.RegisterEtcdClusterFactory(
 		kstoneapiv1.EtcdClusterImported,
-		func(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
-			return NewEtcdClusterImported(cluster)
+		func(ctx *clusterprovider.ClusterContext) (clusterprovider.Cluster, error) {
+			return initEtcdClusterImportedInstance(ctx)
 		},
 	)
 }
 
-// NewEtcdClusterImported generates imported etcd provider
-func NewEtcdClusterImported(cluster *kstoneapiv1.EtcdCluster) (clusterprovider.Cluster, error) {
-	return &EtcdClusterImported{
-		name:    kstoneapiv1.EtcdClusterImported,
-		cluster: cluster,
-	}, nil
+func initEtcdClusterImportedInstance(ctx *clusterprovider.ClusterContext) (clusterprovider.Cluster, error) {
+	once.Do(func() {
+		instance = &EtcdClusterImported{
+			name: kstoneapiv1.EtcdClusterImported,
+			ctx: &clusterprovider.ClusterContext{
+				Clientbuilder: ctx.Clientbuilder,
+				Client:        ctx.Clientbuilder.DynamicClientOrDie(),
+			},
+		}
+	})
+	return instance, nil
 }
 
-func (c *EtcdClusterImported) BeforeCreate() error {
+func (c *EtcdClusterImported) BeforeCreate(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) Create() error {
+func (c *EtcdClusterImported) Create(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) AfterCreate() error {
+func (c *EtcdClusterImported) AfterCreate(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) BeforeUpdate() error {
+func (c *EtcdClusterImported) BeforeUpdate(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) Update() error {
+func (c *EtcdClusterImported) Update(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) AfterUpdate() error {
+func (c *EtcdClusterImported) AfterUpdate(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) BeforeDelete() error {
+func (c *EtcdClusterImported) BeforeDelete(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) Delete() error {
+func (c *EtcdClusterImported) Delete(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) AfterDelete() error {
+func (c *EtcdClusterImported) AfterDelete(etcdCluster *kstoneapiv1.EtcdCluster) error {
 	return nil
 }
 
-func (c *EtcdClusterImported) Equal() (bool, error) {
+func (c *EtcdClusterImported) Equal(etcdCluster *kstoneapiv1.EtcdCluster) (bool, error) {
 	return true, nil
 }
 
 // Status gets the imported etcd cluster status
-func (c *EtcdClusterImported) Status(tlsConfig *transport.TLSInfo) (kstoneapiv1.EtcdClusterStatus, error) {
-	status := c.cluster.Status
+func (c *EtcdClusterImported) Status(tlsConfig *transport.TLSInfo, etcdCluster *kstoneapiv1.EtcdCluster) (kstoneapiv1.EtcdClusterStatus, error) {
+	status := etcdCluster.Status
 
-	annotations := c.cluster.ObjectMeta.Annotations
+	annotations := etcdCluster.ObjectMeta.Annotations
 	if annotations == nil {
 		annotations = make(map[string]string)
 	}
 
-	endpoints := clusterprovider.GetStorageMemberEndpoints(c.cluster)
+	endpoints := clusterprovider.GetStorageMemberEndpoints(etcdCluster)
 
 	if len(endpoints) == 0 {
 		if addr, found := annotations[AnnoImportedURI]; found {
@@ -116,7 +128,7 @@ func (c *EtcdClusterImported) Status(tlsConfig *transport.TLSInfo) (kstoneapiv1.
 
 	members, err := clusterprovider.GetRuntimeEtcdMembers(
 		endpoints,
-		c.cluster.Annotations[util.ClusterExtensionClientURL],
+		etcdCluster.Annotations[util.ClusterExtensionClientURL],
 		tlsConfig,
 	)
 	if err != nil && len(members) == 0 {
