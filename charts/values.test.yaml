@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 global:
-  env: production
+  env: test
 
 serviceAccount:
   # Specifies whether a service account should be created

@@ -5,12 +5,13 @@
 ## 1 Preparation
 
 - Prerequisites
-    - Kubernetes version is between 1.14 and 1.20.
-    - The version of Prometheus Operator is v0.49.0.
+  - Kubernetes version is between 1.14 and 1.20.
+  - The version of Prometheus Operator is v0.49.0.
 - Apply for a cluster from [TKE](https://cloud.tencent.com/product/tke).
 - Requirements：
-    - Worker >= 4 vCPU 8 GB of Memory.
-    - Can access the managed etcd.
+  - For production environment (recommended): Worker >= 4 vCPU 8 GB of Memory.
+  - For test environment (minimum): Worker >= 2 vCPU 2 GB of Memory.
+  - Can access the managed etcd.
 
 ## 2 Deploy
 
@@ -86,13 +87,25 @@ kube:
 
 ### 2.2 Install
 
-- Helm is
+- Create kstone namespace
+
 ``` shell
-cd charts
-
 kubectl create ns kstone
+```
+- Helm install for production environment
 
-helm install kstone . -n kstone
+```shell
+cd charts/
+helm install kstone . -n kstone -f values.yaml
+```
+
+or
+
+- Helm install for test environment
+
+```shell
+cd charts/
+helm install kstone . -n kstone -f values.test.yaml
 ```
 
 ### 2.3 Update
