@@ -27,7 +27,7 @@ import (
 	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 )
 
-type EtcdFactory func(cluster *kstoneapiv1.EtcdCluster) (Cluster, error)
+type EtcdFactory func(cluster *ClusterContext) (Cluster, error)
 
 var (
 	mutex     sync.Mutex
@@ -50,7 +50,7 @@ func RegisterEtcdClusterFactory(name kstoneapiv1.EtcdClusterType, factory EtcdFa
 // GetEtcdClusterProvider gets the specified cluster provider
 func GetEtcdClusterProvider(
 	name kstoneapiv1.EtcdClusterType,
-	cluster *kstoneapiv1.EtcdCluster,
+	ctx *ClusterContext,
 ) (Cluster, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -60,5 +60,5 @@ func GetEtcdClusterProvider(
 	if !found {
 		return nil, errors.New("fatal error,etcd cluster provider not found")
 	}
-	return f(cluster)
+	return f(ctx)
 }

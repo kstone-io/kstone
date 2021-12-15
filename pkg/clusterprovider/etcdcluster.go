@@ -20,35 +20,44 @@ package clusterprovider
 
 import (
 	"go.etcd.io/etcd/client/pkg/v3/transport"
+	"k8s.io/client-go/dynamic"
+
 	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	"tkestack.io/kstone/pkg/controllers/util"
 )
 
 // Cluster is an abstract, pluggable interface for etcd clusters.
 type Cluster interface {
+
 	// BeforeCreate does some things before creating the cluster
-	BeforeCreate() error
+	BeforeCreate(cluster *kstoneapiv1.EtcdCluster) error
 	// Create creates the cluster
-	Create() error
+	Create(cluster *kstoneapiv1.EtcdCluster) error
 	// AfterCreate does some things after creating the cluster
-	AfterCreate() error
+	AfterCreate(cluster *kstoneapiv1.EtcdCluster) error
 
 	// BeforeUpdate does some things before updating the cluster
-	BeforeUpdate() error
+	BeforeUpdate(cluster *kstoneapiv1.EtcdCluster) error
 	// Update updates the cluster
-	Update() error
+	Update(cluster *kstoneapiv1.EtcdCluster) error
 	// AfterUpdate does some things after updating the cluster
-	AfterUpdate() error
+	AfterUpdate(cluster *kstoneapiv1.EtcdCluster) error
 
 	// BeforeDelete does some things before deleting the cluster
-	BeforeDelete() error
+	BeforeDelete(cluster *kstoneapiv1.EtcdCluster) error
 	// Delete deletes the cluster
-	Delete() error
+	Delete(cluster *kstoneapiv1.EtcdCluster) error
 	// AfterDelete does some things after deleting the cluster
-	AfterDelete() error
+	AfterDelete(cluster *kstoneapiv1.EtcdCluster) error
 
 	// Equal checks whether the cluster needs to be updated
-	Equal() (bool, error)
+	Equal(cluster *kstoneapiv1.EtcdCluster) (bool, error)
 
 	// Status gets the cluster status
-	Status(tlsConfig *transport.TLSInfo) (kstoneapiv1.EtcdClusterStatus, error)
+	Status(tlsConfig *transport.TLSInfo, cluster *kstoneapiv1.EtcdCluster) (kstoneapiv1.EtcdClusterStatus, error)
+}
+
+type ClusterContext struct {
+	Clientbuilder util.ClientBuilder
+	Client        dynamic.Interface
 }
