@@ -18,7 +18,7 @@ ingress:
   enabled: true
   className: ""
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+#    nginx.ingress.kubernetes.io/rewrite-target: /$2
     service.cloud.tencent.com/direct-access: 'false'
     kubernetes.io/ingress.class: qcloud
 #    # lb info
