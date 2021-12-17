@@ -82,10 +82,10 @@ make
 
 如果您有任何疑问或需要支持，请随时与我们联系：
 - [Slack](https://join.slack.com/t/w1639233173-qqx590963/shared_invite/zt-109muo6i9-0kTUQphSVFlwOSW7CgtrGw)
-- 微信群
+- 微信群（添加kstone小助手微信，回复“kstone”入群）
 
 <div align="center">
-  <img src="docs/images/wechat-group.png" width=20% title="Kstone WeChat group">
+  <img src="docs/images/kstone_assistant.jpg" width=20% title="Kstone WeChat group">
 </div>
 
 ## 社区
