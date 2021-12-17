@@ -4,100 +4,25 @@
 
 ## 1 资源准备
 
-- 申请 [TKE](https://cloud.tencent.com/product/tke) 集群。
+- 前置条件
+  - Kubernetes集群版本在1.14和1.20之间。
+  - Prometheus-Operator版本为v0.49.0。
+- 申请 [TKE](https://cloud.tencent.com/product/tke) 集群或搭建 [minikube](https://minikube.sigs.k8s.io/docs/start/) 集群。
+  - Kstone 支持部署在多云或原生 K8s 集群中
+  - 只需要安装并配置相对应的 Ingress 转发规则即可
 - 环境要求：
-  - Worker 4C8G以上配置。
+  - 生产环境配置要求（推荐）：Worker 4C8G以上配置。
+  - 体验环境配置要求（最低）：Worker 2C2G以上配置。
   - 可访问待管理的目标etcd。
+- 安全提示：
+  - kstone-dashboard当前版本尚未支持鉴权，请注意数据安全，尽量不要将其暴露在公网中。
 
-## 2 部署
+## 2 在 TKE 集群安装 Kstone
 
-### 2.1 修改Helm配置
+[Kstone installation on TKE](../docs/installation/tke.md)
 
-#### 步骤一：
+## 3 在 Minikube 集群安装 Kstone
 
-- 下载Helm Repo：
+[Kstone installation on Minikube(Mac OS X)](../docs/installation/minikube-macos.md)
 
-``` shell
-git clone git@github.com:tkestack/kstone.git
-cd ./charts
-```
-
-- 修改配置：
-
-``` yaml 
-// kstone-charts/values.yaml
-
-ingress:
-  enabled: true
-  className: ""
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    service.cloud.tencent.com/direct-access: 'false'
-    kubernetes.io/ingress.class: qcloud
-    service.kubernetes.io/tke-existed-lbid: $lb
-    kubernetes.io/ingress.existLbId: $lb
-    kubernetes.io/ingress.subnetId: $subnet
-```
-
-方式一 使用现有LB
-
-参考上述配置，填入TKE集群同VPC下的$lb和$subnet。
-
-方式二 不使用现有LB
-
-删除以下配置：
-
-- ingress.annotations.service.kubernetes.io/tke-existed-lbid
-- kubernetes.io/ingress.existLbId
-- kubernetes.io/ingress.subnetId
-
-#### 步骤二：
-
-- 填入运行集群的TOKEN。
-
-``` yaml
-// kstone-charts/charts/dashboard-api/values.yaml
-
-kube:
-  token: $token
-  target: kubernetes.default.svc.cluster.local:443
-```
-
-- 要求：
-  - $token为即将部署的TKE集群的访问凭证TOKEN。
-  - $token需要具备访问集群范围所有资源的权限。
-
-### 2.2 安装
-
-``` shell
-cd kstone-charts
-
-kubectl create ns kstone
-
-helm install kstone . -n kstone
-```
-
-### 2.3 更新
-
-``` shell
-cd kstone-charts
-
-helm upgrade kstone . -n kstone
-```
-
-### 2.4 卸载
-
-``` shell
-helm uninstall kstone -n kstone
-
-kubectl delete crd alertmanagerconfigs.monitoring.coreos.com
-kubectl delete crd alertmanagers.monitoring.coreos.com
-kubectl delete crd podmonitors.monitoring.coreos.com
-kubectl delete crd probes.monitoring.coreos.com
-kubectl delete crd prometheuses.monitoring.coreos.com
-kubectl delete crd prometheusrules.monitoring.coreos.com
-kubectl delete crd servicemonitors.monitoring.coreos.com
-kubectl delete crd thanosrulers.monitoring.coreos.com
-kubectl delete crd etcdclusters.kstone.tkestack.io
-kubectl delete crd etcdinspections.kstone.tkestack.io
-```
+[Kstone installation on Minikube(Linux amd64)](../docs/installation/minikube-amd64.md)

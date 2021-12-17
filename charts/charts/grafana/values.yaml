@@ -34,13 +34,21 @@ service:
   type: NodePort
   port: 80
 
-resources:
+prodResources:
   limits:
-    cpu: 4
-    memory: 8G
-  requests:
     cpu: 2
     memory: 4G
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+testResources:
+  limits:
+    cpu: 1
+    memory: 2G
+  requests:
+    cpu: 100m
+    memory: 50Mi
 
 nodeSelector: {}
 

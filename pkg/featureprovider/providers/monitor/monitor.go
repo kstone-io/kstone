@@ -26,9 +26,13 @@ import (
 	"tkestack.io/kstone/pkg/monitor"
 )
 
+var (
+	once     sync.Once
+	instance *FeaturePrometheus
+)
+
 type FeaturePrometheus struct {
 	name string
-	once sync.Once
 	prom *monitor.PrometheusMonitor
 	ctx  *featureprovider.FeatureContext
 }
@@ -41,26 +45,29 @@ func init() {
 	featureprovider.RegisterFeatureFactory(
 		ProviderName,
 		func(cfg *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-			return NewEtcdOpsPrometheus(cfg)
+			return initFeaturePrometheusInstance(cfg)
 		},
 	)
 }
 
-func NewEtcdOpsPrometheus(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-	return &FeaturePrometheus{
-		name: ProviderName,
-		ctx:  ctx,
-	}, nil
+func initFeaturePrometheusInstance(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
+	var err error
+	once.Do(func() {
+		instance = &FeaturePrometheus{
+			name: ProviderName,
+			ctx:  ctx,
+		}
+		err = instance.init()
+	})
+	return instance, err
 }
 
-func (p *FeaturePrometheus) Init() error {
+func (p *FeaturePrometheus) init() error {
 	var err error
-	p.once.Do(func() {
-		p.prom = &monitor.PrometheusMonitor{
-			ClientBuilder: p.ctx.Clientbuilder,
-		}
-		err = p.prom.Init()
-	})
+	p.prom = &monitor.PrometheusMonitor{
+		ClientBuilder: p.ctx.Clientbuilder,
+	}
+	err = p.prom.Init()
 	return err
 }
 

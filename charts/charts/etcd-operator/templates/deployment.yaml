@@ -50,7 +50,11 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- if eq .Values.global.env "production" }}
+            {{- toYaml .Values.prodResources | nindent 12 }}
+            {{- else }}
+            {{- toYaml .Values.testResources | nindent 12 }}
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

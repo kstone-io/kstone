@@ -14,7 +14,7 @@ Kstone 将帮助你高效管理etcd集群，显著降低运维成本、及时发
 
 ## 特性
 
-Kstone 是一个 [etcd](https://github.com/etcd-io/etcd) 的治理平台，它有以下特点. 
+Kstone 是一个 [etcd](https://github.com/etcd-io/etcd) 的治理平台，它有以下特点：
 
 * 轻量，安装方便
 * 支持导入已有集群、创建新etcd集群
@@ -26,7 +26,12 @@ Kstone 是一个 [etcd](https://github.com/etcd-io/etcd) 的治理平台，它�
 
 ## 核心架构
 
-Kstone 由5个组件组成：kstone-etcdcluster-controller,kstone-etcd-operator,kstone-etcdinspection-controller,kstone-api, kstone-dashboard.
+Kstone 由5个组件组成：
+- kstone-etcdcluster-controller
+- kstone-etcdinspection-controller
+- kstone-etcd-operator
+- kstone-api
+- kstone-dashboard
 
 ![Architecture Of Kstone](docs/images/kstone-arch.png)
 
@@ -35,30 +40,31 @@ Kstone 由5个组件组成：kstone-etcdcluster-controller,kstone-etcd-operator,
 ### kstone-etcdcluster-controller
 
 * 关联已有集群，如已有的kubernetes集群etcd 
-* 根据EtcdCluster资源所描述的集群元信息，调用ClusterProvider,创建、更新、删除etcd集群
+* 根据EtcdCluster资源所描述的集群元信息，调用ClusterProvider创建、更新、删除etcd集群
 * 根据EtcdCluster资源所描述的特性开关，开启或关闭监控、备份、巡检等特性(创建EtcdInspection资源)
 
 ### kstone-etcdinspection-controller
 
 * 实时监听EtcdInspection资源，调用后端FeatureProvider执行巡检
 
-### kstone-api
-
-* 提供了一系列etcd集群管理的api给web前端使用
-
-## [kstone-dashboard](https://github.com/tkestack/kstone-dashboard)
-
-Kstone 提供的WEB管理系统如下:
-
-![kstone-ui](docs/images/kstone-ui.png)
-
 ### [kstone-etcd-operator](https://github.com/tkestack/kstone-etcd-operator)
 
 kstone-etcd-operator提供丰富的集群管理能力(此组件也即将开源)。
 
+### kstone-api
+
+* 提供了一系列etcd集群管理的api给web前端使用
+
+### [kstone-dashboard](https://github.com/tkestack/kstone-dashboard)
+
+Kstone 提供的WEB管理系统如下：
+
+![kstone-ui](docs/images/kstone-ui.png)
+
+
 ## 安装
 
-请阅读[部署文档](charts/README_CN.md),
+请阅读[部署文档](charts/README_CN.md)，
 你可通过Helm快速安装Kstone。
 
 ## 开发
@@ -72,9 +78,19 @@ cd kstone
 make
 ```
 
+## 联系方式
+
+如果您有任何疑问或需要支持，请随时与我们联系：
+- [Slack](https://join.slack.com/t/w1639233173-qqx590963/shared_invite/zt-109muo6i9-0kTUQphSVFlwOSW7CgtrGw)
+- 微信群
+
+<div align="center">
+  <img src="docs/images/wechat-group.png" width=20% title="Kstone WeChat group">
+</div>
+
 ## 社区
 
-欢迎大家提交issue和pull request来一起完善、提升Kstone.
+欢迎大家提交issue和pull request来一起完善、提升Kstone。
 
 ## License
 

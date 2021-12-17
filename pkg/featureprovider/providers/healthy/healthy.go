@@ -26,10 +26,14 @@ import (
 	"tkestack.io/kstone/pkg/inspection"
 )
 
+var (
+	once     sync.Once
+	instance *FeatureHealthy
+)
+
 type FeatureHealthy struct {
 	name       string
 	inspection *inspection.Server
-	once       sync.Once
 	ctx        *featureprovider.FeatureContext
 }
 
@@ -41,26 +45,29 @@ func init() {
 	featureprovider.RegisterFeatureFactory(
 		ProviderName,
 		func(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-			return NewFeatureHealty(ctx)
+			return initFeatureHealthyInstance(ctx)
 		},
 	)
 }
 
-func NewFeatureHealty(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-	return &FeatureHealthy{
-		name: ProviderName,
-		ctx:  ctx,
-	}, nil
+func initFeatureHealthyInstance(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
+	var err error
+	once.Do(func() {
+		instance = &FeatureHealthy{
+			name: ProviderName,
+			ctx:  ctx,
+		}
+		err = instance.init()
+	})
+	return instance, err
 }
 
-func (c *FeatureHealthy) Init() error {
+func (c *FeatureHealthy) init() error {
 	var err error
-	c.once.Do(func() {
-		c.inspection = &inspection.Server{
-			Clientbuilder: c.ctx.Clientbuilder,
-		}
-		err = c.inspection.Init()
-	})
+	c.inspection = &inspection.Server{
+		Clientbuilder: c.ctx.Clientbuilder,
+	}
+	err = c.inspection.Init()
 	return err
 }
 

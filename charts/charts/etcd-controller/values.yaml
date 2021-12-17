@@ -8,7 +8,7 @@ image:
   repository: tkestack/kstone-controller-amd64
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v0.0.1-alpha.1"
+  tag: "v0.0.1-alpha.2"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -27,13 +27,21 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-resources:
+prodResources:
   limits:
-    cpu: 4
-    memory: 8G
-  requests:
     cpu: 2
     memory: 4G
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+testResources:
+  limits:
+    cpu: 1
+    memory: 2G
+  requests:
+    cpu: 100m
+    memory: 50Mi
 
 nodeSelector: {}
 
