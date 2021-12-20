@@ -33,6 +33,10 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - etcd-backup-operator
+          args:
+            - --etcd-client-cert-file=client.pem
+            - --etcd-client-key-file=client-key.pem
+            - --etcd-client-ca-file=ca.pem
           env:
             - name: MY_POD_NAMESPACE
               valueFrom:
