@@ -67,6 +67,10 @@ Kstone 提供的WEB管理系统如下：
 请阅读[部署文档](charts/README_CN.md)，
 你可通过Helm快速安装Kstone。
 
+## 文档
+
+更多文档信息，请阅读[文档](docs) 
+
 ## 开发
 
 ### 构建
