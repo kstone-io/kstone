@@ -67,11 +67,12 @@ make
 
 For any question or support, feel free to contact us via:
 - Join [#Kstone Slack channel](https://join.slack.com/t/w1639233173-qqx590963/shared_invite/zt-109muo6i9-0kTUQphSVFlwOSW7CgtrGw)
-- Join WeChat Group Discussion
+- Join WeChat Group Discussion (Join the group by adding kstone assistant WeChat and reply "kstone")
 
 <div align="center">
-  <img src="docs/images/wechat-group.png" width=20% title="Kstone WeChat group">
+  <img src="docs/images/kstone_assistant.jpg" width=20% title="Kstone_assistant WeChat">
 </div>
+
 
 ## Community
 
