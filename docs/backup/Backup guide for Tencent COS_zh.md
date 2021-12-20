@@ -13,7 +13,7 @@
 
 ### 步骤1: 打开 kstone-dashboard UI 然后点击 "关联集群":
 
-![image-20211220173803261](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220173803261.png)
+![kstone-associate](..\images\images_for_backup_cos\kstone-associate.png)
 
 ### 步骤 2: 关联etcd集群到kstone:
 
@@ -21,10 +21,9 @@
 
 填好下面的内容然后 "提交"
 
-![image-20211220174133300](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220174133300.png)
+![kstone-associate](..\images\images_for_backup_cos\kstone-associate2.png)
 
-![image-20211220180202214](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220180202214.png)
-
+![kstone-associate](..\images\images_for_backup_cos\kstone-associate3.png)
 集群名称: etcd集群的名称，唯一键
 
 集群备注: 集群的备注名称
@@ -55,7 +54,7 @@ CA证书: etcd集群的CA证书
 
 ### 步骤 3: 开启备份功能
 
-![image-20211220180651354](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220180651354.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup.png)
 
 现在我们有了一个状态正常的etcd集群, 让我们来开启备份功能.
 
@@ -97,21 +96,16 @@ CA证书: etcd集群的CA证书
     然后你想要你的备份文件的前缀是my-first-cluster, 你需要像下面一样填好path:
 
     #### etcd-bakcup-XXXXXXX.cos.ap-guangzhou.myqcloud.com/my-first-cluster
-    
-    
-  
-  ![image-20211220182218324](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220182218324.png)
 
 
 
-![image-20211220182246325](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220182246325.png)
-
-![image-20211220183506017](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220183506017.png)
-
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup2.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup3.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup4.png)
 
 
 + 等待BackupIntervalInSecond秒然后检查 COS bucket
 
-  ![image-20211220184047124](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220184047124.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup5.png)
 
 你会发现一个带有之前指定前缀的etcd备份文件

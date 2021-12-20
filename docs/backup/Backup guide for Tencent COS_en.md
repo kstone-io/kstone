@@ -13,7 +13,7 @@
 
 ### Step 1: Access kstone-dashboard UI and Click "关联集群":
 
-![image-20211220173803261](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220173803261.png)
+![kstone-associate](..\images\images_for_backup_cos\kstone-associate.png)
 
 ### Step 2: Associate etcd cluster with kstone:
 
@@ -21,9 +21,9 @@ in this document we will use kubeadm managed etcd cluster
 
 fill the content and click "提交"
 
-![image-20211220174133300](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220174133300.png)
+![kstone-associate](..\images\images_for_backup_cos\kstone-associate2.png)
 
-![image-20211220180202214](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220180202214.png)
+![kstone-associate](..\images\images_for_backup_cos\kstone-associate3.png)
 
 集群名称: etcd cluster name，uniqueKey
 
@@ -55,7 +55,7 @@ CA证书: the ca certificate of etcd cluster
 
 ### Step3: Enable BACKUP feature
 
-![image-20211220180651354](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220180651354.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup.png)
 
 now we have a working etcd cluster, it's time for us to enable the backup feature.
 
@@ -96,20 +96,15 @@ now we have a working etcd cluster, it's time for us to enable the backup featur
 
     #### etcd-bakcup-XXXXXXX.cos.ap-guangzhou.myqcloud.com/my-first-cluster
 
-    
-
-  ![image-20211220182218324](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220182218324.png)
 
 
-
-![image-20211220182246325](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220182246325.png)
-
-![image-20211220183506017](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220183506017.png)
-
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup2.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup3.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup4.png)
 
 
 + wait BackupIntervalInSecond  and check the COS bucket
 
-  ![image-20211220184047124](C:\Users\maudlin\AppData\Roaming\Typora\typora-user-images\image-20211220184047124.png)
+![kstone-enable-backup](..\images\images_for_backup_cos\kstone-enable-backup5.png)
 
 You will find an etcd backup file with the prefix you specified in the previous step.
