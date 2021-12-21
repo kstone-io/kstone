@@ -46,10 +46,15 @@ The web management system provided by kstone is as follows:
 
 ![kstone-ui](docs/images/kstone-ui.png)
 
+
 ## Installation
 
 Please read [the detailed installation document](charts),
 You can quickly install kstone through helm.
+
+## Documentation
+
+Please refer to [document page](docs) for more information.
 
 ## Developing
 
