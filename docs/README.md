@@ -1,5 +1,7 @@
 # Documentation
 
+[中文](README_CN.md)
+
 In this page You can find kstone documentation.
 
 ## Installation

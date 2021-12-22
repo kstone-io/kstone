@@ -26,3 +26,7 @@
 [Kstone installation on Minikube(Mac OS X)](../docs/installation/minikube-macos.md)
 
 [Kstone installation on Minikube(Linux amd64)](../docs/installation/minikube-amd64.md)
+
+## 4 在 kubeadm 集群安装 Kstone
+
+[Kstone installation on the cluster created by kubeadm](../docs/installation/kubeadm_en.md)
