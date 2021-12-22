@@ -21,31 +21,14 @@ package inspection
 import (
 	"k8s.io/klog/v2"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/etcd"
 	"tkestack.io/kstone/pkg/inspection/metrics"
 )
 
-// AddHealthyTask adds health check tasks.
-func (c *Server) AddHealthyTask(cluster *kstoneapiv1.EtcdCluster, cruiseType string) error {
-	task, err := c.initInspectionTask(cluster, cruiseType)
-	if err != nil {
-		return err
-	}
-
-	klog.Info(task)
-
-	_, err = c.CreateEtcdInspection(task)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // CollectMemberHealthy collects the health of etcd, and
 // transfer them to prometheus metrics
-func (c *Server) CollectMemberHealthy(inspection *kstoneapiv1.EtcdInspection) error {
+func (c *Server) CollectMemberHealthy(inspection *kstonev1alpha1.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	if err != nil {

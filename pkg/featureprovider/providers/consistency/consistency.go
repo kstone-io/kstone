@@ -21,13 +21,13 @@ package consistency
 import (
 	"sync"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/inspection"
 )
 
 const (
-	ProviderName = string(kstoneapiv1.KStoneFeatureConsistency)
+	ProviderName = string(kstonev1alpha1.KStoneFeatureConsistency)
 )
 
 var (
@@ -71,14 +71,14 @@ func (c *FeatureConsistency) init() error {
 	return err
 }
 
-func (c *FeatureConsistency) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
-	return c.inspection.IsNotFound(cluster, ProviderName)
+func (c *FeatureConsistency) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureConsistency)
 }
 
-func (c *FeatureConsistency) Sync(cluster *kstoneapiv1.EtcdCluster) error {
-	return c.inspection.AddConsistencyTask(cluster, ProviderName)
+func (c *FeatureConsistency) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureConsistency)
 }
 
-func (c *FeatureConsistency) Do(inspection *kstoneapiv1.EtcdInspection) error {
+func (c *FeatureConsistency) Do(inspection *kstonev1alpha1.EtcdInspection) error {
 	return c.inspection.CollectMemberConsistency(inspection)
 }

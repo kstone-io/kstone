@@ -21,8 +21,9 @@ package monitor
 import (
 	"sync"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/featureprovider"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/monitor"
 )
 
@@ -38,7 +39,7 @@ type FeaturePrometheus struct {
 }
 
 const (
-	ProviderName = string(kstoneapiv1.KStoneFeatureMonitor)
+	ProviderName = string(kstonev1alpha1.KStoneFeatureMonitor)
 )
 
 func init() {
@@ -71,17 +72,23 @@ func (p *FeaturePrometheus) init() error {
 	return err
 }
 
-func (p *FeaturePrometheus) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
-	if len(cluster.Status.Members) == 0 {
-		return false
+func (p *FeaturePrometheus) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureMonitor) {
+		if cluster.Status.FeatureGatesStatus[kstonev1alpha1.KStoneFeatureMonitor] != featureutil.FeatureStatusDisabled {
+			return p.prom.CheckEqualIfDisabled(cluster)
+		}
+		return true
 	}
-	return p.prom.Equal(cluster)
+	return p.prom.CheckEqualIfEnabled(cluster)
 }
 
-func (p *FeaturePrometheus) Sync(cluster *kstoneapiv1.EtcdCluster) error {
+func (p *FeaturePrometheus) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
+	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureMonitor) {
+		return p.prom.CleanPrometheusMonitor(cluster)
+	}
 	return p.prom.SyncPrometheusMonitor(cluster)
 }
 
-func (p *FeaturePrometheus) Do(inspection *kstoneapiv1.EtcdInspection) error {
+func (p *FeaturePrometheus) Do(inspection *kstonev1alpha1.EtcdInspection) error {
 	return nil
 }

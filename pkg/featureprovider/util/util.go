@@ -16,23 +16,34 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package featureprovider
+package util
 
 import (
-	"tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
-	"tkestack.io/kstone/pkg/controllers/util"
+	"strconv"
+	"strings"
+
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 )
 
-type Feature interface {
-	// Equal checks whether the feature needs to be updated
-	Equal(cluster *v1alpha1.EtcdCluster) bool
+const (
+	FeatureStatusEnabled  = "enabled"
+	FeatureStatusDisabled = "disabled"
+)
 
-	// Sync synchronizes the latest feature configuration
-	Sync(cluster *v1alpha1.EtcdCluster) error
+func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha1.KStoneFeature) bool {
+	if gates, found := annotations[kstonev1alpha1.KStoneFeatureAnno]; found && gates != "" {
+		featurelist := strings.Split(gates, ",")
+		for _, item := range featurelist {
+			features := strings.Split(item, "=")
+			if len(features) != 2 {
+				continue
+			}
 
-	// Do executes inspection tasks.
-	Do(task *v1alpha1.EtcdInspection) error
-}
-type FeatureContext struct {
-	Clientbuilder util.ClientBuilder
+			enabled, _ := strconv.ParseBool(features[1])
+			if kstonev1alpha1.KStoneFeature(features[0]) == name && enabled {
+				return true
+			}
+		}
+	}
+	return false
 }
