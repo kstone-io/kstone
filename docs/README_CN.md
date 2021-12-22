@@ -1,5 +1,7 @@
 # 文档
 
+[English](README.md)
+
 你可以在本页面找到 kstone 相关文档
 
 ## 安装部署
