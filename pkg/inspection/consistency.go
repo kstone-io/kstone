@@ -29,13 +29,13 @@ import (
 	"go.etcd.io/etcd/client/pkg/v3/transport"
 	"k8s.io/klog/v2"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/etcd"
 	"tkestack.io/kstone/pkg/inspection/metrics"
 )
 
 const (
-	CruiseConsistencyAnno = "cruiseConsistency"
+	inspectionConsistencyAnno = "consistency"
 )
 
 type ConsistencyInfo struct {
@@ -43,38 +43,9 @@ type ConsistencyInfo struct {
 	Interval int    `json:"interval,omitempty"`
 }
 
-// AddConsistencyTask adds consistency inspection task
-func (c *Server) AddConsistencyTask(cluster *kstoneapiv1.EtcdCluster, cruiseType string) error {
-	task, err := c.initInspectionTask(cluster, cruiseType)
-	if err != nil {
-		return err
-	}
-
-	annotations := cluster.ObjectMeta.Annotations
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-
-	if _, found := annotations[CruiseConsistencyAnno]; found {
-		taskAnno := task.ObjectMeta.Annotations
-		if taskAnno == nil {
-			taskAnno = make(map[string]string)
-			taskAnno[CruiseConsistencyAnno] = annotations[CruiseConsistencyAnno]
-			task.ObjectMeta.Annotations = taskAnno
-		}
-	}
-
-	_, err = c.CreateEtcdInspection(task)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // getEtcdNodeKeyDiff checks the diff of node data
 func (c *Server) getEtcdNodeKeyDiff(
-	cluster *kstoneapiv1.EtcdCluster,
+	cluster *kstonev1alpha1.EtcdCluster,
 	keyPrefix string,
 	tls *transport.TLSInfo,
 ) (chan uint64, chan error) {
@@ -90,7 +61,7 @@ func (c *Server) getEtcdNodeKeyDiff(
 	}()
 	go func() {
 		for _, member := range cluster.Status.Members {
-			go func(member kstoneapiv1.MemberStatus) {
+			go func(member kstonev1alpha1.MemberStatus) {
 				defer wg.Done()
 				ca, cert, key := "", "", ""
 				if tls != nil {
@@ -138,7 +109,7 @@ func (c *Server) getEtcdNodeKeyDiff(
 
 // CollectMemberConsistency collects the consistency info, and
 // transfer them to prometheus metrics
-func (c *Server) CollectMemberConsistency(inspection *kstoneapiv1.EtcdInspection) error {
+func (c *Server) CollectMemberConsistency(inspection *kstonev1alpha1.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	if err != nil {
@@ -149,7 +120,7 @@ func (c *Server) CollectMemberConsistency(inspection *kstoneapiv1.EtcdInspection
 	path := DefaultInspectionPath
 	annotations := inspection.ObjectMeta.Annotations
 	if annotations != nil {
-		if info, found := annotations[CruiseConsistencyAnno]; found {
+		if info, found := annotations[inspectionConsistencyAnno]; found {
 			consistencyInfo := &ConsistencyInfo{}
 			err = json.Unmarshal([]byte(info), consistencyInfo)
 			if err != nil {
