@@ -100,6 +100,11 @@ lint:
 test:
 	@$(MAKE) go.test
 
+## e2e: Run e2e test.
+.PHONY: e2e
+e2e:
+	@$(MAKE) go.e2e
+
 ## release-test: test release
 .PHONY: release-test
 release-test:

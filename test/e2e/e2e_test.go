@@ -68,11 +68,14 @@ func TestE2E(t *testing.T) {
 
 var _ = ginkgo.BeforeSuite(func() {
 	// KUBECONFIG=/Users/etcd/.kube/config
-	kubeconfig = os.Getenv("KUBECONFIG")
+	workspace := os.Getenv("GITHUB_WORKSPACE")
+	gomega.Expect(workspace).ShouldNot(gomega.BeEmpty())
+
+	kubeconfig = workspace + "/" + os.Getenv("E2E_KUBECONFIG_PATH")
 	gomega.Expect(kubeconfig).ShouldNot(gomega.BeEmpty())
 
 	// FIXTURESDIR=/Users/etcd/go/src/tkestack.io/kstone/test/fixtures/manifests
-	fixturesDir = os.Getenv("FIXTURESDIR")
+	fixturesDir = workspace + "/" + os.Getenv("FIXTURES_DIR")
 	gomega.Expect(fixturesDir).ShouldNot(gomega.BeEmpty())
 
 	var err error

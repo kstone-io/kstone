@@ -98,3 +98,8 @@ endif
 go.test: go.test.verify
 	@echo "===========> Run unit test"
 	$(GO) test -count=1 -timeout=10m -short -v `go list ./...|grep -v tkestack.io/kstone/test` 2>&1 | tee >(go-junit-report --set-exit-code >$(OUTPUT_DIR)/report.xml)
+
+.PHONY: go.e2e
+go.e2e:
+	@echo "===========> Run e2e test"
+	$(GO) test -v tkestack.io/kstone/test/e2e/...
