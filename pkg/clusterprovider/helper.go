@@ -30,6 +30,11 @@ import (
 	"tkestack.io/kstone/pkg/etcd"
 )
 
+type EtcdAlarm struct {
+	MemberID  uint64
+	AlarmType string
+}
+
 // GetStorageMemberEndpoints get member of cluster status
 func GetStorageMemberEndpoints(cluster *kstonev1alpha1.EtcdCluster) []string {
 	members := cluster.Status.Members
@@ -181,4 +186,37 @@ func GetEtcdClusterMemberStatus(
 	}
 
 	return newMembers, clusterStatus
+}
+
+// GetEtcdAlarms get alarm list of etcd
+func GetEtcdAlarms(
+	endpoints []string,
+	tls *transport.TLSInfo) ([]EtcdAlarm, error) {
+	etcdAlarms := make([]EtcdAlarm, 0)
+
+	ca, cert, key := "", "", ""
+	if tls != nil {
+		ca, cert, key = tls.TrustedCAFile, tls.CertFile, tls.KeyFile
+	}
+
+	client, err := etcd.NewClientv3(ca, cert, key, endpoints)
+	if err != nil {
+		klog.Errorf("failed to get new etcd clientv3, err is %v ", err)
+		return etcdAlarms, err
+	}
+	defer client.Close()
+
+	alarmRsp, err := etcd.AlarmList(client)
+	if err != nil {
+		klog.Errorf("failed to get alarm list, err is %v", err)
+		return etcdAlarms, err
+	}
+
+	for _, a := range alarmRsp.Alarms {
+		etcdAlarms = append(etcdAlarms, EtcdAlarm{
+			MemberID:  a.MemberID,
+			AlarmType: a.Alarm.String(),
+		})
+	}
+	return etcdAlarms, nil
 }
