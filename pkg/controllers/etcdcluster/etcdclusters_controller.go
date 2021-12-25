@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -46,6 +45,7 @@ import (
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
 	"tkestack.io/kstone/pkg/featureprovider"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	// register feature provider
 	_ "tkestack.io/kstone/pkg/featureprovider/providers"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
@@ -282,22 +282,8 @@ func (c *ClusterController) handleClusterManagement(cluster *kstonev1alpha1.Etcd
 	return cluster, nil
 }
 
-func (c *ClusterController) enabledFeatureGate(annotations map[string]string, feature string) bool {
-	if gates, found := annotations[kstonev1alpha1.KStoneFeatureAnno]; found && gates != "" {
-		features := strings.Split(gates, ",")
-		for _, f := range features {
-			ff := strings.Split(f, "=")
-			if len(ff) != 2 {
-				continue
-			}
-
-			g, _ := strconv.ParseBool(ff[1])
-			if ff[0] == feature && g {
-				return true
-			}
-		}
-	}
-	return false
+func (c *ClusterController) enabledFeatureGate(annotations map[string]string, name kstonev1alpha1.KStoneFeature) bool {
+	return featureutil.IsFeatureGateEnabled(annotations, name)
 }
 
 // handleClusterLabels updates EtcdCluster Resource labels.
@@ -312,8 +298,8 @@ func (c *ClusterController) handleClusterLabels(
 	if labels == nil {
 		labels = make(map[string]string)
 	}
-	for opsName := range featureprovider.EtcdFeatureProviders {
-		labels[opsName] = strconv.FormatBool(c.enabledFeatureGate(annotations, opsName))
+	for featureName := range featureprovider.EtcdFeatureProviders {
+		labels[featureName] = strconv.FormatBool(c.enabledFeatureGate(annotations, kstonev1alpha1.KStoneFeature(featureName)))
 	}
 
 	labels["clusterType"] = string(cluster.Spec.ClusterType)
@@ -342,35 +328,29 @@ func (c *ClusterController) handleClusterFeature(cluster *kstonev1alpha1.EtcdClu
 	if cluster.Status.FeatureGatesStatus == nil {
 		cluster.Status.FeatureGatesStatus = make(map[kstonev1alpha1.KStoneFeature]string)
 	}
-
 	for name := range featureprovider.EtcdFeatureProviders {
-		if !c.enabledFeatureGate(annotations, name) {
-			klog.V(4).Infof("feature %s is disabled,skip it,cluster is %s", name, cluster.Name)
-			continue
-		}
-
+		featureName := kstonev1alpha1.KStoneFeature(name)
 		feature, err := c.GetFeatureProvider(name)
 		if err != nil {
-			klog.Errorf("failed to get feature %s provider, err is %v", name, err)
+			klog.Errorf("failed to get feature %s provider,err is %v", name, err)
 			continue
 		}
-
-		if !feature.Equal(cluster) {
+		if feature.Equal(cluster) {
 			klog.V(4).Infof("skip feature %s,no changed, cluster is %s", name, cluster.Name)
 			continue
 		}
-		featureName := kstonev1alpha1.KStoneFeature(name)
-
 		err = feature.Sync(cluster)
 		if err != nil {
-			klog.Errorf("failed to enable %s feature, err is %v, cluster is %s", name, err, cluster.Name)
-			cluster.Status.FeatureGatesStatus[featureName] = fmt.Sprintf("failed to enable %s feature, err is %v", name, err)
+			klog.Errorf("failed to sync %s feature, err is %v, cluster is %s", name, err, cluster.Name)
+			cluster.Status.FeatureGatesStatus[featureName] = fmt.Sprintf("failed to sync %s feature, err is %v", name, err)
 			continue
 		}
-
-		cluster.Status.FeatureGatesStatus[featureName] = "done"
+		if c.enabledFeatureGate(annotations, featureName) {
+			cluster.Status.FeatureGatesStatus[featureName] = featureutil.FeatureStatusEnabled
+		} else {
+			cluster.Status.FeatureGatesStatus[featureName] = featureutil.FeatureStatusDisabled
+		}
 	}
-
 	return c.updateEtcdClusterStatus(cluster)
 }
 

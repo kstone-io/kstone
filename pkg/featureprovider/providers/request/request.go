@@ -21,13 +21,13 @@ package request
 import (
 	"sync"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/inspection"
 )
 
 const (
-	ProviderName = string(kstoneapiv1.KStoneFeatureRequest)
+	ProviderName = string(kstonev1alpha1.KStoneFeatureRequest)
 )
 
 var (
@@ -71,14 +71,14 @@ func (c *FeatureRequest) init() error {
 	return err
 }
 
-func (c *FeatureRequest) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
-	return c.inspection.IsNotFound(cluster, ProviderName)
+func (c *FeatureRequest) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureRequest)
 }
 
-func (c *FeatureRequest) Sync(cluster *kstoneapiv1.EtcdCluster) error {
-	return c.inspection.AddRequestTask(cluster, ProviderName)
+func (c *FeatureRequest) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureRequest)
 }
 
-func (c *FeatureRequest) Do(inspection *kstoneapiv1.EtcdInspection) error {
+func (c *FeatureRequest) Do(inspection *kstonev1alpha1.EtcdInspection) error {
 	return c.inspection.CollectEtcdClusterRequest(inspection)
 }

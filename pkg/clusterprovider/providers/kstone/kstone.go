@@ -36,14 +36,14 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	"tkestack.io/kstone/pkg/controllers/util"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
 
 const (
-	providerName    = kstoneapiv1.EtcdClusterKstone
+	providerName    = kstonev1alpha1.EtcdClusterKstone
 	AnnoImportedURI = "importedAddr"
 )
 
@@ -54,7 +54,7 @@ var (
 
 // EtcdClusterKstone is responsible for synchronizing kstone.tkestack.io/etcdcluster to kstone-etcd-operator
 type EtcdClusterKstone struct {
-	name kstoneapiv1.EtcdClusterType
+	name kstonev1alpha1.EtcdClusterType
 	ctx  *clusterprovider.ClusterContext
 }
 
@@ -71,7 +71,7 @@ func init() {
 func initEtcdClusterKstoneInstance(ctx *clusterprovider.ClusterContext) (clusterprovider.Cluster, error) {
 	once.Do(func() {
 		instance = &EtcdClusterKstone{
-			name: kstoneapiv1.EtcdClusterKstone,
+			name: kstonev1alpha1.EtcdClusterKstone,
 			ctx: &clusterprovider.ClusterContext{
 				Clientbuilder: ctx.Clientbuilder,
 				Client:        ctx.Clientbuilder.DynamicClientOrDie(),
@@ -81,12 +81,12 @@ func initEtcdClusterKstoneInstance(ctx *clusterprovider.ClusterContext) (cluster
 	return instance, nil
 }
 
-func (c *EtcdClusterKstone) BeforeCreate(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) BeforeCreate(cluster *kstonev1alpha1.EtcdCluster) error {
 	return nil
 }
 
 // Create creates an etcd cluster
-func (c *EtcdClusterKstone) Create(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) Create(cluster *kstonev1alpha1.EtcdCluster) error {
 	etcdRes := schema.GroupVersionResource{Group: "etcd.tkestack.io", Version: "v1alpha1", Resource: "etcdclusters"}
 	etcdcluster := map[string]interface{}{
 		"apiVersion": "etcd.tkestack.io/v1alpha1",
@@ -118,7 +118,7 @@ func (c *EtcdClusterKstone) Create(cluster *kstoneapiv1.EtcdCluster) error {
 }
 
 // AfterCreate handles etcdcluster after created
-func (c *EtcdClusterKstone) AfterCreate(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) AfterCreate(cluster *kstonev1alpha1.EtcdCluster) error {
 	if cluster.Annotations["scheme"] == "https" {
 		cluster.Annotations["certName"] = fmt.Sprintf("%s/%s-etcd-client-cert", cluster.Namespace, cluster.Name)
 	}
@@ -151,12 +151,12 @@ func (c *EtcdClusterKstone) AfterCreate(cluster *kstoneapiv1.EtcdCluster) error 
 }
 
 // BeforeUpdate handles etcdcluster before updated
-func (c *EtcdClusterKstone) BeforeUpdate(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) BeforeUpdate(cluster *kstonev1alpha1.EtcdCluster) error {
 	return nil
 }
 
 // Update updates cluster of kstone-etcd-operator
-func (c *EtcdClusterKstone) Update(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) Update(cluster *kstonev1alpha1.EtcdCluster) error {
 	etcdRes := schema.GroupVersionResource{Group: "etcd.tkestack.io", Version: "v1alpha1", Resource: "etcdclusters"}
 	etcd, err := c.ctx.Client.Resource(etcdRes).
 		Namespace(cluster.Namespace).
@@ -182,7 +182,7 @@ func (c *EtcdClusterKstone) Update(cluster *kstoneapiv1.EtcdCluster) error {
 
 // Equal checks etcdcluster, if not equal, sync etcdclusters.etcd.tkestack.io
 // if equal, nothing to do
-func (c *EtcdClusterKstone) Equal(cluster *kstoneapiv1.EtcdCluster) (bool, error) {
+func (c *EtcdClusterKstone) Equal(cluster *kstonev1alpha1.EtcdCluster) (bool, error) {
 	etcdRes := schema.GroupVersionResource{Group: "etcd.tkestack.io", Version: "v1alpha1", Resource: "etcdclusters"}
 	etcd, err := c.ctx.Client.Resource(etcdRes).
 		Namespace(cluster.Namespace).
@@ -258,28 +258,28 @@ func (c *EtcdClusterKstone) Equal(cluster *kstoneapiv1.EtcdCluster) (bool, error
 }
 
 // AfterUpdate handles etcdcluster after updated
-func (c *EtcdClusterKstone) AfterUpdate(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) AfterUpdate(cluster *kstonev1alpha1.EtcdCluster) error {
 	return nil
 }
 
 // BeforeDelete handles etcdcluster before deleted
-func (c *EtcdClusterKstone) BeforeDelete(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) BeforeDelete(cluster *kstonev1alpha1.EtcdCluster) error {
 	return nil
 }
 
 // Delete handles delete
-func (c *EtcdClusterKstone) Delete(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) Delete(cluster *kstonev1alpha1.EtcdCluster) error {
 	return nil
 }
 
 // AfterDelete handles etcdcluster after deleted
-func (c *EtcdClusterKstone) AfterDelete(cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) AfterDelete(cluster *kstonev1alpha1.EtcdCluster) error {
 	return nil
 }
 
 // Status checks etcd member and returns new status
-func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstoneapiv1.EtcdCluster) (kstoneapiv1.EtcdClusterStatus, error) {
-	var phase kstoneapiv1.EtcdClusterPhase
+func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstonev1alpha1.EtcdCluster) (kstonev1alpha1.EtcdClusterStatus, error) {
+	var phase kstonev1alpha1.EtcdClusterPhase
 
 	status := cluster.Status
 
@@ -296,7 +296,7 @@ func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstone
 			endpoints = append(endpoints, addr)
 			status.ServiceName = addr
 		} else {
-			status.Phase = kstoneapiv1.EtcdCluterCreating
+			status.Phase = kstonev1alpha1.EtcdCluterCreating
 			return status, nil
 		}
 	}
@@ -307,21 +307,21 @@ func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstone
 		tlsConfig,
 	)
 	if err != nil || len(members) == 0 || int(cluster.Spec.Size) != len(members) {
-		if status.Phase == kstoneapiv1.EtcdClusterRunning {
-			status.Phase = kstoneapiv1.EtcdClusterUnknown
+		if status.Phase == kstonev1alpha1.EtcdClusterRunning {
+			status.Phase = kstonev1alpha1.EtcdClusterUnknown
 		}
 		return status, err
 	}
 
 	status.Members, phase = clusterprovider.GetEtcdClusterMemberStatus(members, tlsConfig)
-	if status.Phase == kstoneapiv1.EtcdClusterRunning || phase != kstoneapiv1.EtcdClusterUnknown {
+	if status.Phase == kstonev1alpha1.EtcdClusterRunning || phase != kstonev1alpha1.EtcdClusterUnknown {
 		status.Phase = phase
 	}
 	return status, err
 }
 
 // updateEtcdSpec update spec
-func (c *EtcdClusterKstone) updateEtcdSpec(etcd *unstructured.Unstructured, cluster *kstoneapiv1.EtcdCluster) error {
+func (c *EtcdClusterKstone) updateEtcdSpec(etcd *unstructured.Unstructured, cluster *kstonev1alpha1.EtcdCluster) error {
 	newSpec := c.generateEtcdSpec(cluster)
 
 	spec, found, err := unstructured.NestedMap(etcd.Object, "spec")
@@ -338,7 +338,7 @@ func (c *EtcdClusterKstone) updateEtcdSpec(etcd *unstructured.Unstructured, clus
 }
 
 // generateEtcdSpec generate spec with etcdcluster
-func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstoneapiv1.EtcdCluster) map[string]interface{} {
+func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha1.EtcdCluster) map[string]interface{} {
 	extraServerCertSANsStr := cluster.Annotations["extraServerCertSANs"]
 	extraServerCertSANList := make([]interface{}, 0)
 	for _, certSAN := range strings.Split(extraServerCertSANsStr, ",") {

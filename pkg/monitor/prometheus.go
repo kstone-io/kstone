@@ -40,6 +40,7 @@ import (
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
 
@@ -101,6 +102,15 @@ func (prom *PrometheusMonitor) UpdateEtcdService(service *corev1.Service) (*core
 	return svr, err
 }
 
+// DeleteEtcdService deletes service
+func (prom *PrometheusMonitor) DeleteEtcdService(namespace, name string) error {
+	err := prom.kubeCli.CoreV1().Services(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil {
+		klog.Errorf("delete etcd service, namespace is %s, name is %s,error is %v", namespace, name, err)
+	}
+	return err
+}
+
 // GetEtcdEndpoint gets endpoints
 func (prom *PrometheusMonitor) GetEtcdEndpoint(namespace, name string) (*corev1.Endpoints, error) {
 	ep, err := prom.kubeCli.CoreV1().Endpoints(namespace).Get(context.TODO(), name, metav1.GetOptions{})
@@ -135,7 +145,7 @@ func (prom *PrometheusMonitor) CreateEtcdEndpoint(ep *corev1.Endpoints) (*corev1
 func (prom *PrometheusMonitor) GetServiceMonitorTask(namespace, name string) (*promapiv1.ServiceMonitor, error) {
 	task, err := prom.promCli.ServiceMonitors(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
-		klog.Errorf("list service monitor,namespaces is %s,name is %s,error is %v", namespace, name, err)
+		klog.Errorf("get service monitor,namespaces is %s,name is %s,error is %v", namespace, name, err)
 		return nil, err
 	}
 	return task, err
@@ -177,13 +187,13 @@ func (prom *PrometheusMonitor) UpdateServiceMonitor(task *promapiv1.ServiceMonit
 }
 
 // DeleteServiceMonitor deletes service monitor
-func (prom *PrometheusMonitor) DeleteServiceMonitor(task *promapiv1.ServiceMonitor) error {
-	err := prom.promCli.ServiceMonitors(task.Namespace).Delete(context.TODO(), task.Name, metav1.DeleteOptions{})
+func (prom *PrometheusMonitor) DeleteServiceMonitor(namespace, name string) error {
+	err := prom.promCli.ServiceMonitors(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 	if err != nil {
-		klog.Errorf("delete service monitor,namespaces is %s,name is %s,error is %v", task.Namespace, task.Name, err)
+		klog.Errorf("delete service monitor,namespaces is %s,name is %s,error is %v", namespace, name, err)
 		return err
 	}
-	klog.V(6).Infof("delete task %v spec succ", task.Name)
+	klog.V(6).Infof("delete service monitor %s succ", name)
 	return err
 }
 
@@ -234,6 +244,10 @@ func (prom *PrometheusMonitor) UnpackEndPointSubsets(endpoint *corev1.Endpoints)
 	}
 	sort.Strings(addrs)
 	return addrs, nil
+}
+
+func (prom *PrometheusMonitor) IsMonitorEnabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+	return featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureMonitor)
 }
 
 // Equal checks to Update ServiceMonitor & svc & ep, when label & memberIp change, update
@@ -464,7 +478,60 @@ func (prom *PrometheusMonitor) initEtcdEndpoint(cluster *kstonev1alpha1.EtcdClus
 	return ep, nil
 }
 
-// SyncPrometheusMonitor sync prometheus monitor for etcdcluster
+// CheckEqualIfDisabled Checks whether the monitoring resource has been deleted if monitor feature is disabled.
+func (prom *PrometheusMonitor) CheckEqualIfDisabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+	_, err := prom.GetServiceMonitorTask(cluster.Namespace, cluster.Name)
+	if err != nil && apierrors.IsNotFound(err) {
+		_, err = prom.GetEtcdService(cluster.Namespace, cluster.Name)
+		if err != nil && apierrors.IsNotFound(err) {
+			return true
+		}
+	}
+	return false
+}
+
+// CheckEqualIfEnabled check whether the desired monitoring resources are consistent with the actual resources,
+// if monitor feature is enabled.
+func (prom *PrometheusMonitor) CheckEqualIfEnabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+	var epAddrs []string
+	epLabels := make(map[string]string)
+
+	var clusterEndpoints []string
+	for _, m := range cluster.Status.Members {
+		items := strings.Split(m.ExtensionClientUrl, ":")
+		endPoint := strings.TrimPrefix(items[1], "//")
+		clusterEndpoints = append(clusterEndpoints, endPoint+":"+items[2])
+	}
+
+	endpoints, err := prom.GetEtcdEndpoint(DefaultEtcdPromNamespace, cluster.Name)
+	if err != nil {
+		klog.Errorf("get endpoint failed, cluster name %s,err is %v", cluster.Name, err)
+		return false
+	}
+	if epAddrs, err = prom.UnpackEndPointSubsets(endpoints); err != nil {
+		klog.Errorf("unpack endpoint failed, err is %v", err)
+		return false
+	}
+
+	if reflect.DeepEqual(epLabels, cluster.ObjectMeta.Labels) &&
+		reflect.DeepEqual(epAddrs, clusterEndpoints) {
+		return true
+	}
+	return false
+}
+
+// CleanPrometheusMonitor cleans prometheus monitor for etcdcluster if it is disabled
+func (prom *PrometheusMonitor) CleanPrometheusMonitor(cluster *kstonev1alpha1.EtcdCluster) error {
+	if err := prom.DeleteServiceMonitor(cluster.Namespace, cluster.Name); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+	if err := prom.DeleteEtcdService(cluster.Namespace, cluster.Name); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+	return nil
+}
+
+// SyncPrometheusMonitor syncs prometheus monitor for etcdcluster if it is enabled
 func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha1.EtcdCluster) error {
 	taskName := cluster.Name
 
@@ -521,9 +588,9 @@ func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha1.Etc
 	}
 
 	// 3 init servicemonitor
-	newServiceMonitor, sErr := prom.initEtcdServiceMonitor(cluster)
-	if sErr != nil {
-		return sErr
+	newServiceMonitor, err := prom.initEtcdServiceMonitor(cluster)
+	if err != nil {
+		return err
 	}
 	curServiceMonitor, err := prom.GetServiceMonitorTask(DefaultEtcdPromNamespace, taskName)
 	if apierrors.IsNotFound(err) {
