@@ -29,4 +29,6 @@ import (
 	_ "tkestack.io/kstone/pkg/featureprovider/providers/healthy"
 	// register request inspection feature
 	_ "tkestack.io/kstone/pkg/featureprovider/providers/request"
+	// register alarm inspection feature
+	_ "tkestack.io/kstone/pkg/featureprovider/providers/alarm"
 )
