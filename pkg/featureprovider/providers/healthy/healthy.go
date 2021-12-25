@@ -21,7 +21,7 @@ package healthy
 import (
 	"sync"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/inspection"
 )
@@ -38,7 +38,7 @@ type FeatureHealthy struct {
 }
 
 const (
-	ProviderName = string(kstoneapiv1.KStoneFeatureHealthy)
+	ProviderName = string(kstonev1alpha1.KStoneFeatureHealthy)
 )
 
 func init() {
@@ -71,14 +71,14 @@ func (c *FeatureHealthy) init() error {
 	return err
 }
 
-func (c *FeatureHealthy) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
-	return c.inspection.IsNotFound(cluster, ProviderName)
+func (c *FeatureHealthy) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureHealthy)
 }
 
-func (c *FeatureHealthy) Sync(cluster *kstoneapiv1.EtcdCluster) error {
-	return c.inspection.AddHealthyTask(cluster, ProviderName)
+func (c *FeatureHealthy) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureHealthy)
 }
 
-func (c *FeatureHealthy) Do(inspection *kstoneapiv1.EtcdInspection) error {
+func (c *FeatureHealthy) Do(inspection *kstonev1alpha1.EtcdInspection) error {
 	return c.inspection.CollectMemberHealthy(inspection)
 }

@@ -21,13 +21,14 @@ package backup
 import (
 	"sync"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/backup"
 	"tkestack.io/kstone/pkg/featureprovider"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 )
 
 const (
-	ProviderName = string(kstoneapiv1.KStoneFeatureBackup)
+	ProviderName = string(kstonev1alpha1.KStoneFeatureBackup)
 )
 
 var (
@@ -71,14 +72,23 @@ func (bak *FeatureBackup) init() error {
 	return err
 }
 
-func (bak *FeatureBackup) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
-	return bak.backupSvr.Equal(cluster)
+func (bak *FeatureBackup) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureBackup) {
+		if cluster.Status.FeatureGatesStatus[kstonev1alpha1.KStoneFeatureBackup] != featureutil.FeatureStatusDisabled {
+			return bak.backupSvr.CheckEqualIfDisabled(cluster)
+		}
+		return true
+	}
+	return bak.backupSvr.CheckEqualIfEnabled(cluster)
 }
 
-func (bak *FeatureBackup) Sync(cluster *kstoneapiv1.EtcdCluster) error {
-	return bak.backupSvr.SyncEtcdBackup(cluster)
+func (bak *FeatureBackup) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
+	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureBackup) {
+		return bak.backupSvr.CleanBackup(cluster)
+	}
+	return bak.backupSvr.SyncBackup(cluster)
 }
 
-func (bak *FeatureBackup) Do(inspection *kstoneapiv1.EtcdInspection) error {
+func (bak *FeatureBackup) Do(inspection *kstonev1alpha1.EtcdInspection) error {
 	return nil
 }

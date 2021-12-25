@@ -27,7 +27,7 @@ import (
 	"strings"
 
 	backupapiv2 "github.com/coreos/etcd-operator/pkg/apis/etcd/v1beta2"
-	k8serors "k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 
-	kstoneapiv1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/controllers/util"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
@@ -119,27 +119,36 @@ func (bak *Server) decodeBackupObj(backup *backupapiv2.EtcdBackup) (*unstructure
 }
 
 // CreateEtcdBackupByYaml creates etcd backup by yaml
-func (bak *Server) CreateEtcdBackupByYaml(backup *backupapiv2.EtcdBackup) (*backupapiv2.EtcdBackup, error) {
+func (bak *Server) CreateEtcdBackupByYaml(backup *backupapiv2.EtcdBackup) error {
 	obj, err := bak.decodeBackupObj(backup)
 	if err != nil {
-		return nil, fmt.Errorf("decode backup failed, err is %v", err)
+		return fmt.Errorf("decode backup failed, err is %v", err)
 	}
-	retObj, retErr := bak.cli.Resource(BackupSchema).
+	_, err = bak.cli.Resource(BackupSchema).
 		Namespace(backup.Namespace).
 		Create(context.TODO(), obj, metav1.CreateOptions{})
-	if retErr != nil {
-		return nil, fmt.Errorf("create etcdbackup failed, err is %v", retErr)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		return fmt.Errorf("create etcdbackup failed, err is %v", err)
 	}
-	return bak.encodeBackupObj(retObj)
+	return nil
 }
 
-// GetEtcdBackup gets backup
+// GetEtcdBackup gets etcd backup
 func (bak *Server) GetEtcdBackup(name, namespace string) (*backupapiv2.EtcdBackup, error) {
 	obj, err := bak.cli.Resource(BackupSchema).Namespace(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 	return bak.encodeBackupObj(obj)
+}
+
+// DeleteEtcdBackup deletes etcd backup
+func (bak *Server) DeleteEtcdBackup(name, namespace string) error {
+	err := bak.cli.Resource(BackupSchema).Namespace(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+	return nil
 }
 
 // UpdateEtcdBackup updates etcd backup
@@ -167,7 +176,7 @@ func (bak *Server) UpdateEtcdBackup(backup *backupapiv2.EtcdBackup) (*backupapiv
 }
 
 // parseBackupConfig parses backup config
-func (bak *Server) parseBackupConfig(cluster *kstoneapiv1.EtcdCluster) (*Config, string, error) {
+func (bak *Server) parseBackupConfig(cluster *kstonev1alpha1.EtcdCluster) (*Config, string, error) {
 	annotations := cluster.ObjectMeta.Annotations
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -212,7 +221,7 @@ func (bak *Server) parseBackupConfig(cluster *kstoneapiv1.EtcdCluster) (*Config,
 }
 
 // initEtcdBackup generates etcd backup
-func (bak *Server) initEtcdBackup(cluster *kstoneapiv1.EtcdCluster) (*backupapiv2.EtcdBackup, error) {
+func (bak *Server) initEtcdBackup(cluster *kstonev1alpha1.EtcdCluster) (*backupapiv2.EtcdBackup, error) {
 	backupCfg, secretName, err := bak.parseBackupConfig(cluster)
 	if err != nil {
 		return nil, err
@@ -241,11 +250,12 @@ func (bak *Server) initEtcdBackup(cluster *kstoneapiv1.EtcdCluster) (*backupapiv
 }
 
 // Equal checks whether the backup resource needs to be updated
-func (bak *Server) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
+func (bak *Server) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
 	namespace, name := cluster.Namespace, cluster.Name
+
 	backup, err := bak.GetEtcdBackup(name, namespace)
 	if err != nil {
-		return k8serors.IsNotFound(err)
+		return apierrors.IsNotFound(err)
 	}
 
 	newBackup, err := bak.initEtcdBackup(cluster)
@@ -257,8 +267,42 @@ func (bak *Server) Equal(cluster *kstoneapiv1.EtcdCluster) bool {
 	return !reflect.DeepEqual(backup, &newBackup)
 }
 
-// SyncEtcdBackup synchronizes the latest backup configuration.
-func (bak *Server) SyncEtcdBackup(cluster *kstoneapiv1.EtcdCluster) error {
+// CheckEqualIfDisabled checks whether the backup resource is not found if it is disabled
+func (bak *Server) CheckEqualIfDisabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+	if _, err := bak.GetEtcdBackup(cluster.Name, cluster.Namespace); apierrors.IsNotFound(err) {
+		return true
+	}
+	return false
+}
+
+// CheckEqualIfEnabled checks whether the backup resource is equal if it is enabled
+func (bak *Server) CheckEqualIfEnabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+	namespace, name := cluster.Namespace, cluster.Name
+	backup, err := bak.GetEtcdBackup(name, namespace)
+	if err != nil && apierrors.IsNotFound(err) {
+		return false
+	}
+
+	newBackup, err := bak.initEtcdBackup(cluster)
+	if err != nil {
+		klog.Errorf("init etcd backup failed, namespace is %s, name is %s, err is %v", namespace, name, err)
+		return false
+	}
+
+	return reflect.DeepEqual(backup, &newBackup)
+}
+
+// CleanBackup cleans the etcdbackup if it is disabled.
+func (bak *Server) CleanBackup(cluster *kstonev1alpha1.EtcdCluster) error {
+	err := bak.DeleteEtcdBackup(cluster.Name, cluster.Namespace)
+	if err != nil {
+		klog.Errorf("failed to delete etcd backup, namespace is %s, name is %s, err is %v", cluster.Namespace, cluster.Name, err)
+	}
+	return err
+}
+
+// SyncBackup synchronizes the etcdbackup if it is enabled.
+func (bak *Server) SyncBackup(cluster *kstonev1alpha1.EtcdCluster) error {
 	namespace, name := cluster.Namespace, cluster.Name
 	newBackup, err := bak.initEtcdBackup(cluster)
 	if err != nil {
@@ -271,12 +315,12 @@ func (bak *Server) SyncEtcdBackup(cluster *kstoneapiv1.EtcdCluster) error {
 		return err
 	}
 	_, err = bak.GetEtcdBackup(name, namespace)
-	if err != nil && !k8serors.IsNotFound(err) {
+	if err != nil && !apierrors.IsNotFound(err) {
 		klog.Errorf("failed to get etcd backup, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return err
 	}
-	if k8serors.IsNotFound(err) {
-		_, err = bak.CreateEtcdBackupByYaml(newBackup)
+	if apierrors.IsNotFound(err) {
+		err = bak.CreateEtcdBackupByYaml(newBackup)
 		if err != nil {
 			klog.Errorf("failed to create etcd backup, namespace is %s, name is %s, err is %v", namespace, name, err)
 		}
