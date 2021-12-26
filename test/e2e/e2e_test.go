@@ -46,9 +46,9 @@ const (
 	// TestSuiteTeardownTimeOut defines the time after which the suite tear down times out.
 	TestSuiteTeardownTimeOut = 300 * time.Second
 	// pollInterval defines the interval time for a poll operation.
-	pollInterval = 5 * time.Second
+	pollInterval = 1 * time.Second
 	// pollTimeout defines the time after which the poll operation times out.
-	pollTimeout = 120 * time.Second
+	pollTimeout = 180 * time.Second
 )
 
 var (
