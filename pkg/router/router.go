@@ -19,9 +19,7 @@
 package router
 
 import (
-	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -29,17 +27,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	clientv3 "go.etcd.io/etcd/client/v3"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/clientcmd"
-	klog "k8s.io/klog/v2"
-
-	"tkestack.io/kstone/pkg/backup"
 	// import backup provider
 	_ "tkestack.io/kstone/pkg/backup/providers"
-	"tkestack.io/kstone/pkg/controllers/util"
-	"tkestack.io/kstone/pkg/etcd"
-	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 )
 
 var (
@@ -67,6 +56,8 @@ func NewRouter() *gin.Engine {
 
 	r.GET("/apis/etcd/:etcdName", EtcdKeyList)
 	r.GET("/apis/backup/:etcdName", BackupList)
+	r.GET("/apis/alarm/:etcdName", AlarmList)
+	r.POST("/apis/alarm/:etcdName", AlarmDisarm)
 	return r
 }
 
@@ -131,204 +122,4 @@ func ReverseProxy() gin.HandlerFunc {
 		}
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
-}
-
-// EtcdKeyList returns etcd key list
-func EtcdKeyList(ctx *gin.Context) {
-	etcdName := ctx.Param("etcdName")
-	etcdKey := ctx.DefaultQuery("key", "")
-
-	// generate etcd client
-	cfg, err := clientcmd.BuildConfigFromFlags("", "")
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	clusterClient, err := clientset.NewForConfig(cfg)
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	cluster, err := clusterClient.KstoneV1alpha1().EtcdClusters("kstone").
-		Get(context.TODO(), etcdName, metav1.GetOptions{})
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	annotations := cluster.Annotations
-	secretName := ""
-	if annotations != nil {
-		if _, found := annotations["certName"]; found {
-			secretName = annotations["certName"]
-		}
-	}
-	tlsGetter := etcd.NewTLSSecretGetter(util.NewSimpleClientBuilder(""))
-	klog.Infof("secretName: %s", secretName)
-	tlsConfig, err := tlsGetter.Config(cluster.Name, secretName)
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	ca, cert, key := "", "", ""
-	if tlsConfig != nil {
-		ca, cert, key = tlsConfig.TrustedCAFile, tlsConfig.CertFile, tlsConfig.KeyFile
-	}
-	klog.Infof("endpoint: %s, ca: %s, cert: %s, key: %s", cluster.Status.ServiceName, ca, cert, key)
-	client, err := etcd.NewClientv3(ca, cert, key, []string{cluster.Status.ServiceName})
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	defer client.Close()
-
-	if etcdKey == "" {
-		resp, err := client.Get(context.TODO(), "", clientv3.WithPrefix(), clientv3.WithKeysOnly())
-		if err != nil {
-			klog.Errorf(err.Error())
-			ctx.JSON(http.StatusInternalServerError, err)
-			return
-		}
-
-		data := make([]string, 0)
-		for _, value := range resp.Kvs {
-			data = append(data, string(value.Key))
-		}
-
-		ctx.JSON(http.StatusOK, map[string]interface{}{
-			"code": 0,
-			"data": data,
-		})
-		return
-	}
-	klog.Infof("get value by key: %s", etcdKey)
-	resp, err := client.Get(context.TODO(), etcdKey, clientv3.WithPrefix())
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	if resp.Count == 0 {
-		ctx.JSON(http.StatusNotFound, map[string]interface{}{
-			"code": 1,
-			"data": "",
-		})
-	} else {
-		result := map[string]interface{}{
-			"code": 0,
-			"err":  "",
-		}
-		if cluster.Annotations["kubernetes"] == "true" && etcdKey != "compact_rev_key" {
-			jsonValue := etcd.ConvertToJSON(resp.Kvs[0])
-			inMediaType, in, err := etcd.DetectAndExtract(resp.Kvs[0].Value)
-			if err != nil {
-				klog.Errorf(err.Error())
-				ctx.JSON(http.StatusInternalServerError, err)
-				return
-			}
-			respData, err := etcd.ConvertToData(inMediaType, in)
-			if err != nil {
-				klog.Errorf(err.Error())
-				if respData == nil {
-					respData = make(map[string]string)
-				}
-				result["err"] = err.Error()
-			}
-			respData["json"] = jsonValue
-			respDataList := make([]map[string]string, 0)
-			for dataType, value := range respData {
-				respDataList = append(respDataList, map[string]string{
-					"type": dataType,
-					"data": value,
-				})
-			}
-			result["data"] = respDataList
-		} else {
-			result["data"] = []map[string]string{
-				{
-					"type": "javascript",
-					"data": string(resp.Kvs[0].Value),
-				},
-			}
-		}
-		ctx.JSON(http.StatusOK, result)
-	}
-}
-
-// BackupList returns backup list
-func BackupList(ctx *gin.Context) {
-	etcdName := ctx.Param("etcdName")
-
-	kubeconfigPath := ""
-
-	// generate etcd client
-	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// generate k8s client
-	clusterClient, err := clientset.NewForConfig(cfg)
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// get cluster
-	cluster, err := clusterClient.KstoneV1alpha1().EtcdClusters(Namespace).
-		Get(context.TODO(), etcdName, metav1.GetOptions{})
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// generate backup config
-	strCfg, found := cluster.Annotations[backup.AnnoBackupConfig]
-	if !found || strCfg == "" {
-		err = fmt.Errorf(
-			"backup config not found, annotation key %s not exists, namespace is %s, name is %s",
-			backup.AnnoBackupConfig,
-			cluster.Namespace,
-			cluster.Name,
-		)
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusOK, []interface{}{})
-		return
-	}
-	backupConfig := &backup.Config{}
-	err = json.Unmarshal([]byte(strCfg), backupConfig)
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// generate backup provider
-	backupProvider, err := backup.GetBackupProvider(string(backupConfig.StorageType), &backup.ProviderConfig{
-		Kubeconfig: kubeconfigPath,
-	})
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	resp, err := backupProvider.List(cluster)
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	ctx.JSON(http.StatusOK, resp)
 }
