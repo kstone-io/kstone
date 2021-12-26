@@ -18,7 +18,9 @@
 
 package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 var (
 	EtcdNodeDiffTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -48,6 +50,13 @@ var (
 		Name:      "etcd_key_total",
 		Help:      "The total number of etcd key",
 	}, []string{"clusterName", "etcdPrefix", "resourceName"})
+
+	EtcdEndpointAlarm = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "etcd_endpoint_alarm",
+		Help:      "The alarm of etcd member",
+	}, []string{"clusterName", "endpoint", "alarmType"})
 )
 
 func init() {
@@ -55,4 +64,5 @@ func init() {
 	prometheus.MustRegister(EtcdEndpointHealthy)
 	prometheus.MustRegister(EtcdRequestTotal)
 	prometheus.MustRegister(EtcdKeyTotal)
+	prometheus.MustRegister(EtcdEndpointAlarm)
 }

@@ -305,3 +305,17 @@ func getTransport(dialTimeout, totalTimeout time.Duration, scfg *secureConfig, s
 		DisableKeepAlives:   true,
 	}, nil
 }
+
+// AlarmList list etcd alarm
+func AlarmList(cli *clientv3.Client) (*clientv3.AlarmResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultDialTimeout)
+	defer cancel()
+
+	rsp, err := cli.AlarmList(ctx)
+	if err != nil {
+		klog.Errorf("failed list etcd alarm,err is %v", err)
+		return rsp, err
+	}
+	klog.V(6).Infof("list etcd alarm succ,resp info %v", rsp)
+	return rsp, err
+}

@@ -122,6 +122,7 @@ const (
 	KStoneFeatureHealthy     KStoneFeature = "healthy"
 	KStoneFeatureConsistency KStoneFeature = "consistency"
 	KStoneFeatureRequest     KStoneFeature = "request"
+	KStoneFeatureAlarm       KStoneFeature = "alarm"
 )
 
 // EtcdClusterStatus defines the actual state of EtcdCluster.
