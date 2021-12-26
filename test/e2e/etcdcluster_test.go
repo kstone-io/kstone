@@ -34,7 +34,7 @@ import (
 
 var _ = ginkgo.Describe("etcdcluster", func() {
 	clusterName := "kstone-test"
-	ginkgo.Describe("import an existed etcdcluster and enable monitor,backup,healthy,request,consistency features", func() {
+	ginkgo.Describe("import an existed etcdcluster and enable monitor,backup,healthy,request,consistency,alarm features", func() {
 		ginkgo.BeforeEach(func() {
 			//TODO: kstone does not support headless service,just use pod ip to bypass
 			podIP, err := getEtcdPodIP()
@@ -134,6 +134,20 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 			})
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
+
+		ginkgo.It("kstone should generate etcdinspection/alarm resources", func() {
+			err := wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
+				_, err = etcdClusterClient.KstoneV1alpha1().EtcdInspections(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName+"-"+string(kstoneapiv1.KStoneFeatureAlarm), metav1.GetOptions{})
+				if err != nil {
+					if errors.IsNotFound(err) {
+						return false, nil
+					}
+					return false, err
+				}
+				return true, nil
+			})
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
 	})
 
 	ginkgo.Describe("delete an existed etcdcluster", func() {
@@ -184,6 +198,17 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 		ginkgo.It("kstone should delete etcdbackup resources", func() {
 			err := wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
 				_, err = dynamicCli.Resource(backup.BackupSchema).Namespace(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
+				if errors.IsNotFound(err) {
+					return true, nil
+				}
+				return false, nil
+			})
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdinspection/alarm resources", func() {
+			err := wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
+				_, err = etcdClusterClient.KstoneV1alpha1().EtcdInspections(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName+"-"+string(kstoneapiv1.KStoneFeatureAlarm), metav1.GetOptions{})
 				if errors.IsNotFound(err) {
 					return true, nil
 				}

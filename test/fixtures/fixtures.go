@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	DefaultFeatureGate                = "monitor=true,consistency=true,healthy=true,request=true,backup=true"
+	DefaultFeatureGate                = "monitor=true,consistency=true,healthy=true,request=true,backup=true,alarm=true"
 	DefaultTestClusterAddr            = "etcd-test-headless.default.svc.cluster.local:2379"
 	DefaultTestClusterStatefulsetYaml = "etcd_statefulset.yaml"
 	DefaultTestClusterSvcYaml         = "etcd_service.yaml"
