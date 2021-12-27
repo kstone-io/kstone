@@ -19,23 +19,19 @@
 package inspection
 
 import (
-	"encoding/json"
-	"fmt"
-	"math"
+	"context"
 	"sort"
 	"strings"
 	"sync"
 
 	"go.etcd.io/etcd/client/pkg/v3/transport"
+	"golang.org/x/sync/errgroup"
 	"k8s.io/klog/v2"
 
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/etcd"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/inspection/metrics"
-)
-
-const (
-	inspectionConsistencyAnno = "consistency"
 )
 
 type ConsistencyInfo struct {
@@ -43,115 +39,106 @@ type ConsistencyInfo struct {
 	Interval int    `json:"interval,omitempty"`
 }
 
-// getEtcdNodeKeyDiff checks the diff of node data
-func (c *Server) getEtcdNodeKeyDiff(
+// getEtcdConsistentMetadata gets the etcd consistent metadata.
+func (c *Server) getEtcdConsistentMetadata(
 	cluster *kstonev1alpha1.EtcdCluster,
 	keyPrefix string,
 	tls *transport.TLSInfo,
-) (chan uint64, chan error) {
-	memberCnt := len(cluster.Status.Members)
-	ch := make(chan uint64, memberCnt)
-	errch := make(chan error, memberCnt)
-	var wg sync.WaitGroup
-	wg.Add(memberCnt)
-	go func() {
-		wg.Wait()
-		errch <- nil
-		ch <- math.MaxUint64
-	}()
-	go func() {
-		for _, member := range cluster.Status.Members {
-			go func(member kstonev1alpha1.MemberStatus) {
-				defer wg.Done()
-				ca, cert, key := "", "", ""
-				if tls != nil {
-					ca, cert, key = tls.TrustedCAFile, tls.CertFile, tls.KeyFile
-				}
+) (map[featureutil.ConsistencyType][]uint64, error) {
 
-				backendStorage, endpoint := etcd.EtcdV3Backend, member.ExtensionClientUrl
-				if strings.HasPrefix(member.Version, "2") {
-					backendStorage = etcd.EtcdV2Backend
-				}
-				backend, err := etcd.NewEtcdStatBackend(backendStorage)
-				if err != nil {
-					klog.Errorf("failed to get etcd stat backend,backend %s,err is %v", endpoint, err)
-					errch <- err
-					return
-				}
-				err = backend.Init(ca, cert, key, endpoint)
-				if err != nil {
-					klog.Errorf(
-						"failed to get new etcd clientv3,cluster name is %s,endpoint is %s,err is %v",
-						cluster.Name,
-						endpoint,
-						err,
-					)
-					ch <- 0
-					errch <- err
-					return
-				}
-				defer backend.Close()
-				totalKeyNum, err := backend.GetTotalKeyNum(keyPrefix)
-				if err != nil {
-					klog.Errorf("failed to get etcd cluster %s total key num,endpoint is %s,err is %v", cluster.Name, endpoint, err)
-					ch <- 0
-					errch <- err
-					return
-				}
+	var mu sync.Mutex
+	endpointMetadata := make(map[featureutil.ConsistencyType][]uint64)
 
-				ch <- totalKeyNum
+	ctx, cancel := context.WithTimeout(context.Background(), etcd.DefaultDialTimeout)
+	g, ctx := errgroup.WithContext(ctx)
+	defer cancel()
 
-			}(member)
-		}
-	}()
-	return ch, errch
+	for _, member := range cluster.Status.Members {
+		member := member
+		g.Go(func() error {
+			ca, cert, key := "", "", ""
+			if tls != nil {
+				ca, cert, key = tls.TrustedCAFile, tls.CertFile, tls.KeyFile
+			}
+			backendStorage, extensionClientURL := etcd.EtcdV3Backend, member.ExtensionClientUrl
+			if strings.HasPrefix(member.Version, "2") {
+				backendStorage = etcd.EtcdV2Backend
+			}
+			backend, err := etcd.NewEtcdStatBackend(backendStorage)
+			if err != nil {
+				klog.Errorf("failed to get etcd stat backend,backend %s,err is %v", extensionClientURL, err)
+				return err
+			}
+			err = backend.Init(ca, cert, key, extensionClientURL)
+			if err != nil {
+				klog.Errorf(
+					"failed to get new etcd clientv3,cluster name is %s,endpoint is %s,err is %v",
+					cluster.Name,
+					extensionClientURL,
+					err,
+				)
+				return err
+			}
+			defer backend.Close()
+			metadata, err := backend.GetIndex(ctx, extensionClientURL)
+			if err != nil {
+				return err
+			}
+			totalKey, err := backend.GetTotalKeyNum(ctx, keyPrefix)
+			if err != nil {
+				return err
+			}
+			metadata[featureutil.ConsistencyKeyTotal] = totalKey
+
+			mu.Lock()
+			for t, v := range metadata {
+				endpointMetadata[t] = append(endpointMetadata[t], v)
+			}
+			mu.Unlock()
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return endpointMetadata, err
+	}
+	return endpointMetadata, nil
 }
 
-// CollectMemberConsistency collects the consistency info, and
+// CollectClusterConsistentData collects the etcd metadata info, calculate the difference, and
 // transfer them to prometheus metrics
-func (c *Server) CollectMemberConsistency(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *Server) CollectClusterConsistentData(inspection *kstonev1alpha1.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	if err != nil {
 		klog.Errorf("failed to load tls config, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return err
 	}
-
-	path := DefaultInspectionPath
-	annotations := inspection.ObjectMeta.Annotations
-	if annotations != nil {
-		if info, found := annotations[inspectionConsistencyAnno]; found {
-			consistencyInfo := &ConsistencyInfo{}
-			err = json.Unmarshal([]byte(info), consistencyInfo)
-			if err != nil {
-				klog.Errorf("failed to load inspection info, err is %v", err)
-			} else {
-				path = consistencyInfo.Path
-			}
-		}
-	}
-
-	var msg string
-	var nodeKeyDiff uint64
-	ch, errch := c.getEtcdNodeKeyDiff(cluster, path, tlsConfig)
-	err = <-errch
+	endpointMetadataDiff := make(map[featureutil.ConsistencyType]uint64)
+	endpointMetadata, err := c.getEtcdConsistentMetadata(cluster, DefaultInspectionPath, tlsConfig)
 	if err != nil {
-		msg = fmt.Sprintf("failed to collectEtcdNodeKeyDiff,etcd cluster %s,err is %v", cluster.Name, err)
-		klog.Errorf("%s", msg)
+		klog.Errorf("failed to getEtcdConsistentMetadata, etcd cluster %s, err is %v", cluster.Name, err)
 	} else {
-		var keys []uint64
-		for v := range ch {
-			if v == math.MaxUint64 {
-				break
-			}
-			keys = append(keys, v)
+		for t, values := range endpointMetadata {
+			sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
+			endpointMetadataDiff[t] = values[len(values)-1] - values[0]
 		}
-		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-		nodeKeyDiff = keys[len(keys)-1] - keys[0]
 	}
 	labels := map[string]string{
 		"clusterName": cluster.Name,
 	}
-	metrics.EtcdNodeDiffTotal.With(labels).Set(float64(nodeKeyDiff))
+	for t, v := range endpointMetadataDiff {
+		switch t {
+		case featureutil.ConsistencyKeyTotal:
+			metrics.EtcdNodeDiffTotal.With(labels).Set(float64(v))
+		case featureutil.ConsistencyRevision:
+			metrics.EtcdNodeRevisionDiff.With(labels).Set(float64(v))
+		case featureutil.ConsistencyIndex:
+			metrics.EtcdNodeIndexDiff.With(labels).Set(float64(v))
+		case featureutil.ConsistencyRaftRaftAppliedIndex:
+			metrics.EtcdNodeRaftAppliedIndexDiff.With(labels).Set(float64(v))
+		case featureutil.ConsistencyRaftIndex:
+			metrics.EtcdNodeRaftIndexDiff.With(labels).Set(float64(v))
+		}
+	}
 	return nil
 }

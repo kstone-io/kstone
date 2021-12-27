@@ -24,6 +24,7 @@ require (
 	go.etcd.io/etcd/client/v2 v2.305.0-alpha.0
 	go.etcd.io/etcd/client/v3 v3.5.0
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	k8s.io/api v0.21.3
 	k8s.io/apimachinery v0.21.3
 	k8s.io/client-go v12.0.0+incompatible
