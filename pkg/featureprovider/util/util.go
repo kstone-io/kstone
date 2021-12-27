@@ -30,6 +30,16 @@ const (
 	FeatureStatusDisabled = "disabled"
 )
 
+type ConsistencyType string
+
+const (
+	ConsistencyKeyTotal             ConsistencyType = "keyTotal"
+	ConsistencyRevision             ConsistencyType = "revision"
+	ConsistencyIndex                ConsistencyType = "index"
+	ConsistencyRaftRaftAppliedIndex ConsistencyType = "raftAppliedIndex"
+	ConsistencyRaftIndex            ConsistencyType = "raftIndex"
+)
+
 func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha1.KStoneFeature) bool {
 	if gates, found := annotations[kstonev1alpha1.KStoneFeatureAnno]; found && gates != "" {
 		featurelist := strings.Split(gates, ",")
