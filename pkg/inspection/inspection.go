@@ -45,33 +45,33 @@ const (
 )
 
 type Server struct {
-	Clientbuilder util.ClientBuilder
-	cli           *clientset.Clientset
-	kubeCli       kubernetes.Interface
-	tlsGetter     etcd.TLSGetter
-	client        map[string]*clientv3.Client
-	wchan         map[string]clientv3.WatchChan
-	watcher       map[string]clientv3.Watcher
-	eventCh       map[string]chan *clientv3.Event
-	mux           sync.Mutex
+	cli       *clientset.Clientset
+	kubeCli   kubernetes.Interface
+	tlsGetter etcd.TLSGetter
+	client    map[string]*clientv3.Client
+	wchan     map[string]clientv3.WatchChan
+	watcher   map[string]clientv3.Watcher
+	eventCh   map[string]chan *clientv3.Event
+	mux       sync.Mutex
 }
 
-// Init inits the server of inspection
-func (c *Server) Init() error {
-	var err error
-	c.kubeCli = c.Clientbuilder.ClientOrDie()
-	c.cli, err = clientset.NewForConfig(c.Clientbuilder.ConfigOrDie())
+// NewInspectionServer generates the server of inspection
+func NewInspectionServer(clientBuilder util.ClientBuilder) (*Server, error) {
+	cli, err := clientset.NewForConfig(clientBuilder.ConfigOrDie())
 	if err != nil {
 		klog.Errorf("failed to init etcdinspection client, err is %v", err)
-		return err
+		return nil, err
 	}
-	c.tlsGetter = etcd.NewTLSSecretGetter(c.Clientbuilder)
-	c.client = make(map[string]*clientv3.Client)
-	c.wchan = make(map[string]clientv3.WatchChan)
-	c.watcher = make(map[string]clientv3.Watcher)
-	c.eventCh = make(map[string]chan *clientv3.Event)
 
-	return nil
+	return &Server{
+		kubeCli:   clientBuilder.ClientOrDie(),
+		cli:       cli,
+		tlsGetter: etcd.NewTLSSecretGetter(clientBuilder),
+		client:    make(map[string]*clientv3.Client),
+		wchan:     make(map[string]clientv3.WatchChan),
+		watcher:   make(map[string]clientv3.Watcher),
+		eventCh:   make(map[string]chan *clientv3.Event),
+	}, nil
 }
 
 // GetEtcdCluster gets etcdcluster

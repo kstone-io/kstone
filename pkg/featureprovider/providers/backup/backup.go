@@ -20,7 +20,6 @@ package backup
 
 import (
 	"sync"
-
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/backup"
 	"tkestack.io/kstone/pkg/featureprovider"
@@ -58,18 +57,9 @@ func initFeatureBackupInstance(ctx *featureprovider.FeatureContext) (featureprov
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		err = instance.init()
+		instance.backupSvr, err = backup.NewBackupServer(ctx.ClientBuilder)
 	})
 	return instance, err
-}
-
-func (bak *FeatureBackup) init() error {
-	var err error
-	bak.backupSvr = &backup.Server{
-		Clientbuilder: bak.ctx.Clientbuilder,
-	}
-	err = bak.backupSvr.Init()
-	return err
 }
 
 func (bak *FeatureBackup) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
