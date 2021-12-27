@@ -57,18 +57,9 @@ func initFeatureHealthyInstance(ctx *featureprovider.FeatureContext) (featurepro
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		err = instance.init()
+		instance.inspection, err = inspection.NewInspectionServer(ctx.ClientBuilder)
 	})
 	return instance, err
-}
-
-func (c *FeatureHealthy) init() error {
-	var err error
-	c.inspection = &inspection.Server{
-		Clientbuilder: c.ctx.Clientbuilder,
-	}
-	err = c.inspection.Init()
-	return err
 }
 
 func (c *FeatureHealthy) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
