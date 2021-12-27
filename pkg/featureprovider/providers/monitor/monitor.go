@@ -58,18 +58,9 @@ func initFeaturePrometheusInstance(ctx *featureprovider.FeatureContext) (feature
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		err = instance.init()
+		instance.prom, err = monitor.NewPrometheusMonitor(ctx.ClientBuilder)
 	})
 	return instance, err
-}
-
-func (p *FeaturePrometheus) init() error {
-	var err error
-	p.prom = &monitor.PrometheusMonitor{
-		ClientBuilder: p.ctx.Clientbuilder,
-	}
-	err = p.prom.Init()
-	return err
 }
 
 func (p *FeaturePrometheus) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {

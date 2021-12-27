@@ -234,7 +234,7 @@ func (c *InspectionController) enqueueEtcdInspection(obj interface{}) {
 }
 
 func (c *InspectionController) GetInspectionFeatureProvider(name string) (featureprovider.Feature, error) {
-	ctx := &featureprovider.FeatureContext{Clientbuilder: c.clientbuilder}
+	ctx := &featureprovider.FeatureContext{ClientBuilder: c.clientbuilder}
 	feature, err := featureprovider.GetFeatureProvider(name, ctx)
 	if err != nil {
 		return nil, err

@@ -57,18 +57,9 @@ func initFeatureConsistencyInstance(ctx *featureprovider.FeatureContext) (featur
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		err = instance.init()
+		instance.inspection, err = inspection.NewInspectionServer(ctx.ClientBuilder)
 	})
 	return instance, err
-}
-
-func (c *FeatureConsistency) init() error {
-	var err error
-	c.inspection = &inspection.Server{
-		Clientbuilder: c.ctx.Clientbuilder,
-	}
-	err = c.inspection.Init()
-	return err
 }
 
 func (c *FeatureConsistency) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {

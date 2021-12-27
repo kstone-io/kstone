@@ -57,18 +57,9 @@ func initFeatureAlarmInstance(ctx *featureprovider.FeatureContext) (featureprovi
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		err = instance.init()
+		instance.inspection, err = inspection.NewInspectionServer(ctx.ClientBuilder)
 	})
 	return instance, err
-}
-
-func (c *FeatureAlarm) init() error {
-	var err error
-	c.inspection = &inspection.Server{
-		Clientbuilder: c.ctx.Clientbuilder,
-	}
-	err = c.inspection.Init()
-	return err
 }
 
 func (c *FeatureAlarm) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
