@@ -34,5 +34,5 @@ type Feature interface {
 	Do(task *v1alpha1.EtcdInspection) error
 }
 type FeatureContext struct {
-	Clientbuilder util.ClientBuilder
+	ClientBuilder util.ClientBuilder
 }

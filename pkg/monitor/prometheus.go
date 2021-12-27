@@ -53,23 +53,22 @@ const (
 var EtcdPromNamespace = os.Getenv("PROM_NAMESPACE")
 
 type PrometheusMonitor struct {
-	ClientBuilder util.ClientBuilder
-	kubeCli       kubernetes.Interface
-	promCli       *monitoringv1.MonitoringV1Client
+	kubeCli kubernetes.Interface
+	promCli *monitoringv1.MonitoringV1Client
 }
 
-// Init inits prometheus provider
-func (prom *PrometheusMonitor) Init() error {
-	var err error
-	// init kube cli
-	prom.kubeCli = prom.ClientBuilder.ClientOrDie()
+// NewPrometheusMonitor generates prometheus provider
+func NewPrometheusMonitor(clientBuilder util.ClientBuilder) (*PrometheusMonitor, error) {
 	// init prom cli
-	prom.promCli, err = monitoringv1.NewForConfig(prom.ClientBuilder.ConfigOrDie())
+	promCli, err := monitoringv1.NewForConfig(clientBuilder.ConfigOrDie())
 	if err != nil {
 		klog.Errorf("failed to init prom client, err is %v", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return &PrometheusMonitor{
+		kubeCli: clientBuilder.ClientOrDie(),
+		promCli: promCli,
+	}, nil
 }
 
 // GetEtcdService gets service

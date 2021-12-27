@@ -50,9 +50,8 @@ type Config struct {
 }
 
 type Server struct {
-	Clientbuilder util.ClientBuilder
-	cli           dynamic.Interface
-	kubeCli       kubernetes.Interface
+	cli     dynamic.Interface
+	kubeCli kubernetes.Interface
 }
 
 const (
@@ -76,15 +75,18 @@ var (
 	}
 )
 
-// Init inits backup provider
-func (bak *Server) Init() error {
-	var err error
-	bak.cli, err = dynamic.NewForConfig(bak.Clientbuilder.ConfigOrDie())
+// NewBackupServer generates backup provider
+func NewBackupServer(clientBuilder util.ClientBuilder) (*Server, error) {
+	cli, err := dynamic.NewForConfig(clientBuilder.ConfigOrDie())
 	if err != nil {
 		klog.Errorf("failed to init backup client,err is %v", err)
+		return nil, err
 	}
-	bak.kubeCli = bak.Clientbuilder.ClientOrDie()
-	return err
+
+	return &Server{
+		cli:     cli,
+		kubeCli: clientBuilder.ClientOrDie(),
+	}, err
 }
 
 // encodeBackupObj encodes backup object
