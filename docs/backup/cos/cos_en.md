@@ -12,51 +12,51 @@
 
 # 2 Guide
 
-### Step 1: Access kstone-dashboard UI and Click "关联集群":
+### Step 1: Access kstone-dashboard UI and Click "Import Cluster":
 
-![kstone-associate](../../images/images_for_backup_cos/kstone-associate.png)
+![kstone-associate](../../images/images_for_backup_cos/en/kstone-associate.png)
 
 ### Step 2: Associate etcd cluster with kstone:
 
 in this document we will use kubeadm managed etcd cluster 
 
-fill the content and click "提交"
+fill the content and click "Submit"
 
-![kstone-associate](../../images/images_for_backup_cos/kstone-associate2.png)
+![kstone-associate](../../images/images_for_backup_cos/en/kstone-associate2.png)
 
-![kstone-associate](../../images/images_for_backup_cos/kstone-associate3.png)
+![kstone-associate](../../images/images_for_backup_cos/en/kstone-associate3.png)
 
-集群名称: etcd cluster name，uniqueKey
+Cluster Name : etcd cluster name，uniqueKey
 
-集群备注: comment about this cluster
+Cluster Description : description about this cluster
 
-用于Kubernetes: Is this cluster used by kubernetes
+For Kubernetes : Is this cluster used by kubernetes
 
-访问方式:  the access method of etcd, if choose HTTPS, etcd certificate and key should be provided.
+Access Method :  the access method of etcd, if choose HTTPS, etcd certificate and key should be provided.
 
-CPU核数:  single node's CPU, unit: Core
+CPU Cores :  single node's CPU, unit: Core
 
-内存大小: single node's mem, unit: GiB
+Memory Size : single node's mem, unit: GiB
 
-磁盘类型: disk type, CLOUD_SSD/CLOUD_PREMIUM/CLOUD_BASIC
+Disk type : disk type, CLOUD_SSD/CLOUD_PREMIUM/CLOUD_BASIC
 
-磁盘大小: single node's disk size, unit: GB
+Disk size : single node's disk size, unit: GB
 
-集群规模: etcd cluster member count: support 1, 3, 5, 7
+Cluster Size : etcd cluster member count: support 1, 3, 5, 7
 
-集群节点映射: the private and public address of etcd cluster, omit if not used
+Cluster Node Mapping : the private and public address of etcd cluster, omit if not used
 
-CA证书: the ca certificate of etcd cluster
+CA Certificate : the ca certificate of etcd cluster
 
-客户端证书:  the client certificate of etcd cluster
+Client Certificate :  the client certificate of etcd cluster
 
-客户端私钥: the client key of etcd cluster
+Client Private Key : the client key of etcd cluster
 
-描述: etcd description
+Description : etcd description
 
 ### Step3: Enable BACKUP feature
 
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/en/kstone-enable-backup.png)
 
 now we have a working etcd cluster, it's time for us to enable the backup feature.
 
@@ -69,9 +69,9 @@ now we have a working etcd cluster, it's time for us to enable the backup featur
 
 + Let's head back to the kstone-dashboard
 
-  - click "操作"
+  - click "Operation"
 
-  - click "集群功能项"
+  - click "Cluster Feature"
 
   - toggle "Backup:"
 
@@ -99,13 +99,13 @@ now we have a working etcd cluster, it's time for us to enable the backup featur
 
 
 
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup2.png)
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup3.png)
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup4.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/en/kstone-enable-backup2.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/en/kstone-enable-backup3.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/en/kstone-enable-backup4.png)
 
 
 + wait BackupIntervalInSecond  and check the COS bucket
 
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup5.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/en/kstone-enable-backup5.png)
 
 You will find an etcd backup file with the prefix you specified in the previous step.
