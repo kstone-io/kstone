@@ -21,11 +21,12 @@ package etcd
 import (
 	"context"
 	"errors"
-	"time"
 
 	clientv2 "go.etcd.io/etcd/client/v2"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
+
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 )
 
 const (
@@ -39,7 +40,10 @@ type Stat interface {
 	Init(ca, cert, key, endpoint string) error
 
 	// GetTotalKeyNum counts the number of total keys
-	GetTotalKeyNum(keyPrefix string) (uint64, error)
+	GetTotalKeyNum(ctx context.Context, keyPrefix string) (uint64, error)
+
+	// GetIndex gets the etcd metadata index
+	GetIndex(ctx context.Context, endpoint string) (map[featureutil.ConsistencyType]uint64, error)
 
 	// Close close etcd client
 	Close() error
@@ -74,11 +78,8 @@ func (c *StatV3) Init(ca, cert, key, endpoint string) error {
 	return nil
 }
 
-func (c *StatV3) GetTotalKeyNum(keyPrefix string) (uint64, error) {
-	klog.V(2).Infof("start to get etcdcluster total key num")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+func (c *StatV3) GetTotalKeyNum(ctx context.Context, keyPrefix string) (uint64, error) {
 	rsp, err := c.cli.Get(ctx, keyPrefix, clientv3.WithPrefix(), clientv3.WithCountOnly())
-	defer cancel()
 	if err != nil {
 		klog.Errorf("failed to get etcdcluster total key num,err is %v", err)
 		return 0, err
@@ -86,6 +87,19 @@ func (c *StatV3) GetTotalKeyNum(keyPrefix string) (uint64, error) {
 	totalKeyNum := rsp.Count
 	klog.V(2).Infof("finished to get etcdcluster total key num %d", totalKeyNum)
 	return uint64(totalKeyNum), nil
+}
+
+func (c *StatV3) GetIndex(ctx context.Context, endpoint string) (map[featureutil.ConsistencyType]uint64, error) {
+	metadata := make(map[featureutil.ConsistencyType]uint64, 4)
+	statusRsp, err := c.cli.Status(ctx, endpoint)
+	if err != nil {
+		klog.Errorf("failed to get etcdcluster index,err is %v", err)
+		return nil, err
+	}
+	metadata[featureutil.ConsistencyRevision] = uint64(statusRsp.Header.Revision)
+	metadata[featureutil.ConsistencyRaftRaftAppliedIndex] = statusRsp.RaftAppliedIndex
+	metadata[featureutil.ConsistencyRaftIndex] = statusRsp.RaftIndex
+	return metadata, nil
 }
 
 func (c *StatV3) Close() error {
@@ -101,19 +115,32 @@ func (c *StatV2) Init(ca, cert, key, endpoint string) error {
 	return nil
 }
 
-func (c *StatV2) GetTotalKeyNum(keyPrefix string) (uint64, error) {
+func (c *StatV2) GetTotalKeyNum(ctx context.Context, keyPrefix string) (uint64, error) {
 	api := clientv2.NewKeysAPI(*c.cli)
-	klog.V(2).Infof("start to get etcdcluster total key num")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	// Note that in order to avoid affecting performance, only some keys are counted.
 	rsp, err := api.Get(ctx, keyPrefix, &clientv2.GetOptions{Recursive: false, Sort: true, Quorum: true})
-	defer cancel()
 	if err != nil {
 		klog.Errorf("failed to get etcdcluster total key num,err is %v", err)
 		return 0, err
 	}
-	totalKeyNum := uint64(len(rsp.Node.Nodes)) + rsp.Index
+	totalKeyNum := uint64(len(rsp.Node.Nodes))
 	klog.V(2).Infof("finished to get etcdcluster total key num %d,index is %d", totalKeyNum, rsp.Index)
 	return totalKeyNum, nil
+}
+
+func (c *StatV2) GetIndex(ctx context.Context, endpoint string) (map[featureutil.ConsistencyType]uint64, error) {
+	metadata := make(map[featureutil.ConsistencyType]uint64, 4)
+	api := clientv2.NewKeysAPI(*c.cli)
+	rsp, err := api.Get(ctx, "", &clientv2.GetOptions{Recursive: false, Sort: true, Quorum: true})
+	if err != nil {
+		klog.Errorf("failed to get etcdcluster index,err is %v", err)
+		return nil, err
+	}
+	klog.V(2).Infof("finish to get etcdcluster index,%d", rsp.Index)
+	metadata[featureutil.ConsistencyIndex] = rsp.Index
+	metadata[featureutil.ConsistencyRaftRaftAppliedIndex] = 0
+	metadata[featureutil.ConsistencyRaftIndex] = 0
+	return metadata, nil
 }
 
 func (c *StatV2) Close() error {
