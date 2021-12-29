@@ -71,5 +71,5 @@ func (c *FeatureConsistency) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
 }
 
 func (c *FeatureConsistency) Do(inspection *kstonev1alpha1.EtcdInspection) error {
-	return c.inspection.CollectMemberConsistency(inspection)
+	return c.inspection.CollectClusterConsistentData(inspection)
 }

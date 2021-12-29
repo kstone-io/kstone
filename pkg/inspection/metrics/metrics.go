@@ -57,6 +57,34 @@ var (
 		Name:      "etcd_endpoint_alarm",
 		Help:      "The alarm of etcd member",
 	}, []string{"clusterName", "endpoint", "alarmType"})
+
+	EtcdNodeRevisionDiff = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "etcd_node_revision_diff_total",
+		Help:      "The revision difference between all member",
+	}, []string{"clusterName"})
+
+	EtcdNodeIndexDiff = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "etcd_node_index_diff_total",
+		Help:      "The index difference between all member",
+	}, []string{"clusterName"})
+
+	EtcdNodeRaftAppliedIndexDiff = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "etcd_node_raft_applied_index_diff_total",
+		Help:      "The raft applied index difference between all member",
+	}, []string{"clusterName"})
+
+	EtcdNodeRaftIndexDiff = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "etcd_node_raft_index_diff_total",
+		Help:      "The raft index difference between all member",
+	}, []string{"clusterName"})
 )
 
 func init() {
@@ -65,4 +93,8 @@ func init() {
 	prometheus.MustRegister(EtcdRequestTotal)
 	prometheus.MustRegister(EtcdKeyTotal)
 	prometheus.MustRegister(EtcdEndpointAlarm)
+	prometheus.MustRegister(EtcdNodeRevisionDiff)
+	prometheus.MustRegister(EtcdNodeIndexDiff)
+	prometheus.MustRegister(EtcdNodeRaftAppliedIndexDiff)
+	prometheus.MustRegister(EtcdNodeRaftIndexDiff)
 }
