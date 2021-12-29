@@ -17,7 +17,7 @@
   "gnetId": 3070,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1640005026961,
+  "iteration": 1640766483206,
   "links": [],
   "panels": [
     {
@@ -3497,19 +3497,52 @@
       "steppedLine": false,
       "targets": [
         {
+          "exemplar": true,
           "expr": "kstone_inspection_etcd_node_diff_total{clusterName=\"$job\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{clusterName}}",
+          "legendFormat": "key_{{clusterName}}",
           "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "kstone_inspection_etcd_node_revision_diff_total{clusterName=\"$job\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "revision_{{clusterName}}",
+          "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "kstone_inspection_etcd_node_index_diff_total{clusterName=\"$job\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "index_{{clusterName}}",
+          "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "kstone_inspection_etcd_node_raft_applied_index_diff_total{clusterName=\"$job\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "raft_applied_{{clusterName}}",
+          "refId": "D"
+        },
+        {
+          "exemplar": true,
+          "expr": "kstone_inspection_etcd_node_raft_index_diff_total{clusterName=\"$job\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "raft_index_{{clusterName}}",
+          "refId": "E"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Consistency",
+      "title": "The consistency difference between each node",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3680,9 +3713,9 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "demo3",
-          "value": "demo3"
+          "selected": true,
+          "text": "demo0x00",
+          "value": "demo0x00"
         },
         "datasource": "$datasource",
         "definition": "query_result(sum by (job) (increase(etcd_server_has_leader{}[$__range])))",
