@@ -12,19 +12,19 @@
 
 # 2 参考
 
-### 步骤1: 打开 kstone-dashboard UI 然后点击 "关联集群":
+### 步骤1: 打开 kstone-dashboard UI 然后点击 "导入集群":
 
-![kstone-associate](../../images/images_for_backup_cos/kstone-associate.png)
+![kstone-associate](../../images/images_for_backup_cos/zh/kstone-associate.png)
 
-### 步骤 2: 关联etcd集群到kstone:
+### 步骤 2: 导入etcd集群到kstone:
 
 本文档将会使用kubeadm管理的etcd集群
 
 填好下面的内容然后 "提交"
 
-![kstone-associate](../../images/images_for_backup_cos/kstone-associate2.png)
+![kstone-associate](../../images/images_for_backup_cos/zh/kstone-associate2.png)
 
-![kstone-associate](../../images/images_for_backup_cos/kstone-associate3.png)
+![kstone-associate](../../images/images_for_backup_cos/zh/kstone-associate3.png)
 集群名称: etcd集群的名称，唯一键
 
 集群备注: 集群的备注名称
@@ -55,7 +55,7 @@ CA证书: etcd集群的CA证书
 
 ### 步骤 3: 开启备份功能
 
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/zh/kstone-enable-backup.png)
 
 现在我们有了一个状态正常的etcd集群, 让我们来开启备份功能.
 
@@ -100,13 +100,13 @@ CA证书: etcd集群的CA证书
 
 
 
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup2.png)
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup3.png)
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup4.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/zh/kstone-enable-backup2.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/zh/kstone-enable-backup3.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/zh/kstone-enable-backup4.png)
 
 
 + 等待BackupIntervalInSecond秒然后检查 COS bucket
 
-![kstone-enable-backup](../../images/images_for_backup_cos/kstone-enable-backup5.png)
+![kstone-enable-backup](../../images/images_for_backup_cos/zh/kstone-enable-backup5.png)
 
 你会发现一个带有之前指定前缀的etcd备份文件
