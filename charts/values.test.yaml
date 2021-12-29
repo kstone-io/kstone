@@ -5,7 +5,7 @@
 global:
   env: test
   kstone:
-    tag: v0.0.1-alpha.2
+    tag: v0.1.0-alpha.1
 
 serviceAccount:
   # Specifies whether a service account should be created
