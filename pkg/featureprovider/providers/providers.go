@@ -31,4 +31,6 @@ import (
 	_ "tkestack.io/kstone/pkg/featureprovider/providers/request"
 	// register alarm inspection feature
 	_ "tkestack.io/kstone/pkg/featureprovider/providers/alarm"
+	// register backupcheck inspection feature
+	_ "tkestack.io/kstone/pkg/featureprovider/providers/backupcheck"
 )

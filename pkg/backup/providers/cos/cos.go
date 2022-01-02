@@ -21,20 +21,23 @@ package cos
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/coreos/etcd-operator/pkg/apis/etcd/v1beta2"
 	tencentCOS "github.com/tencentyun/cos-go-sdk-v5"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 
 	"tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/backup"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 )
 
 const (
@@ -126,4 +129,24 @@ func (p *BackupProvider) List(cluster *v1alpha1.EtcdCluster) (interface{}, error
 	}
 
 	return result.Contents, nil
+}
+
+func (p *BackupProvider) StatBackupFiles(resp interface{}) (int, error) {
+	res, ok := resp.([]tencentCOS.Object)
+	if !ok {
+		return 0, errors.New("can not decode resp to COS object")
+	}
+	backupFiles := 0
+	for i := len(res) - 1; i >= 0; i-- {
+		lastModifiedTime, err := time.Parse("2006-01-02T15:04:05Z", res[i].LastModified)
+		if err != nil {
+			return 0, errors.New("can not parse COS time")
+		}
+		timeElapse := int64(time.Since(lastModifiedTime).Seconds())
+		if timeElapse > featureutil.OneDaySeconds {
+			break
+		}
+		backupFiles++
+	}
+	return backupFiles, nil
 }
