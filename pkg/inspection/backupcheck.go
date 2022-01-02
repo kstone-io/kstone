@@ -20,9 +20,6 @@ package inspection
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -43,7 +40,6 @@ func (c *Server) StatBackupFiles(inspection *kstonev1alpha1.EtcdInspection) erro
 		"clusterName": name,
 	}
 	cluster, err := c.cli.KstoneV1alpha1().EtcdClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil
@@ -51,40 +47,28 @@ func (c *Server) StatBackupFiles(inspection *kstonev1alpha1.EtcdInspection) erro
 		return err
 	}
 
-	// generate backup config
-	strCfg, found := cluster.Annotations[backup.AnnoBackupConfig]
-	if !found || strCfg == "" {
-		err = fmt.Errorf(
-			"backup config not found, annotation key %s not exists, namespace is %s, name is %s",
-			backup.AnnoBackupConfig,
-			cluster.Namespace,
-			cluster.Name,
-		)
-		klog.Errorf("failed to get backup config,cluster %s,err is %v", inspection.ClusterName, err)
-		return err
-	}
-	backupConfig := &backup.Config{}
-	err = json.Unmarshal([]byte(strCfg), backupConfig)
+	// get backup config
+	backupConfig, err := featureutil.GetBackupConfig(cluster)
 	if err != nil {
-		klog.Errorf("failed to unmarshal backup config,cluster %s,err is %v", inspection.ClusterName, err)
+		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		return err
 	}
 
-	// generate backup provider
-	backupProvider, err := backup.GetBackupProvider(string(backupConfig.StorageType), &backup.ProviderConfig{
-		Kubeconfig: "",
+	// get specified backup storage provider
+	storage, err := backup.GetBackupStorageProvider(string(backupConfig.StorageType), &backup.StorageConfig{
+		KubeCli: c.kubeCli,
 	})
 	if err != nil {
 		klog.Errorf("failed to get backup provider,cluster %s,err is %v", inspection.ClusterName, err)
 		return err
 	}
-	resp, err := backupProvider.List(cluster)
+	objects, err := storage.List(cluster)
 	if err != nil {
 		klog.Errorf("failed to list backup files,cluster %s,err is %v", inspection.ClusterName, err)
 		return err
 	}
 
-	actualFiles, err := backupProvider.StatBackupFiles(resp)
+	actualFiles, err := storage.Stat(objects)
 	if err != nil {
 		klog.Errorf("failed to stat backup files,cluster %s,err is %v", inspection.ClusterName, err)
 		return err
