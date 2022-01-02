@@ -21,7 +21,6 @@ package util
 import (
 	"strconv"
 	"strings"
-
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 )
 
@@ -38,6 +37,10 @@ const (
 	ConsistencyIndex                ConsistencyType = "index"
 	ConsistencyRaftRaftAppliedIndex ConsistencyType = "raftAppliedIndex"
 	ConsistencyRaftIndex            ConsistencyType = "raftIndex"
+)
+
+const (
+	OneDaySeconds = 24 * 60 * 60
 )
 
 func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha1.KStoneFeature) bool {

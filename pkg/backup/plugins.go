@@ -34,6 +34,9 @@ var (
 
 type Provider interface {
 	List(cluster *v1alpha1.EtcdCluster) (interface{}, error)
+
+	// StatBackupFiles counts the number of backup file in the last day.
+	StatBackupFiles(resp interface{}) (int, error)
 }
 
 type ProviderConfig struct {
