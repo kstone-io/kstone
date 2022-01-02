@@ -20,7 +20,6 @@ package cos
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,7 +31,6 @@ import (
 	tencentCOS "github.com/tencentyun/cos-go-sdk-v5"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 
 	"tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
@@ -44,57 +42,32 @@ const (
 	ProviderName = string(v1beta2.BackupStorageTypeCOS)
 )
 
-type BackupProvider struct {
-	kubeconfig string
+type StorageCOS struct {
+	kubeCli kubernetes.Interface
 }
 
 func init() {
-	backup.RegisterBackupFactory(ProviderName, func(config *backup.ProviderConfig) (backup.Provider, error) {
+	backup.RegisterBackupStorageFactory(ProviderName, func(config *backup.StorageConfig) (backup.Storage, error) {
 		return NewCOSBackupProvider(config), nil
 	})
 }
 
-func NewCOSBackupProvider(config *backup.ProviderConfig) backup.Provider {
-	return &BackupProvider{
-		kubeconfig: config.Kubeconfig,
+func NewCOSBackupProvider(config *backup.StorageConfig) backup.Storage {
+	return &StorageCOS{
+		kubeCli: config.KubeCli,
 	}
 }
 
-func (p *BackupProvider) List(cluster *v1alpha1.EtcdCluster) (interface{}, error) {
-	var err error
-	strCfg, found := cluster.Annotations[backup.AnnoBackupConfig]
-	if !found {
-		err = fmt.Errorf(
-			"backup config not found, annotation key %s not exists, namespace is %s, name is %s",
-			backup.AnnoBackupConfig,
-			cluster.Namespace,
-			cluster.Name,
-		)
-		klog.Errorf(err.Error())
-		return nil, err
-	}
-
-	backupConfig := &backup.Config{}
-	err = json.Unmarshal([]byte(strCfg), backupConfig)
+func (c *StorageCOS) List(cluster *v1alpha1.EtcdCluster) (interface{}, error) {
+	// get backup config
+	backupConfig, err := featureutil.GetBackupConfig(cluster)
 	if err != nil {
-		klog.Errorf(err.Error())
+		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		return nil, err
 	}
-	klog.Info(backupConfig)
+	klog.V(3).Infof("backup config is %v", backupConfig)
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", p.kubeconfig)
-	if err != nil {
-		klog.Errorf(err.Error())
-		return nil, err
-	}
-
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		klog.Errorf(err.Error())
-		return nil, err
-	}
-
-	secret, err := kubeClient.CoreV1().Secrets("kstone").Get(context.TODO(), backupConfig.COS.COSSecret, v1.GetOptions{})
+	secret, err := c.kubeCli.CoreV1().Secrets("kstone").Get(context.TODO(), backupConfig.COS.COSSecret, v1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())
 		return nil, err
@@ -113,14 +86,14 @@ func (p *BackupProvider) List(cluster *v1alpha1.EtcdCluster) (interface{}, error
 
 	u, _ := url.Parse(cosPath)
 	b := &tencentCOS.BaseURL{BucketURL: u}
-	c := tencentCOS.NewClient(b, &http.Client{
+	client := tencentCOS.NewClient(b, &http.Client{
 		Transport: &tencentCOS.AuthorizationTransport{
 			SecretID:  secretID,
 			SecretKey: secretKey,
 		},
 	})
 
-	result, _, err := c.Bucket.Get(context.Background(), &tencentCOS.BucketGetOptions{
+	result, _, err := client.Bucket.Get(context.Background(), &tencentCOS.BucketGetOptions{
 		Prefix: strings.TrimLeft(b.BucketURL.Path, "/"),
 	})
 	if err != nil {
@@ -131,14 +104,14 @@ func (p *BackupProvider) List(cluster *v1alpha1.EtcdCluster) (interface{}, error
 	return result.Contents, nil
 }
 
-func (p *BackupProvider) StatBackupFiles(resp interface{}) (int, error) {
-	res, ok := resp.([]tencentCOS.Object)
+func (c *StorageCOS) Stat(objects interface{}) (int, error) {
+	cosObjects, ok := objects.([]tencentCOS.Object)
 	if !ok {
-		return 0, errors.New("can not decode resp to COS object")
+		return 0, errors.New("can not decode objects to COS objects")
 	}
 	backupFiles := 0
-	for i := len(res) - 1; i >= 0; i-- {
-		lastModifiedTime, err := time.Parse("2006-01-02T15:04:05Z", res[i].LastModified)
+	for i := len(cosObjects) - 1; i >= 0; i-- {
+		lastModifiedTime, err := time.Parse("2006-01-02T15:04:05Z", cosObjects[i].LastModified)
 		if err != nil {
 			return 0, errors.New("can not parse COS time")
 		}
