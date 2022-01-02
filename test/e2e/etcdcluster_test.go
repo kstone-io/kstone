@@ -76,6 +76,11 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
+		ginkgo.It("kstone should generate etcdinspection/backupcheck resources", func() {
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
 		ginkgo.It("kstone should generate prometheus servicemonitor resources", func() {
 			err := CheckServiceMonitorEnabled(clusterName)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -103,6 +108,11 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 
 		ginkgo.It("kstone should be able to disable etcdinspection/alarm feature", func() {
 			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable etcdinspection/backupcheck feature", func() {
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
@@ -140,6 +150,11 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 
 		ginkgo.It("kstone should delete etcdinspection/alarm resources", func() {
 			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdinspection/backupcheck resources", func() {
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
