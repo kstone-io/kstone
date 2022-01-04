@@ -109,6 +109,11 @@ func (c *Server) getEtcdConsistentMetadata(
 func (c *Server) CollectClusterConsistentData(inspection *kstonev1alpha1.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
+	defer func() {
+		if err != nil {
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureConsistency)
+		}
+	}()
 	if err != nil {
 		klog.Errorf("failed to load tls config, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return err
