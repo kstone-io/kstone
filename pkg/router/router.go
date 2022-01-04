@@ -38,6 +38,9 @@ import (
 	_ "tkestack.io/kstone/pkg/backup/providers"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
+	"tkestack.io/kstone/pkg/featureprovider"
+	// import feature provider
+	_ "tkestack.io/kstone/pkg/featureprovider/providers"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 )
@@ -67,6 +70,7 @@ func NewRouter() *gin.Engine {
 
 	r.GET("/apis/etcd/:etcdName", EtcdKeyList)
 	r.GET("/apis/backup/:etcdName", BackupList)
+	r.GET("/apis/features", FeatureList)
 	return r
 }
 
@@ -309,4 +313,10 @@ func BackupList(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, resp)
+}
+
+// FeatureList returns all features
+func FeatureList(ctx *gin.Context) {
+	features := featureprovider.ListFeatureProvider()
+	ctx.JSON(http.StatusOK, features)
 }
