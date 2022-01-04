@@ -28,6 +28,7 @@ import (
 
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/backup"
+	"tkestack.io/kstone/pkg/inspection/metrics"
 )
 
 const (
@@ -88,4 +89,12 @@ func GetBackupConfig(cluster *kstonev1alpha1.EtcdCluster) (*backup.Config, error
 		return nil, err
 	}
 	return backupConfig, nil
+}
+
+func IncrFailedInspectionCounter(clusterName string, featureName kstonev1alpha1.KStoneFeature) {
+	labels := map[string]string{
+		"clusterName":    clusterName,
+		"inspectionType": string(featureName),
+	}
+	metrics.EtcdInspectionFailedNum.With(labels).Inc()
 }
