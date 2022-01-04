@@ -34,6 +34,7 @@ import (
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
+	"tkestack.io/kstone/pkg/featureprovider"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
@@ -47,30 +48,29 @@ const (
 type Server struct {
 	cli       *clientset.Clientset
 	kubeCli   kubernetes.Interface
-	tlsGetter etcd.TLSGetter
 	client    map[string]*clientv3.Client
 	wchan     map[string]clientv3.WatchChan
 	watcher   map[string]clientv3.Watcher
 	eventCh   map[string]chan *clientv3.Event
 	mux       sync.Mutex
+	tlsGetter etcd.TLSGetter
 }
 
 // NewInspectionServer generates the server of inspection
-func NewInspectionServer(clientBuilder util.ClientBuilder) (*Server, error) {
-	cli, err := clientset.NewForConfig(clientBuilder.ConfigOrDie())
+func NewInspectionServer(ctx *featureprovider.FeatureContext) (*Server, error) {
+	cli, err := clientset.NewForConfig(ctx.ClientBuilder.ConfigOrDie())
 	if err != nil {
 		klog.Errorf("failed to init etcdinspection client, err is %v", err)
 		return nil, err
 	}
-
 	return &Server{
-		kubeCli:   clientBuilder.ClientOrDie(),
+		kubeCli:   ctx.ClientBuilder.ClientOrDie(),
 		cli:       cli,
-		tlsGetter: etcd.NewTLSSecretGetter(clientBuilder),
 		client:    make(map[string]*clientv3.Client),
 		wchan:     make(map[string]clientv3.WatchChan),
 		watcher:   make(map[string]clientv3.Watcher),
 		eventCh:   make(map[string]chan *clientv3.Event),
+		tlsGetter: ctx.TLSGetter,
 	}, nil
 }
 
@@ -155,7 +155,7 @@ func (c *Server) initInspectionTask(
 func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha1.EtcdCluster, *transport.TLSInfo, error) {
 	cluster, err := c.GetEtcdCluster(namespace, name)
 	if err != nil {
-		klog.Errorf("faild to get cluster info, namespace is %s, name is %s, err is %v", namespace, name, err)
+		klog.Errorf("failed to get cluster info, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return nil, nil, err
 	}
 
