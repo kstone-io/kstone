@@ -39,7 +39,13 @@ func (c *Server) StatBackupFiles(inspection *kstonev1alpha1.EtcdInspection) erro
 	labels := map[string]string{
 		"clusterName": name,
 	}
+
 	cluster, err := c.cli.KstoneV1alpha1().EtcdClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	defer func() {
+		if err != nil {
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureBackupCheck)
+		}
+	}()
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil
