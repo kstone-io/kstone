@@ -32,6 +32,7 @@ import (
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	"tkestack.io/kstone/pkg/etcd"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/inspection/metrics"
 )
 
@@ -50,6 +51,12 @@ type RequestInfo struct {
 func (c *Server) CollectEtcdClusterRequest(inspection *kstonev1alpha1.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
+	defer func() {
+		if err != nil {
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureRequest)
+		}
+	}()
+
 	if err != nil {
 		klog.Errorf("failed to get cluster info, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return err

@@ -99,6 +99,13 @@ var (
 		Name:      "etcd_failed_backup_files",
 		Help:      "The Number of failed backup files in the last day",
 	}, []string{"clusterName"})
+
+	EtcdInspectionFailedNum = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "failed_num",
+		Help:      "The total Number of failed inspection",
+	}, []string{"clusterName", "inspectionType"})
 )
 
 func init() {
@@ -113,4 +120,5 @@ func init() {
 	prometheus.MustRegister(EtcdNodeRaftIndexDiff)
 	prometheus.MustRegister(EtcdBackupFiles)
 	prometheus.MustRegister(EtcdFailedBackupFiles)
+	prometheus.MustRegister(EtcdInspectionFailedNum)
 }
