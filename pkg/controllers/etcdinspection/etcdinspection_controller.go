@@ -29,15 +29,18 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	informerscorev1 "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	listerscorev1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	klog "k8s.io/klog/v2"
 
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	"tkestack.io/kstone/pkg/etcd"
 	// register etcd cluster providers
 	_ "tkestack.io/kstone/pkg/clusterprovider/providers"
 	"tkestack.io/kstone/pkg/controllers/util"
@@ -57,6 +60,9 @@ type InspectionController struct {
 	// platformclientset is a clientset for our own API group
 	platformclientset clientset.Interface
 
+	secretLister listerscorev1.SecretLister
+	secretSynced cache.InformerSynced
+
 	etcdinspectionLister listers.EtcdInspectionLister
 	etcdinspectionSynced cache.InformerSynced
 	// To allow injection of doClusterInspection for testing.
@@ -73,6 +79,8 @@ type InspectionController struct {
 	recorder record.EventRecorder
 
 	clientbuilder util.ClientBuilder
+
+	tlsGetter etcd.TLSGetter
 }
 
 func NewInspectionControllerMetric() http.Handler {
@@ -92,6 +100,7 @@ func NewEtcdInspectionController(
 	clientbuilder util.ClientBuilder,
 	kubeclientset kubernetes.Interface,
 	platformclientset clientset.Interface,
+	secretInformer informerscorev1.SecretInformer,
 	etcdinspectionInformer informers.EtcdInspectionInformer) *InspectionController {
 
 	// Create event broadcaster
@@ -111,6 +120,8 @@ func NewEtcdInspectionController(
 		clientbuilder:        clientbuilder,
 		kubeclientset:        kubeclientset,
 		platformclientset:    platformclientset,
+		secretLister:         secretInformer.Lister(),
+		secretSynced:         secretInformer.Informer().HasSynced,
 		etcdinspectionLister: etcdinspectionInformer.Lister(),
 		etcdinspectionSynced: etcdinspectionInformer.Informer().HasSynced,
 		workqueue: workqueue.NewNamedRateLimitingQueue(
@@ -120,6 +131,7 @@ func NewEtcdInspectionController(
 		recorder: recorder,
 	}
 	controller.syncHandler = controller.doClusterInspection
+	controller.tlsGetter = etcd.NewTLSSecretCacheGetter(controller.secretLister)
 
 	klog.Info("Setting up event handlers")
 	// Set up an event handler for when etcdinspection resources change
@@ -146,7 +158,7 @@ func (c *InspectionController) Run(threadiness int, stopCh <-chan struct{}) erro
 
 	// Wait for the caches to be synced before starting workers
 	klog.Info("Waiting for informer caches to sync")
-	if ok := cache.WaitForCacheSync(stopCh, c.etcdinspectionSynced); !ok {
+	if ok := cache.WaitForCacheSync(stopCh, c.secretSynced, c.etcdinspectionSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
@@ -234,7 +246,10 @@ func (c *InspectionController) enqueueEtcdInspection(obj interface{}) {
 }
 
 func (c *InspectionController) GetInspectionFeatureProvider(name string) (featureprovider.Feature, error) {
-	ctx := &featureprovider.FeatureContext{ClientBuilder: c.clientbuilder}
+	ctx := &featureprovider.FeatureContext{
+		ClientBuilder: c.clientbuilder,
+		TLSGetter:     c.tlsGetter,
+	}
 	feature, err := featureprovider.GetFeatureProvider(name, ctx)
 	if err != nil {
 		return nil, err

@@ -22,12 +22,13 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"sync"
 
 	"go.etcd.io/etcd/client/pkg/v3/transport"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	klog "k8s.io/klog/v2"
+	listerscorev1 "k8s.io/client-go/listers/core/v1"
+	"k8s.io/klog/v2"
 
 	"tkestack.io/kstone/pkg/controllers/util"
 )
@@ -36,20 +37,27 @@ type TLSGetter interface {
 	Config(path string, sc string) (*transport.TLSInfo, error)
 }
 
-type TLSSecretCacher struct {
-	kubeCli kubernetes.Interface
-	tlsMap  map[string]*transport.TLSInfo
-	mutex   sync.Mutex
+type TLSSecret struct {
+	kubeCli      kubernetes.Interface
+	secretLister listerscorev1.SecretLister
+	secretGetter func(t *TLSSecret, namespace, secretName string) (*v1.Secret, error)
 }
 
-func NewTLSSecretGetter(clientbuilder util.ClientBuilder) TLSGetter {
-	var tlsSecretCacher TLSSecretCacher
-	tlsSecretCacher.kubeCli = clientbuilder.ClientOrDie()
-	tlsSecretCacher.tlsMap = make(map[string]*transport.TLSInfo)
-	return &tlsSecretCacher
+func NewTLSSecretGetter(clientBuilder util.ClientBuilder) *TLSSecret {
+	return &TLSSecret{
+		kubeCli:      clientBuilder.ClientOrDie(),
+		secretGetter: Secret,
+	}
 }
 
-func (tsc *TLSSecretCacher) Config(path string, sc string) (*transport.TLSInfo, error) {
+func NewTLSSecretCacheGetter(secretLister listerscorev1.SecretLister) *TLSSecret {
+	return &TLSSecret{
+		secretLister: secretLister,
+		secretGetter: SecretCache,
+	}
+}
+
+func (t *TLSSecret) Config(path string, sc string) (*transport.TLSInfo, error) {
 	if sc == "" {
 		return nil, nil
 	}
@@ -62,16 +70,9 @@ func (tsc *TLSSecretCacher) Config(path string, sc string) (*transport.TLSInfo, 
 		namespace = items[0]
 		secretName = items[1]
 	}
-
-	tsc.mutex.Lock()
-	defer tsc.mutex.Unlock()
-
-	tlsKey := path + "_" + secretName
-	if tls, found := tsc.tlsMap[tlsKey]; found {
-		return tls, nil
-	}
-
-	secret, err := tsc.kubeCli.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+	var secret *v1.Secret
+	var err error
+	secret, err = t.secretGetter(t, namespace, secretName)
 	if err != nil {
 		klog.Errorf("failed to get secret, namespace is %s, secret name is %s", namespace, secretName)
 		return nil, err
@@ -91,6 +92,13 @@ func (tsc *TLSSecretCacher) Config(path string, sc string) (*transport.TLSInfo, 
 		CertFile:      certFile,
 	}
 
-	tsc.tlsMap[tlsKey] = cfg
 	return cfg, nil
+}
+
+func SecretCache(t *TLSSecret, namespace, secretName string) (*v1.Secret, error) {
+	return t.secretLister.Secrets(namespace).Get(secretName)
+}
+
+func Secret(t *TLSSecret, namespace, secretName string) (*v1.Secret, error) {
+	return t.kubeCli.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 }

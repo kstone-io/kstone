@@ -21,6 +21,7 @@ package featureprovider
 import (
 	"tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/controllers/util"
+	"tkestack.io/kstone/pkg/etcd"
 )
 
 // Feature is an abstract, pluggable interface for cluster features.
@@ -36,4 +37,5 @@ type Feature interface {
 }
 type FeatureContext struct {
 	ClientBuilder util.ClientBuilder
+	TLSGetter     etcd.TLSGetter
 }

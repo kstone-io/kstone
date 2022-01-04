@@ -82,6 +82,7 @@ func (c *EtcdInspectionCommand) Run() error {
 		util.NewSimpleClientBuilder(c.kubeconfig),
 		kubeClient,
 		clusterClient,
+		kubeInformerFactory.Core().V1().Secrets(),
 		informerFactory.Kstone().V1alpha1().EtcdInspections(),
 	)
 	// notice that there is no need to run Start methods in a separate goroutine.
