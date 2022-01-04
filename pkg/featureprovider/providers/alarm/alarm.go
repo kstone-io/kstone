@@ -57,7 +57,7 @@ func initFeatureAlarmInstance(ctx *featureprovider.FeatureContext) (featureprovi
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		instance.inspection, err = inspection.NewInspectionServer(ctx.ClientBuilder)
+		instance.inspection, err = inspection.NewInspectionServer(ctx)
 	})
 	return instance, err
 }
