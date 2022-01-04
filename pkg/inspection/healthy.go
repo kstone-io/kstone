@@ -23,6 +23,7 @@ import (
 
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/etcd"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/inspection/metrics"
 )
 
@@ -31,6 +32,11 @@ import (
 func (c *Server) CollectMemberHealthy(inspection *kstonev1alpha1.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
+	defer func() {
+		if err != nil {
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureHealthy)
+		}
+	}()
 	if err != nil {
 		klog.Errorf("load tlsConfig failed, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return err
