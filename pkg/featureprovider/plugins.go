@@ -22,7 +22,7 @@ import (
 	"errors"
 	"sync"
 
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -56,4 +56,15 @@ func GetFeatureProvider(name string, ctx *FeatureContext) (Feature, error) {
 		return nil, errors.New("fatal error,feature provider not found")
 	}
 	return f(ctx)
+}
+
+// ListFeatureProvider lists all feature provider
+func ListFeatureProvider() []string {
+	var features []string
+	mutex.Lock()
+	defer mutex.Unlock()
+	for feature := range EtcdFeatureProviders {
+		features = append(features, feature)
+	}
+	return features
 }
