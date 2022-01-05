@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	"tkestack.io/kstone/test/fixtures"
 	"tkestack.io/kstone/test/testfiles"
@@ -68,6 +69,7 @@ func TestE2E(t *testing.T) {
 
 var _ = ginkgo.BeforeSuite(func() {
 	// KUBECONFIG=/Users/etcd/.kube/config
+
 	workspace := os.Getenv("GITHUB_WORKSPACE")
 	gomega.Expect(workspace).ShouldNot(gomega.BeEmpty())
 
@@ -97,6 +99,9 @@ var _ = ginkgo.BeforeSuite(func() {
 	testfiles.AddFileSource(testfiles.RootFileSource{Root: fixturesDir})
 
 	err = CreateTmpTestEtcdCluster()
+	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+	err = createKstoneEtcdOperatorCluster(fixtures.DefaultKstoneEtcdOperatorClusterName, 1, kstonev1alpha1.EtcdClusterKstone, fixtures.DefaultFeatureGate)
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 }, TestSuiteSetupTimeOut.Seconds())

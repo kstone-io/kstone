@@ -35,6 +35,7 @@ spec:
             metadata:
               type: object
             spec:
+              x-kubernetes-preserve-unknown-fields: true
               description: EtcdClusterSpec defines the desired state of EtcdCluster
               properties:
                 affinity:

@@ -33,11 +33,17 @@ import (
 )
 
 const (
-	DefaultFeatureGate                = "monitor=true,consistency=true,healthy=true,request=true,backup=true,alarm=true,backupcheck=true"
-	DefaultTestClusterAddr            = "etcd-test-headless.default.svc.cluster.local:2379"
-	DefaultTestClusterStatefulsetYaml = "etcd_statefulset.yaml"
-	DefaultTestClusterSvcYaml         = "etcd_service.yaml"
-	DefaultKstoneNamespace            = "kstone"
+	DefaultFeatureGate                    = "monitor=true,consistency=true,healthy=true,request=true,backup=true,alarm=true,backupcheck=true"
+	DefaultTestClusterAddr                = "etcd-test-headless.default.svc.cluster.local:2379"
+	DefaultTestClusterStatefulsetYaml     = "etcd_statefulset.yaml"
+	DefaultTestClusterSvcYaml             = "etcd_service.yaml"
+	DefaultKstoneNamespace                = "kstone"
+	DefaultTestPodName                    = "etcd-test-0"
+	DefaultNamespace                      = "default"
+	DefautlKstoneEtcdOperatorClustePvYaml = "etcd_pv.yaml"
+	DefaultKstoneEtcdOperatorClusterDir   = "/home/runner/work/kstone/kstone/etcd"
+	DefaultKstoneEtcdOperatorClusterName  = "kstone-etcd-operator-test"
+	DefaultKstoneEtcdOperatorPodName      = "kstone-etcd-operator-test-etcd-0"
 )
 
 func NewEtcdCluster(
@@ -82,6 +88,52 @@ func NewEtcdCluster(
 			Version:     "3.5.0",
 			TotalCpu:    2,
 			TotalMem:    8,
+		},
+	}
+}
+
+func NewKstoneEtcdOperatorCluster(
+	name string,
+	replicas uint,
+	clusterType kstonev1alpha1.EtcdClusterType,
+	featureGate string) *kstonev1alpha1.EtcdCluster {
+	return &kstonev1alpha1.EtcdCluster{
+		TypeMeta: metav1.TypeMeta{APIVersion: kstonev1alpha1.SchemeGroupVersion.String()},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: DefaultKstoneNamespace,
+			Labels:    map[string]string{},
+			Annotations: map[string]string{
+				"autoTest":     "true",
+				"featureGates": featureGate,
+				"scheme":       "http",
+				"backup": `
+{
+	"backupPolicy": {
+		"backupIntervalInSecond": 600,
+		"maxBackups": 20,
+		"timeoutInSecond": 10000
+	},
+	"cos": {
+		"cosSecret": "kstone-test",
+		"path": "kstone-test.cos.ap-nanjing.myqcloud.com/kstone-test"
+	},
+	"storageType": "COS"
+}
+`,
+			},
+		},
+
+		Spec: kstonev1alpha1.EtcdClusterSpec{
+			ClusterType: clusterType,
+			Size:        replicas,
+			DiskSize:    3,
+			DiskType:    "ssd",
+			Version:     "3.4.13",
+			TotalCpu:    1,
+			TotalMem:    1,
+			QosType:     "Burstable",
+			QosRatio:    10,
 		},
 	}
 }
@@ -140,4 +192,22 @@ func StatefulSetFromManifest(fileName, ns string) (*appsv1.StatefulSet, error) {
 		}
 	}
 	return &ss, nil
+}
+
+// PvFromManifest reads a .json/yaml file and create an pv.
+func PvFromManifest(fileName string) (*v1.PersistentVolume, error) {
+	var pv v1.PersistentVolume
+	data, err := testfiles2.Read(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	json, err := utilyaml.ToJSON(data)
+	if err != nil {
+		return nil, err
+	}
+	if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), json, &pv); err != nil {
+		return nil, err
+	}
+	return &pv, nil
 }

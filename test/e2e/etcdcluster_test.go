@@ -21,6 +21,8 @@ package e2e
 import (
 	"context"
 	"errors"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -29,6 +31,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/klog/v2"
 
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/backup"
@@ -37,7 +40,8 @@ import (
 
 var _ = ginkgo.Describe("etcdcluster", func() {
 	clusterName := "kstone-test"
-	ginkgo.Describe("import an existed etcdcluster and enable monitor,backup,healthy,request,consistency,alarm features", func() {
+	podName := fixtures.DefaultTestPodName
+	ginkgo.Describe("import an existed etcdcluster and enable monitor,backup,healthy,request,consistency,alarm,backupcheck features", func() {
 		ginkgo.BeforeEach(func() {
 			//TODO: kstone does not support headless service,just use pod ip to bypass
 			podIP, err := getEtcdPodIP()
@@ -53,6 +57,13 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 
 		ginkgo.It("ensure cluster status to be running", func() {
 			err := waitClusterStatusToRunning(clusterName)
+			if err != nil {
+				PrintDescribePodInfo(podName, fixtures.DefaultNamespace)
+				hostName, err2 := os.Hostname()
+				if err2 == nil {
+					PrintDescribeNodeInfo(hostName)
+				}
+			}
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
@@ -162,6 +173,138 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 			err := CheckBackupDisabled(clusterName)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
+	})
+})
+
+var _ = ginkgo.Describe("kstone-etcd-operator etcdcluster", func() {
+	clusterName := fixtures.DefaultKstoneEtcdOperatorClusterName
+	podName := fixtures.DefaultKstoneEtcdOperatorPodName
+	ginkgo.Describe("create an kstone-etcd-operator etcdcluster and enable monitor,backup,healthy,request,consistency,alarm,backupcheck features", func() {
+
+		ginkgo.It("ensure cluster status to be running", func() {
+			err := waitClusterStatusToRunning(clusterName)
+			if err != nil {
+				PrintDescribePodInfo(podName, fixtures.DefaultKstoneNamespace)
+				hostName, err2 := os.Hostname()
+				if err2 == nil {
+					PrintDescribeNodeInfo(hostName)
+				}
+			}
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should generate etcdinspection/consistency resources", func() {
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureConsistency)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should generate etcdinspection/healthy resources", func() {
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureHealthy)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should generate etcdinspection/request resources", func() {
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureRequest)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should generate etcdinspection/alarm resources", func() {
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should generate etcdinspection/backupcheck resources", func() {
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should generate prometheus servicemonitor resources", func() {
+			err := CheckServiceMonitorEnabled(clusterName)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should generate etcdbackup resources", func() {
+			err := CheckBackupEnabled(clusterName)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable etcdinspection/consistency feature", func() {
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureConsistency)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable etcdinspection/healthy feature", func() {
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureHealthy)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable etcdinspection/request feature", func() {
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureRequest)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable etcdinspection/alarm feature", func() {
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable etcdinspection/backupcheck feature", func() {
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable prometheus servicemonitor feature", func() {
+			err := EnsureServiceMonitorDisabled(clusterName)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should be able to disable etcdbackup feature", func() {
+			err := EnsureBackupDisabled(clusterName)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+	})
+
+	ginkgo.Describe("delete an existed etcdcluster", func() {
+		ginkgo.It("kstone should delete etcd cluster", func() {
+			err := deleteKstoneEtcdOperatorCluster(clusterName)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete servicemonitor resources", func() {
+			err := CheckServiceMonitorDisabled(clusterName)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdinspection/healthy resources", func() {
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureHealthy)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdinspection/request resources", func() {
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureRequest)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdinspection/consistency resources", func() {
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureConsistency)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdinspection/alarm resources", func() {
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdinspection/backupcheck resources", func() {
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
+		ginkgo.It("kstone should delete etcdbackup resources", func() {
+			err := CheckBackupDisabled(clusterName)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+
 	})
 })
 
@@ -371,4 +514,109 @@ func UpdateAnnotationFeature(annotations map[string]string, name kstonev1alpha1.
 		}
 	}
 	return nil
+}
+
+func createKstoneEtcdOperatorCluster(name string, replicas uint, clusterType kstonev1alpha1.EtcdClusterType, featureGate string) error {
+	err := ensureDirEmpty(fixtures.DefaultKstoneEtcdOperatorClusterDir)
+	if err != nil {
+		return err
+	}
+	err = CreateTmpPv()
+	if err != nil {
+		return err
+	}
+
+	etcdcluster := fixtures.NewKstoneEtcdOperatorCluster(name, replicas, clusterType, featureGate)
+	_, err = etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).Create(context.TODO(), etcdcluster, metav1.CreateOptions{})
+	return err
+
+}
+
+func deleteKstoneEtcdOperatorCluster(name string) error {
+	err := etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+	err = kubeClient.CoreV1().PersistentVolumes().Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureDirEmpty(dir string) error {
+	ok, err := PathExists(dir)
+	if err != nil {
+		return err
+	}
+	if ok {
+		err = os.RemoveAll(dir)
+		if err != nil {
+			return err
+		}
+	}
+	err = os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func PathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func CreateTmpPv() error {
+	pv, err := fixtures.PvFromManifest(fixtures.DefautlKstoneEtcdOperatorClustePvYaml)
+	if err != nil {
+		return err
+	}
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+	pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions[0].Values[0] = hostname
+	DeleteTmpPv(pv.Name)
+	_, err = kubeClient.CoreV1().PersistentVolumes().Create(context.TODO(), pv, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteTmpPv(name string) error {
+	_, err := fixtures.PvFromManifest(fixtures.DefautlKstoneEtcdOperatorClustePvYaml)
+	if err != nil {
+		return err
+	}
+	err = kubeClient.CoreV1().PersistentVolumes().Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func PrintDescribePodInfo(podName, namespace string) {
+	cmd := "kubectl describe po " + podName + " -n " + namespace
+	cmnd, err := exec.Command("sh", "-c", cmd).Output()
+	if err != nil {
+		klog.Errorf("failed to exec describe pod,err is %v", err)
+	}
+	klog.Info(string(cmnd))
+}
+
+func PrintDescribeNodeInfo(nodeName string) {
+	cmd := "kubectl describe no " + nodeName
+	cmnd, err := exec.Command("sh", "-c", cmd).Output()
+	if err != nil {
+		klog.Errorf("failed to exec describe node,err is %v", err)
+	}
+	klog.Info(string(cmnd))
 }
