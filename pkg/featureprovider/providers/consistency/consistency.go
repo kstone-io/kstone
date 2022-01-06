@@ -57,7 +57,7 @@ func initFeatureConsistencyInstance(ctx *featureprovider.FeatureContext) (featur
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		instance.inspection, err = inspection.NewInspectionServer(ctx.ClientBuilder)
+		instance.inspection, err = inspection.NewInspectionServer(ctx)
 	})
 	return instance, err
 }
