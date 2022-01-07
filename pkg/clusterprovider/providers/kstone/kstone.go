@@ -38,6 +38,7 @@ import (
 
 	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 	"tkestack.io/kstone/pkg/clusterprovider"
+	clusterutil "tkestack.io/kstone/pkg/clusterprovider/util"
 	"tkestack.io/kstone/pkg/controllers/util"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
@@ -217,13 +218,39 @@ func (c *EtcdClusterKstone) Equal(cluster *kstonev1alpha1.EtcdCluster) (bool, er
 		return false, nil
 	}
 
-	oldCPU, _, _ := unstructured.NestedString(etcd.Object, "spec", "template", "resources", "requests", "cpu")
-	if oldCPU != strconv.Itoa(int(cluster.Spec.TotalCpu)) {
-		klog.Info("cpu is different")
+	oldCPULimits, _, _ := unstructured.NestedString(etcd.Object, "spec", "template", "resources", "limits", "cpu")
+	if oldCPULimits != strconv.Itoa(int(cluster.Spec.TotalCpu)) {
+		klog.Info("cpu limits is different")
 		return false, nil
 	}
 
-	oldMemory, _, _ := unstructured.NestedString(
+	oldMemoryLimits, _, _ := unstructured.NestedString(
+		etcd.Object,
+		"spec",
+		"template",
+		"resources",
+		"limits",
+		"memory",
+	)
+	if strings.TrimRight(oldMemoryLimits, "Gi") != strconv.Itoa(int(cluster.Spec.TotalMem)) {
+		klog.Info("memory limits is different")
+		return false, nil
+	}
+
+	ratio := clusterutil.GetQosRatio(cluster)
+
+	oldCPURequests, _, _ := unstructured.NestedString(etcd.Object, "spec", "template", "resources", "requests", "cpu")
+	desiredCPURequests := clusterutil.CalculateCPURequests(cluster.Spec.TotalCpu, ratio)
+	cpuRequestsEqual, err := clusterutil.CheckResourceEqual(oldCPURequests, desiredCPURequests)
+	if err != nil {
+		return false, err
+	}
+	if !cpuRequestsEqual {
+		klog.Info("cpu requests is different")
+		return false, nil
+	}
+
+	oldMemoryRequests, _, _ := unstructured.NestedString(
 		etcd.Object,
 		"spec",
 		"template",
@@ -231,8 +258,13 @@ func (c *EtcdClusterKstone) Equal(cluster *kstonev1alpha1.EtcdCluster) (bool, er
 		"requests",
 		"memory",
 	)
-	if strings.TrimRight(oldMemory, "Gi") != strconv.Itoa(int(cluster.Spec.TotalMem)) {
-		klog.Info("memory is different")
+	desiredMemoryRequests := clusterutil.CalculateMemoryRequests(cluster.Spec.TotalMem, ratio)
+	memoryRequestsEqual, err := clusterutil.CheckResourceEqual(oldMemoryRequests, desiredMemoryRequests)
+	if err != nil {
+		return false, err
+	}
+	if !memoryRequestsEqual {
+		klog.Info("memory requests is different")
 		return false, nil
 	}
 
@@ -364,6 +396,9 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha1.EtcdCluster
 	envBytes, _ := json.Marshal(cluster.Spec.Env)
 	_ = json.Unmarshal(envBytes, &env)
 
+	ratio := clusterutil.GetQosRatio(cluster)
+	cpuRequests := clusterutil.CalculateCPURequests(cluster.Spec.TotalCpu, ratio)
+	memoryRequests := clusterutil.CalculateMemoryRequests(cluster.Spec.TotalMem, ratio)
 	spec := map[string]interface{}{
 		"size":    int64(cluster.Spec.Size),
 		"version": cluster.Spec.Version,
@@ -386,8 +421,8 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha1.EtcdCluster
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
-					"cpu":    fmt.Sprintf("%d", cluster.Spec.TotalCpu),
-					"memory": fmt.Sprintf("%dGi", cluster.Spec.TotalMem),
+					"cpu":    cpuRequests,
+					"memory": memoryRequests,
 				},
 				"limits": map[string]interface{}{
 					"cpu":    fmt.Sprintf("%d", cluster.Spec.TotalCpu),

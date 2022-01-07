@@ -104,6 +104,9 @@ type EtcdClusterSpec struct {
 	Repository string          `json:"repository,omitempty" protobuf:"bytes,13,opt,name=repository"` // etcd image
 
 	ClusterType EtcdClusterType `json:"clusterType" protobuf:"bytes,14,opt,name=clusterType,casttype=EtcdClusterType"` // ClusterType specifies the etcd cluster provider.
+
+	QosClass string `json:"qosClass" protobuf:"bytes,15,opt,name=qosClass"`  // etcd cluster qosClass, Guaranteed/Burstable
+	QosRatio uint   `json:"qosRatio" protobuf:"varint,16,opt,name=qosRatio"` // The ratio between etcd cluster resource limits and requests, default to 1.
 }
 
 // AuthConfig defines tls
