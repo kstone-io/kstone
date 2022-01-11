@@ -23,7 +23,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/inspection/metrics"
@@ -33,12 +33,12 @@ var alarmTypeList = []string{"NOSPACE", "CORRUPT"}
 
 // CollectAlarmList collects the alarms of etcd, and
 // transfer them to prometheus metrics
-func (c *Server) CollectAlarmList(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *Server) CollectAlarmList(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
-			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureAlarm)
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureAlarm)
 		}
 	}()
 	if err != nil {

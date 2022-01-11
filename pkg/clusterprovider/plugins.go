@@ -24,18 +24,18 @@ import (
 
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 )
 
 type EtcdFactory func(cluster *ClusterContext) (Cluster, error)
 
 var (
 	mutex     sync.Mutex
-	providers = make(map[kstonev1alpha1.EtcdClusterType]EtcdFactory)
+	providers = make(map[kstonev1alpha2.EtcdClusterType]EtcdFactory)
 )
 
 // RegisterEtcdClusterFactory registers the specified cluster provider
-func RegisterEtcdClusterFactory(name kstonev1alpha1.EtcdClusterType, factory EtcdFactory) {
+func RegisterEtcdClusterFactory(name kstonev1alpha2.EtcdClusterType, factory EtcdFactory) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -49,7 +49,7 @@ func RegisterEtcdClusterFactory(name kstonev1alpha1.EtcdClusterType, factory Etc
 
 // GetEtcdClusterProvider gets the specified cluster provider
 func GetEtcdClusterProvider(
-	name kstonev1alpha1.EtcdClusterType,
+	name kstonev1alpha2.EtcdClusterType,
 	ctx *ClusterContext,
 ) (Cluster, error) {
 	mutex.Lock()

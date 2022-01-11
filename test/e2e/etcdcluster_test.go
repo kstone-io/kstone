@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/backup"
 	"tkestack.io/kstone/test/fixtures"
 )
@@ -42,7 +42,7 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 			//TODO: kstone does not support headless service,just use pod ip to bypass
 			podIP, err := getEtcdPodIP()
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			err = createEtcdCluster(clusterName, 3, kstonev1alpha1.EtcdClusterImported, fixtures.DefaultFeatureGate, podIP+":2379")
+			err = createEtcdCluster(clusterName, 3, kstonev1alpha2.EtcdClusterImported, fixtures.DefaultFeatureGate, podIP+":2379")
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
@@ -57,27 +57,27 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 		})
 
 		ginkgo.It("kstone should generate etcdinspection/consistency resources", func() {
-			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureConsistency)
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha2.KStoneFeatureConsistency)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should generate etcdinspection/healthy resources", func() {
-			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureHealthy)
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha2.KStoneFeatureHealthy)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should generate etcdinspection/request resources", func() {
-			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureRequest)
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha2.KStoneFeatureRequest)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should generate etcdinspection/alarm resources", func() {
-			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha2.KStoneFeatureAlarm)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should generate etcdinspection/backupcheck resources", func() {
-			err := CheckInspectionEnabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
+			err := CheckInspectionEnabled(clusterName, kstonev1alpha2.KStoneFeatureBackupCheck)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
@@ -92,27 +92,27 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 		})
 
 		ginkgo.It("kstone should be able to disable etcdinspection/consistency feature", func() {
-			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureConsistency)
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureConsistency)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should be able to disable etcdinspection/healthy feature", func() {
-			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureHealthy)
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureHealthy)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should be able to disable etcdinspection/request feature", func() {
-			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureRequest)
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureRequest)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should be able to disable etcdinspection/alarm feature", func() {
-			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureAlarm)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should be able to disable etcdinspection/backupcheck feature", func() {
-			err := EnsureInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
+			err := EnsureInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureBackupCheck)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
@@ -134,27 +134,27 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 		})
 
 		ginkgo.It("kstone should delete etcdinspection/healthy resources", func() {
-			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureHealthy)
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureHealthy)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should delete etcdinspection/request resources", func() {
-			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureRequest)
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureRequest)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should delete etcdinspection/consistency resources", func() {
-			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureConsistency)
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureConsistency)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should delete etcdinspection/alarm resources", func() {
-			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureAlarm)
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureAlarm)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
 		ginkgo.It("kstone should delete etcdinspection/backupcheck resources", func() {
-			err := CheckInspectionDisabled(clusterName, kstonev1alpha1.KStoneFeatureBackupCheck)
+			err := CheckInspectionDisabled(clusterName, kstonev1alpha2.KStoneFeatureBackupCheck)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
 
@@ -165,19 +165,19 @@ var _ = ginkgo.Describe("etcdcluster", func() {
 	})
 })
 
-func createEtcdCluster(name string, replicas uint, clusterType kstonev1alpha1.EtcdClusterType, featureGate, clusterAddr string) error {
+func createEtcdCluster(name string, replicas uint, clusterType kstonev1alpha2.EtcdClusterType, featureGate, clusterAddr string) error {
 	etcdcluster := fixtures.NewEtcdCluster(name, replicas, clusterType, featureGate, clusterAddr)
-	_, err := etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).Create(context.TODO(), etcdcluster, metav1.CreateOptions{})
+	_, err := etcdClusterClient.KstoneV1alpha2().EtcdClusters(fixtures.DefaultKstoneNamespace).Create(context.TODO(), etcdcluster, metav1.CreateOptions{})
 	return err
 }
 
 func deleteEtcdCluster(name string) error {
-	err := etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	err := etcdClusterClient.KstoneV1alpha2().EtcdClusters(fixtures.DefaultKstoneNamespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 	return err
 }
 
 func cleanAllEtcdCluster() error {
-	clusters, err := etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).List(context.TODO(), metav1.ListOptions{})
+	clusters, err := etcdClusterClient.KstoneV1alpha2().EtcdClusters(fixtures.DefaultKstoneNamespace).List(context.TODO(), metav1.ListOptions{})
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 	for i := 0; i < len(clusters.Items); i++ {
 		if clusters.Items[i].Annotations["autoTest"] == "true" {
@@ -202,14 +202,14 @@ func getEtcdPodIP() (string, error) {
 
 func waitClusterStatusToRunning(clusterName string) error {
 	return wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
-		cluster, err := etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
+		cluster, err := etcdClusterClient.KstoneV1alpha2().EtcdClusters(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return false, nil
 			}
 			return false, err
 		}
-		if cluster.Status.Phase == kstonev1alpha1.EtcdClusterRunning {
+		if cluster.Status.Phase == kstonev1alpha2.EtcdClusterRunning {
 			return true, nil
 		}
 		return false, nil
@@ -218,7 +218,7 @@ func waitClusterStatusToRunning(clusterName string) error {
 
 func EnsureBackupDisabled(clusterName string) error {
 	return wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
-		err = DisableFeature(clusterName, kstonev1alpha1.KStoneFeatureBackup)
+		err = DisableFeature(clusterName, kstonev1alpha2.KStoneFeatureBackup)
 		if err != nil {
 			return false, err
 		}
@@ -258,7 +258,7 @@ func CheckBackupDisabled(clusterName string) error {
 
 func EnsureServiceMonitorDisabled(clusterName string) error {
 	return wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
-		err = DisableFeature(clusterName, kstonev1alpha1.KStoneFeatureMonitor)
+		err = DisableFeature(clusterName, kstonev1alpha2.KStoneFeatureMonitor)
 		if err != nil {
 			return false, err
 		}
@@ -296,7 +296,7 @@ func CheckServiceMonitorDisabled(clusterName string) error {
 	})
 }
 
-func EnsureInspectionDisabled(clusterName string, feature kstonev1alpha1.KStoneFeature) error {
+func EnsureInspectionDisabled(clusterName string, feature kstonev1alpha2.KStoneFeature) error {
 	return wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
 		err = DisableFeature(clusterName, feature)
 		if err != nil {
@@ -310,9 +310,9 @@ func EnsureInspectionDisabled(clusterName string, feature kstonev1alpha1.KStoneF
 	})
 }
 
-func CheckInspectionEnabled(clusterName string, feature kstonev1alpha1.KStoneFeature) error {
+func CheckInspectionEnabled(clusterName string, feature kstonev1alpha2.KStoneFeature) error {
 	return wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
-		_, err = etcdClusterClient.KstoneV1alpha1().EtcdInspections(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName+"-"+string(feature), metav1.GetOptions{})
+		_, err = etcdClusterClient.KstoneV1alpha2().EtcdInspections(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName+"-"+string(feature), metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return false, nil
@@ -323,9 +323,9 @@ func CheckInspectionEnabled(clusterName string, feature kstonev1alpha1.KStoneFea
 	})
 }
 
-func CheckInspectionDisabled(clusterName string, feature kstonev1alpha1.KStoneFeature) error {
+func CheckInspectionDisabled(clusterName string, feature kstonev1alpha2.KStoneFeature) error {
 	return wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
-		_, err = etcdClusterClient.KstoneV1alpha1().EtcdInspections(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName+"-"+string(feature), metav1.GetOptions{})
+		_, err = etcdClusterClient.KstoneV1alpha2().EtcdInspections(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName+"-"+string(feature), metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return true, nil
@@ -336,9 +336,9 @@ func CheckInspectionDisabled(clusterName string, feature kstonev1alpha1.KStoneFe
 	})
 }
 
-func DisableFeature(clusterName string, feature kstonev1alpha1.KStoneFeature) error {
+func DisableFeature(clusterName string, feature kstonev1alpha2.KStoneFeature) error {
 	return wait.PollImmediate(pollInterval, pollTimeout, func() (done bool, err error) {
-		cluster, err := etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
+		cluster, err := etcdClusterClient.KstoneV1alpha2().EtcdClusters(fixtures.DefaultKstoneNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -347,7 +347,7 @@ func DisableFeature(clusterName string, feature kstonev1alpha1.KStoneFeature) er
 		if annotations == nil {
 			return false, errors.New("can't change annotation")
 		}
-		_, err = etcdClusterClient.KstoneV1alpha1().EtcdClusters(fixtures.DefaultKstoneNamespace).Update(context.TODO(), cluster, metav1.UpdateOptions{})
+		_, err = etcdClusterClient.KstoneV1alpha2().EtcdClusters(fixtures.DefaultKstoneNamespace).Update(context.TODO(), cluster, metav1.UpdateOptions{})
 		if err != nil {
 			if apierrors.IsConflict(err) {
 				return false, nil
@@ -358,14 +358,14 @@ func DisableFeature(clusterName string, feature kstonev1alpha1.KStoneFeature) er
 	})
 }
 
-func UpdateAnnotationFeature(annotations map[string]string, name kstonev1alpha1.KStoneFeature, open bool) map[string]string {
-	if gates, found := annotations[kstonev1alpha1.KStoneFeatureAnno]; found && gates != "" {
+func UpdateAnnotationFeature(annotations map[string]string, name kstonev1alpha2.KStoneFeature, open bool) map[string]string {
+	if gates, found := annotations[kstonev1alpha2.KStoneFeatureAnno]; found && gates != "" {
 		featurelist := strings.Split(gates, ",")
 		feature := string(name)
 		newItem := feature + "=" + strconv.FormatBool(open)
 		for _, item := range featurelist {
 			if strings.Contains(item, feature) {
-				annotations[kstonev1alpha1.KStoneFeatureAnno] = strings.Replace(gates, item, newItem, 1)
+				annotations[kstonev1alpha2.KStoneFeatureAnno] = strings.Replace(gates, item, newItem, 1)
 				return annotations
 			}
 		}

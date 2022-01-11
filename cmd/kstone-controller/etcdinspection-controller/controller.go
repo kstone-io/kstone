@@ -83,7 +83,7 @@ func (c *EtcdInspectionCommand) Run() error {
 		kubeClient,
 		clusterClient,
 		kubeInformerFactory.Core().V1().Secrets(),
-		informerFactory.Kstone().V1alpha1().EtcdInspections(),
+		informerFactory.Kstone().V1alpha2().EtcdInspections(),
 	)
 	// notice that there is no need to run Start methods in a separate goroutine.
 	// (i.e. go kubeInformerFactory.Start(stopCh)

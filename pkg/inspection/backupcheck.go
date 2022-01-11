@@ -24,7 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/backup"
 	// import backup provider
 	_ "tkestack.io/kstone/pkg/backup/providers"
@@ -34,16 +34,16 @@ import (
 
 // StatBackupFiles counts the number of backup files in the last day and
 // transfer it to prometheus metrics
-func (c *Server) StatBackupFiles(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *Server) StatBackupFiles(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	labels := map[string]string{
 		"clusterName": name,
 	}
 
-	cluster, err := c.cli.KstoneV1alpha1().EtcdClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	cluster, err := c.cli.KstoneV1alpha2().EtcdClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	defer func() {
 		if err != nil {
-			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureBackupCheck)
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureBackupCheck)
 		}
 	}()
 	if err != nil {

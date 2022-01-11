@@ -1,4 +1,4 @@
-apiVersion: kstone.tkestack.io/v1alpha1
+apiVersion: kstone.tkestack.io/v1alpha2
 kind: EtcdCluster
 metadata:
   annotations:
@@ -31,8 +31,6 @@ spec:
   diskType: ssd
   name: cls-test
   size: 3
-  totalCpu: 4
-  totalMem: 8
   version: ''
 status:
   featureGatesStatus:

@@ -21,7 +21,7 @@ package monitor
 import (
 	"sync"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/featureprovider"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/monitor"
@@ -39,7 +39,7 @@ type FeaturePrometheus struct {
 }
 
 const (
-	ProviderName = string(kstonev1alpha1.KStoneFeatureMonitor)
+	ProviderName = string(kstonev1alpha2.KStoneFeatureMonitor)
 )
 
 func init() {
@@ -63,9 +63,9 @@ func initFeaturePrometheusInstance(ctx *featureprovider.FeatureContext) (feature
 	return instance, err
 }
 
-func (p *FeaturePrometheus) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
-	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureMonitor) {
-		if cluster.Status.FeatureGatesStatus[kstonev1alpha1.KStoneFeatureMonitor] != featureutil.FeatureStatusDisabled {
+func (p *FeaturePrometheus) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
+	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha2.KStoneFeatureMonitor) {
+		if cluster.Status.FeatureGatesStatus[kstonev1alpha2.KStoneFeatureMonitor] != featureutil.FeatureStatusDisabled {
 			return p.prom.CheckEqualIfDisabled(cluster)
 		}
 		return true
@@ -73,13 +73,13 @@ func (p *FeaturePrometheus) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
 	return p.prom.CheckEqualIfEnabled(cluster)
 }
 
-func (p *FeaturePrometheus) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
-	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureMonitor) {
+func (p *FeaturePrometheus) Sync(cluster *kstonev1alpha2.EtcdCluster) error {
+	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha2.KStoneFeatureMonitor) {
 		return p.prom.CleanPrometheusMonitor(cluster)
 	}
 	return p.prom.SyncPrometheusMonitor(cluster)
 }
 
-func (p *FeaturePrometheus) Do(inspection *kstonev1alpha1.EtcdInspection) error {
+func (p *FeaturePrometheus) Do(inspection *kstonev1alpha2.EtcdInspection) error {
 	return nil
 }

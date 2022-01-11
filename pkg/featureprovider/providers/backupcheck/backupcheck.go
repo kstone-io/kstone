@@ -21,7 +21,7 @@ package backupcheck
 import (
 	"sync"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/inspection"
 )
@@ -38,7 +38,7 @@ type FeatureBackupCheck struct {
 }
 
 const (
-	ProviderName = string(kstonev1alpha1.KStoneFeatureBackupCheck)
+	ProviderName = string(kstonev1alpha2.KStoneFeatureBackupCheck)
 )
 
 func init() {
@@ -62,14 +62,14 @@ func initFeatureBackupCheckInstance(ctx *featureprovider.FeatureContext) (featur
 	return instance, err
 }
 
-func (c *FeatureBackupCheck) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
-	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureBackupCheck)
+func (c *FeatureBackupCheck) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha2.KStoneFeatureBackupCheck)
 }
 
-func (c *FeatureBackupCheck) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
-	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureBackupCheck)
+func (c *FeatureBackupCheck) Sync(cluster *kstonev1alpha2.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha2.KStoneFeatureBackupCheck)
 }
 
-func (c *FeatureBackupCheck) Do(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *FeatureBackupCheck) Do(inspection *kstonev1alpha2.EtcdInspection) error {
 	return c.inspection.StatBackupFiles(inspection)
 }

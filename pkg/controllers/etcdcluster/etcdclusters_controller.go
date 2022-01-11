@@ -40,7 +40,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	// register cluster provider
 	_ "tkestack.io/kstone/pkg/clusterprovider/providers"
@@ -52,8 +52,8 @@ import (
 	_ "tkestack.io/kstone/pkg/featureprovider/providers"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
-	informers "tkestack.io/kstone/pkg/generated/informers/externalversions/kstone/v1alpha1"
-	listers "tkestack.io/kstone/pkg/generated/listers/kstone/v1alpha1"
+	informers "tkestack.io/kstone/pkg/generated/informers/externalversions/kstone/v1alpha2"
+	listers "tkestack.io/kstone/pkg/generated/listers/kstone/v1alpha2"
 )
 
 // ClusterController is the controller implementation for EtcdCluster resources
@@ -218,8 +218,8 @@ func (c *ClusterController) syncEtcdCluster(key string) error {
 }
 
 // updateEtcdClusterStatus
-func (c *ClusterController) updateEtcdClusterStatus(cluster *kstonev1alpha1.EtcdCluster) (
-	*kstonev1alpha1.EtcdCluster,
+func (c *ClusterController) updateEtcdClusterStatus(cluster *kstonev1alpha2.EtcdCluster) (
+	*kstonev1alpha2.EtcdCluster,
 	error,
 ) {
 	// NEVER modify objects from the store. It's a read-only, local cache.
@@ -230,7 +230,7 @@ func (c *ClusterController) updateEtcdClusterStatus(cluster *kstonev1alpha1.Etcd
 	// we must use Update instead of UpdateStatus to update the Status block of the EtcdCluster resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	etcdcluster, err := c.platformclientset.KstoneV1alpha1().EtcdClusters(cluster.Namespace).
+	etcdcluster, err := c.platformclientset.KstoneV1alpha2().EtcdClusters(cluster.Namespace).
 		Update(context.TODO(), cluster, metav1.UpdateOptions{})
 	if err != nil {
 		return cluster, err
@@ -251,8 +251,8 @@ func (c *ClusterController) enqueueEtcdcluster(obj interface{}) {
 	c.workqueue.Add(key)
 }
 
-func (c *ClusterController) handleClusterManagement(cluster *kstonev1alpha1.EtcdCluster) (
-	*kstonev1alpha1.EtcdCluster,
+func (c *ClusterController) handleClusterManagement(cluster *kstonev1alpha2.EtcdCluster) (
+	*kstonev1alpha2.EtcdCluster,
 	error,
 ) {
 	// Get cluster provider
@@ -267,9 +267,9 @@ func (c *ClusterController) handleClusterManagement(cluster *kstonev1alpha1.Etcd
 		return cluster, err
 	}
 	switch nextAction {
-	case kstonev1alpha1.EtcdCluterCreating:
+	case kstonev1alpha2.EtcdCluterCreating:
 		cluster, err = c.handleClusterCreate(cluster, provider)
-	case kstonev1alpha1.EtcdClusterUpdating:
+	case kstonev1alpha2.EtcdClusterUpdating:
 		cluster, err = c.handleClusterUpdate(cluster, provider)
 	default:
 		cluster, err = c.handleClusterStatus(cluster, provider)
@@ -290,13 +290,13 @@ func (c *ClusterController) handleClusterManagement(cluster *kstonev1alpha1.Etcd
 	return cluster, nil
 }
 
-func (c *ClusterController) enabledFeatureGate(annotations map[string]string, name kstonev1alpha1.KStoneFeature) bool {
+func (c *ClusterController) enabledFeatureGate(annotations map[string]string, name kstonev1alpha2.KStoneFeature) bool {
 	return featureutil.IsFeatureGateEnabled(annotations, name)
 }
 
 // handleClusterLabels updates EtcdCluster Resource labels.
 func (c *ClusterController) handleClusterLabels(
-	cluster *kstonev1alpha1.EtcdCluster) (*kstonev1alpha1.EtcdCluster, error) {
+	cluster *kstonev1alpha2.EtcdCluster) (*kstonev1alpha2.EtcdCluster, error) {
 	annotations := cluster.ObjectMeta.Annotations
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -307,7 +307,7 @@ func (c *ClusterController) handleClusterLabels(
 		labels = make(map[string]string)
 	}
 	for featureName := range featureprovider.EtcdFeatureProviders {
-		labels[featureName] = strconv.FormatBool(c.enabledFeatureGate(annotations, kstonev1alpha1.KStoneFeature(featureName)))
+		labels[featureName] = strconv.FormatBool(c.enabledFeatureGate(annotations, kstonev1alpha2.KStoneFeature(featureName)))
 	}
 
 	labels["clusterType"] = string(cluster.Spec.ClusterType)
@@ -319,11 +319,11 @@ func (c *ClusterController) handleClusterLabels(
 	return cluster, nil
 }
 
-func (c *ClusterController) handleClusterFeature(cluster *kstonev1alpha1.EtcdCluster) (
-	*kstonev1alpha1.EtcdCluster,
+func (c *ClusterController) handleClusterFeature(cluster *kstonev1alpha2.EtcdCluster) (
+	*kstonev1alpha2.EtcdCluster,
 	error) {
 	// Check cluster status, ensure cluster is running
-	if cluster.Status.Phase != kstonev1alpha1.EtcdClusterRunning || len(cluster.Status.Members) == 0 {
+	if cluster.Status.Phase != kstonev1alpha2.EtcdClusterRunning || len(cluster.Status.Members) == 0 {
 		klog.V(3).Infof("cluster status is not running, waiting")
 		return cluster, nil
 	}
@@ -334,10 +334,10 @@ func (c *ClusterController) handleClusterFeature(cluster *kstonev1alpha1.EtcdClu
 	}
 
 	if cluster.Status.FeatureGatesStatus == nil {
-		cluster.Status.FeatureGatesStatus = make(map[kstonev1alpha1.KStoneFeature]string)
+		cluster.Status.FeatureGatesStatus = make(map[kstonev1alpha2.KStoneFeature]string)
 	}
 	for name := range featureprovider.EtcdFeatureProviders {
-		featureName := kstonev1alpha1.KStoneFeature(name)
+		featureName := kstonev1alpha2.KStoneFeature(name)
 		feature, err := c.GetFeatureProvider(name)
 		if err != nil {
 			klog.Errorf("failed to get feature %s provider,err is %v", name, err)
@@ -362,7 +362,7 @@ func (c *ClusterController) handleClusterFeature(cluster *kstonev1alpha1.EtcdClu
 	return c.updateEtcdClusterStatus(cluster)
 }
 
-func (c *ClusterController) reconcileEtcdCluster(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *ClusterController) reconcileEtcdCluster(cluster *kstonev1alpha2.EtcdCluster) error {
 	// Handle cluster Creation,Update operations
 	cluster, err := c.handleClusterManagement(cluster)
 	if err != nil {
@@ -371,7 +371,7 @@ func (c *ClusterController) reconcileEtcdCluster(cluster *kstonev1alpha1.EtcdClu
 	}
 
 	// If cluster is not running, do not proceed to the next step
-	if cluster.Status.Phase != kstonev1alpha1.EtcdClusterRunning {
+	if cluster.Status.Phase != kstonev1alpha2.EtcdClusterRunning {
 		klog.Warningf("cluster %s is not ready", cluster.Name)
 		return nil
 	}
@@ -405,7 +405,7 @@ func (c *ClusterController) GetFeatureProvider(name string) (featureprovider.Fea
 	return feature, nil
 }
 
-func (c *ClusterController) GetEtcdClusterProvider(name kstonev1alpha1.EtcdClusterType) (clusterprovider.Cluster, error) {
+func (c *ClusterController) GetEtcdClusterProvider(name kstonev1alpha2.EtcdClusterType) (clusterprovider.Cluster, error) {
 	ctx := &clusterprovider.ClusterContext{
 		Clientbuilder: c.clientbuilder,
 	}
@@ -417,45 +417,45 @@ func (c *ClusterController) GetEtcdClusterProvider(name kstonev1alpha1.EtcdClust
 }
 
 func (c *ClusterController) getDesiredAction(
-	cluster *kstonev1alpha1.EtcdCluster,
+	cluster *kstonev1alpha2.EtcdCluster,
 	provider clusterprovider.Cluster,
-) (kstonev1alpha1.EtcdClusterPhase, error) {
+) (kstonev1alpha2.EtcdClusterPhase, error) {
 	if len(cluster.Status.Conditions) == 0 {
-		return kstonev1alpha1.EtcdCluterCreating, nil
+		return kstonev1alpha2.EtcdCluterCreating, nil
 	}
 
 	conditionIndex := len(cluster.Status.Conditions) - 1
 	lastCondition := cluster.Status.Conditions[conditionIndex]
 
 	switch lastCondition.Type {
-	case kstonev1alpha1.EtcdClusterConditionCreate:
+	case kstonev1alpha2.EtcdClusterConditionCreate:
 		if lastCondition.Status == corev1.ConditionFalse {
-			return kstonev1alpha1.EtcdCluterCreating, nil
+			return kstonev1alpha2.EtcdCluterCreating, nil
 		}
-	case kstonev1alpha1.EtcdClusterConditionUpdate:
+	case kstonev1alpha2.EtcdClusterConditionUpdate:
 		if lastCondition.Status == corev1.ConditionFalse {
-			return kstonev1alpha1.EtcdClusterUpdating, nil
+			return kstonev1alpha2.EtcdClusterUpdating, nil
 		}
 	}
 
 	equal, err := provider.Equal(cluster)
 	if err != nil {
 		klog.Errorf("failed to check if the cluster is equal, err is %v,cluster is %s", err, cluster.Name)
-		return kstonev1alpha1.EtcdClusterUnknown, err
+		return kstonev1alpha2.EtcdClusterUnknown, err
 	}
 	if !equal {
 		klog.Infof("spec is different, need to update etcd, cluster is %s", cluster.Name)
-		return kstonev1alpha1.EtcdClusterUpdating, nil
+		return kstonev1alpha2.EtcdClusterUpdating, nil
 	}
 
-	return kstonev1alpha1.EtcdClusterRunning, nil
+	return kstonev1alpha2.EtcdClusterRunning, nil
 }
 
 func (c *ClusterController) generateConditions(
-	conditions []kstonev1alpha1.EtcdClusterCondition,
-	phase kstonev1alpha1.EtcdClusterPhase,
-	nextConditionType kstonev1alpha1.EtcdClusterConditionType,
-) []kstonev1alpha1.EtcdClusterCondition {
+	conditions []kstonev1alpha2.EtcdClusterCondition,
+	phase kstonev1alpha2.EtcdClusterPhase,
+	nextConditionType kstonev1alpha2.EtcdClusterConditionType,
+) []kstonev1alpha2.EtcdClusterCondition {
 	conditionIndex := len(conditions) - 1
 	if conditionIndex >= 0 {
 		lastCondition := conditions[conditionIndex]
@@ -468,7 +468,7 @@ func (c *ClusterController) generateConditions(
 		}
 	}
 
-	conditions = append(conditions, kstonev1alpha1.EtcdClusterCondition{
+	conditions = append(conditions, kstonev1alpha2.EtcdClusterCondition{
 		Type:      nextConditionType,
 		Status:    corev1.ConditionFalse,
 		StartTime: metav1.Now(),
@@ -478,15 +478,15 @@ func (c *ClusterController) generateConditions(
 }
 
 func (c *ClusterController) handleClusterCreate(
-	cluster *kstonev1alpha1.EtcdCluster,
+	cluster *kstonev1alpha2.EtcdCluster,
 	provider clusterprovider.Cluster,
-) (*kstonev1alpha1.EtcdCluster, error) {
+) (*kstonev1alpha2.EtcdCluster, error) {
 	cluster.Status.Conditions = c.generateConditions(
 		cluster.Status.Conditions,
 		cluster.Status.Phase,
-		kstonev1alpha1.EtcdClusterConditionCreate,
+		kstonev1alpha2.EtcdClusterConditionCreate,
 	)
-	cluster.Status.Phase = kstonev1alpha1.EtcdCluterCreating
+	cluster.Status.Phase = kstonev1alpha2.EtcdCluterCreating
 
 	conditionIndex := len(cluster.Status.Conditions) - 1
 
@@ -518,15 +518,15 @@ func (c *ClusterController) handleClusterCreate(
 }
 
 func (c *ClusterController) handleClusterUpdate(
-	cluster *kstonev1alpha1.EtcdCluster,
+	cluster *kstonev1alpha2.EtcdCluster,
 	provider clusterprovider.Cluster,
-) (*kstonev1alpha1.EtcdCluster, error) {
+) (*kstonev1alpha2.EtcdCluster, error) {
 	cluster.Status.Conditions = c.generateConditions(
 		cluster.Status.Conditions,
 		cluster.Status.Phase,
-		kstonev1alpha1.EtcdClusterConditionUpdate,
+		kstonev1alpha2.EtcdClusterConditionUpdate,
 	)
-	cluster.Status.Phase = kstonev1alpha1.EtcdClusterUpdating
+	cluster.Status.Phase = kstonev1alpha2.EtcdClusterUpdating
 	conditionIndex := len(cluster.Status.Conditions) - 1
 
 	err := provider.BeforeUpdate(cluster)
@@ -559,9 +559,9 @@ func (c *ClusterController) handleClusterUpdate(
 // handleClusterStatus checks the status, if equal, updates status
 // if not equal, updates etcdclusters.etcd.tkestack.io
 func (c *ClusterController) handleClusterStatus(
-	cluster *kstonev1alpha1.EtcdCluster,
+	cluster *kstonev1alpha2.EtcdCluster,
 	provider clusterprovider.Cluster,
-) (*kstonev1alpha1.EtcdCluster, error) {
+) (*kstonev1alpha2.EtcdCluster, error) {
 	// Check and update Cluster Status
 	annotations := cluster.ObjectMeta.Annotations
 	secretName := ""

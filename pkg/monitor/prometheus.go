@@ -37,7 +37,7 @@ import (
 	klog "k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
@@ -245,12 +245,12 @@ func (prom *PrometheusMonitor) UnpackEndPointSubsets(endpoint *corev1.Endpoints)
 	return addrs, nil
 }
 
-func (prom *PrometheusMonitor) IsMonitorEnabled(cluster *kstonev1alpha1.EtcdCluster) bool {
-	return featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha1.KStoneFeatureMonitor)
+func (prom *PrometheusMonitor) IsMonitorEnabled(cluster *kstonev1alpha2.EtcdCluster) bool {
+	return featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, kstonev1alpha2.KStoneFeatureMonitor)
 }
 
 // Equal checks to Update ServiceMonitor & svc & ep, when label & memberIp change, update
-func (prom *PrometheusMonitor) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+func (prom *PrometheusMonitor) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
 	var epAddrs []string
 	epLabels := make(map[string]string)
 
@@ -283,7 +283,7 @@ func (prom *PrometheusMonitor) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
 }
 
 // initEtcdServiceMonitor inits cluster serviceMonitor
-func (prom *PrometheusMonitor) initEtcdServiceMonitor(cluster *kstonev1alpha1.EtcdCluster) (
+func (prom *PrometheusMonitor) initEtcdServiceMonitor(cluster *kstonev1alpha2.EtcdCluster) (
 	*promapiv1.ServiceMonitor,
 	error) {
 	certName := cluster.ObjectMeta.Annotations[util.ClusterTLSSecretName]
@@ -384,7 +384,7 @@ func (prom *PrometheusMonitor) initEtcdServiceMonitor(cluster *kstonev1alpha1.Et
 }
 
 // initEtcdSvc inits cluster svc
-func (prom *PrometheusMonitor) initEtcdSvc(cluster *kstonev1alpha1.EtcdCluster) (*corev1.Service, error) {
+func (prom *PrometheusMonitor) initEtcdSvc(cluster *kstonev1alpha2.EtcdCluster) (*corev1.Service, error) {
 	portList := make([]corev1.ServicePort, 0)
 	count := 0
 	for _, m := range cluster.Status.Members {
@@ -423,7 +423,7 @@ func (prom *PrometheusMonitor) initEtcdSvc(cluster *kstonev1alpha1.EtcdCluster) 
 		},
 	}
 
-	if cluster.Spec.ClusterType == kstonev1alpha1.EtcdClusterKstone {
+	if cluster.Spec.ClusterType == kstonev1alpha2.EtcdClusterKstone {
 		svr.Spec.Selector = map[string]string{
 			"etcdcluster.etcd.tkestack.io/cluster-name": cluster.Name,
 		}
@@ -439,9 +439,9 @@ func (prom *PrometheusMonitor) initEtcdSvc(cluster *kstonev1alpha1.EtcdCluster) 
 }
 
 // initEtcdEndpoint inits cluster ep
-func (prom *PrometheusMonitor) initEtcdEndpoint(cluster *kstonev1alpha1.EtcdCluster) (*corev1.Endpoints, error) {
+func (prom *PrometheusMonitor) initEtcdEndpoint(cluster *kstonev1alpha2.EtcdCluster) (*corev1.Endpoints, error) {
 	subsets := make([]corev1.EndpointSubset, 0)
-	if cluster.Spec.ClusterType == kstonev1alpha1.EtcdClusterImported {
+	if cluster.Spec.ClusterType == kstonev1alpha2.EtcdClusterImported {
 		for _, m := range cluster.Status.Members {
 			addr := strings.Split(m.ExtensionClientUrl, ":")
 			port, err := strconv.Atoi(addr[2])
@@ -478,7 +478,7 @@ func (prom *PrometheusMonitor) initEtcdEndpoint(cluster *kstonev1alpha1.EtcdClus
 }
 
 // CheckEqualIfDisabled Checks whether the monitoring resource has been deleted if monitor feature is disabled.
-func (prom *PrometheusMonitor) CheckEqualIfDisabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+func (prom *PrometheusMonitor) CheckEqualIfDisabled(cluster *kstonev1alpha2.EtcdCluster) bool {
 	_, err := prom.GetServiceMonitorTask(cluster.Namespace, cluster.Name)
 	if err != nil && apierrors.IsNotFound(err) {
 		_, err = prom.GetEtcdService(cluster.Namespace, cluster.Name)
@@ -491,7 +491,7 @@ func (prom *PrometheusMonitor) CheckEqualIfDisabled(cluster *kstonev1alpha1.Etcd
 
 // CheckEqualIfEnabled check whether the desired monitoring resources are consistent with the actual resources,
 // if monitor feature is enabled.
-func (prom *PrometheusMonitor) CheckEqualIfEnabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+func (prom *PrometheusMonitor) CheckEqualIfEnabled(cluster *kstonev1alpha2.EtcdCluster) bool {
 	var epAddrs []string
 	epLabels := make(map[string]string)
 
@@ -520,7 +520,7 @@ func (prom *PrometheusMonitor) CheckEqualIfEnabled(cluster *kstonev1alpha1.EtcdC
 }
 
 // CleanPrometheusMonitor cleans prometheus monitor for etcdcluster if it is disabled
-func (prom *PrometheusMonitor) CleanPrometheusMonitor(cluster *kstonev1alpha1.EtcdCluster) error {
+func (prom *PrometheusMonitor) CleanPrometheusMonitor(cluster *kstonev1alpha2.EtcdCluster) error {
 	if err := prom.DeleteServiceMonitor(cluster.Namespace, cluster.Name); err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
@@ -531,7 +531,7 @@ func (prom *PrometheusMonitor) CleanPrometheusMonitor(cluster *kstonev1alpha1.Et
 }
 
 // SyncPrometheusMonitor syncs prometheus monitor for etcdcluster if it is enabled
-func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha1.EtcdCluster) error {
+func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha2.EtcdCluster) error {
 	taskName := cluster.Name
 
 	// 1 init service
@@ -561,7 +561,7 @@ func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha1.Etc
 	}
 
 	// 2 init ep
-	if cluster.Spec.ClusterType == kstonev1alpha1.EtcdClusterImported {
+	if cluster.Spec.ClusterType == kstonev1alpha2.EtcdClusterImported {
 		newEp, err := prom.initEtcdEndpoint(cluster)
 		if err != nil {
 			return err

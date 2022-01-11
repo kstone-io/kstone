@@ -26,6 +26,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	v1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -59,6 +60,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Kstone().V1alpha1().EtcdClusters().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("etcdinspections"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Kstone().V1alpha1().EtcdInspections().Informer()}, nil
+
+		// Group=kstone.tkestack.io, Version=v1alpha2
+	case v1alpha2.SchemeGroupVersion.WithResource("etcdclusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Kstone().V1alpha2().EtcdClusters().Informer()}, nil
+	case v1alpha2.SchemeGroupVersion.WithResource("etcdinspections"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Kstone().V1alpha2().EtcdInspections().Informer()}, nil
 
 	}
 
