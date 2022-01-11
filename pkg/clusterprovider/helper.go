@@ -26,7 +26,7 @@ import (
 	"go.etcd.io/etcd/client/pkg/v3/transport"
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/etcd"
 )
 
@@ -36,7 +36,7 @@ type EtcdAlarm struct {
 }
 
 // GetStorageMemberEndpoints get member of cluster status
-func GetStorageMemberEndpoints(cluster *kstonev1alpha1.EtcdCluster) []string {
+func GetStorageMemberEndpoints(cluster *kstonev1alpha2.EtcdCluster) []string {
 	members := cluster.Status.Members
 	endpoints := make([]string, 0)
 	if len(members) == 0 {
@@ -71,8 +71,8 @@ func populateExtensionCientURLMap(extensionClientURLs string) (map[string]string
 func GetRuntimeEtcdMembers(
 	endpoints []string,
 	extensionClientURLs string,
-	tls *transport.TLSInfo) ([]kstonev1alpha1.MemberStatus, error) {
-	etcdMembers := make([]kstonev1alpha1.MemberStatus, 0)
+	tls *transport.TLSInfo) ([]kstonev1alpha2.MemberStatus, error) {
+	etcdMembers := make([]kstonev1alpha2.MemberStatus, 0)
 
 	ca, cert, key := "", "", ""
 	if tls != nil {
@@ -124,18 +124,18 @@ func GetRuntimeEtcdMembers(
 		}
 
 		// default info
-		memberVersion, memberStatus, memberRole := "", kstonev1alpha1.MemberPhaseUnStarted, kstonev1alpha1.EtcdMemberUnKnown
+		memberVersion, memberStatus, memberRole := "", kstonev1alpha2.MemberPhaseUnStarted, kstonev1alpha2.EtcdMemberUnKnown
 		var errors []string
 		statusRsp, err := etcd.Status(extensionClientURL, client)
 		if err == nil && statusRsp != nil {
-			memberStatus = kstonev1alpha1.MemberPhaseRunning
+			memberStatus = kstonev1alpha2.MemberPhaseRunning
 			memberVersion = statusRsp.Version
 			if statusRsp.IsLearner {
-				memberRole = kstonev1alpha1.EtcdMemberLearner
+				memberRole = kstonev1alpha2.EtcdMemberLearner
 			} else if statusRsp.Leader == m.ID {
-				memberRole = kstonev1alpha1.EtcdMemberLeader
+				memberRole = kstonev1alpha2.EtcdMemberLeader
 			} else {
-				memberRole = kstonev1alpha1.EtcdMemberFollower
+				memberRole = kstonev1alpha2.EtcdMemberFollower
 			}
 			errors = statusRsp.Errors
 		} else {
@@ -143,7 +143,7 @@ func GetRuntimeEtcdMembers(
 			errors = append(errors, err.Error())
 		}
 
-		etcdMembers = append(etcdMembers, kstonev1alpha1.MemberStatus{
+		etcdMembers = append(etcdMembers, kstonev1alpha2.MemberStatus{
 			Name:               m.Name,
 			MemberId:           strconv.FormatUint(m.ID, 10),
 			ClientUrl:          m.ClientURLs[0],
@@ -162,24 +162,24 @@ func GetRuntimeEtcdMembers(
 
 // GetEtcdClusterMemberStatus check healthy of cluster and member
 func GetEtcdClusterMemberStatus(
-	members []kstonev1alpha1.MemberStatus,
-	tls *transport.TLSInfo) ([]kstonev1alpha1.MemberStatus, kstonev1alpha1.EtcdClusterPhase) {
-	clusterStatus := kstonev1alpha1.EtcdClusterRunning
-	newMembers := make([]kstonev1alpha1.MemberStatus, 0)
+	members []kstonev1alpha2.MemberStatus,
+	tls *transport.TLSInfo) ([]kstonev1alpha2.MemberStatus, kstonev1alpha2.EtcdClusterPhase) {
+	clusterStatus := kstonev1alpha2.EtcdClusterRunning
+	newMembers := make([]kstonev1alpha2.MemberStatus, 0)
 	for _, m := range members {
 		healthy, err := etcd.MemberHealthy(m.ExtensionClientUrl, tls)
 		if err != nil {
-			m.Status = kstonev1alpha1.MemberPhaseUnKnown
+			m.Status = kstonev1alpha2.MemberPhaseUnKnown
 		} else {
 			if healthy {
-				m.Status = kstonev1alpha1.MemberPhaseRunning
+				m.Status = kstonev1alpha2.MemberPhaseRunning
 			} else {
-				m.Status = kstonev1alpha1.MemberPhaseUnHealthy
+				m.Status = kstonev1alpha2.MemberPhaseUnHealthy
 			}
 		}
 
-		if m.Status != kstonev1alpha1.MemberPhaseRunning && clusterStatus == kstonev1alpha1.EtcdClusterRunning {
-			clusterStatus = kstonev1alpha1.EtcdClusterUnhealthy
+		if m.Status != kstonev1alpha2.MemberPhaseRunning && clusterStatus == kstonev1alpha2.EtcdClusterRunning {
+			clusterStatus = kstonev1alpha2.EtcdClusterUnhealthy
 		}
 
 		newMembers = append(newMembers, m)

@@ -29,7 +29,7 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	"tkestack.io/kstone/pkg/etcd"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
@@ -48,12 +48,12 @@ type RequestInfo struct {
 }
 
 // CollectEtcdClusterRequest collects request of etcd
-func (c *Server) CollectEtcdClusterRequest(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *Server) CollectEtcdClusterRequest(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
-			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureRequest)
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureRequest)
 		}
 	}()
 
@@ -119,7 +119,7 @@ func (c *Server) CollectEtcdClusterRequest(inspection *kstonev1alpha1.EtcdInspec
 }
 
 // populateClusterTotalKeyMetrics generates prometheus metrics of the etcd key
-func (c *Server) populateClusterTotalKeyMetrics(cluster *kstonev1alpha1.EtcdCluster, nodes []*mvccpb.KeyValue) {
+func (c *Server) populateClusterTotalKeyMetrics(cluster *kstonev1alpha2.EtcdCluster, nodes []*mvccpb.KeyValue) {
 	klog.V(2).Infof("cluster name %s,total node:%d", cluster.Name, len(nodes))
 	labels := map[string]string{
 		"clusterName": cluster.Name,
@@ -163,7 +163,7 @@ func (c *Server) getEventCh(clusterName string) chan *clientv3.Event {
 }
 
 // Watch watches etcd event
-func (c *Server) Watch(cluster *kstonev1alpha1.EtcdCluster, client *clientv3.Client, keyPrefix string) error {
+func (c *Server) Watch(cluster *kstonev1alpha2.EtcdCluster, client *clientv3.Client, keyPrefix string) error {
 	watcher := clientv3.NewWatcher(client)
 	c.watcher[cluster.Name] = watcher
 	go func() {
@@ -181,7 +181,7 @@ func (c *Server) Watch(cluster *kstonev1alpha1.EtcdCluster, client *clientv3.Cli
 	return nil
 }
 
-func (c *Server) watch(cluster *kstonev1alpha1.EtcdCluster, wchan clientv3.WatchChan) error {
+func (c *Server) watch(cluster *kstonev1alpha2.EtcdCluster, wchan clientv3.WatchChan) error {
 	ch := c.getEventCh(cluster.Name)
 	for wresp := range wchan {
 		if wresp.Canceled {
@@ -203,7 +203,7 @@ func (c *Server) watch(cluster *kstonev1alpha1.EtcdCluster, wchan clientv3.Watch
 }
 
 // processWatchEvent prcoesses the event watched
-func (c *Server) processWatchEvent(cluster *kstonev1alpha1.EtcdCluster) {
+func (c *Server) processWatchEvent(cluster *kstonev1alpha2.EtcdCluster) {
 	ch := c.getEventCh(cluster.Name)
 	labels := map[string]string{
 		"clusterName": cluster.Name,

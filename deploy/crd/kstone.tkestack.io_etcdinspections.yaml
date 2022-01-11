@@ -18,7 +18,7 @@ spec:
       - inspection
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - name: v1alpha2
     schema:
       openAPIV3Schema:
         description: EtcdInspection is a specification for a EtcdInspection resource

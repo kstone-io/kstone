@@ -19,7 +19,7 @@
 package featureprovider
 
 import (
-	"tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	"tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
 )
@@ -27,13 +27,13 @@ import (
 // Feature is an abstract, pluggable interface for cluster features.
 type Feature interface {
 	// Equal checks whether the feature needs to be updated
-	Equal(cluster *v1alpha1.EtcdCluster) bool
+	Equal(cluster *v1alpha2.EtcdCluster) bool
 
 	// Sync synchronizes the latest feature configuration
-	Sync(cluster *v1alpha1.EtcdCluster) error
+	Sync(cluster *v1alpha2.EtcdCluster) error
 
 	// Do executes inspection tasks.
-	Do(task *v1alpha1.EtcdInspection) error
+	Do(task *v1alpha2.EtcdInspection) error
 }
 type FeatureContext struct {
 	ClientBuilder util.ClientBuilder

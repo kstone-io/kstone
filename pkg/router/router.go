@@ -53,7 +53,7 @@ var (
 
 const (
 	GroupName   = "kstone.tkestack.io"
-	VersionName = "v1alpha1"
+	VersionName = "v1alpha2"
 	Namespace   = "kstone"
 )
 
@@ -157,7 +157,7 @@ func EtcdKeyList(ctx *gin.Context) {
 		return
 	}
 
-	cluster, err := clusterClient.KstoneV1alpha1().EtcdClusters("kstone").
+	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters("kstone").
 		Get(context.TODO(), etcdName, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())
@@ -282,7 +282,7 @@ func BackupList(ctx *gin.Context) {
 	}
 
 	// get cluster
-	cluster, err := clusterClient.KstoneV1alpha1().EtcdClusters(Namespace).
+	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters(Namespace).
 		Get(context.TODO(), etcdName, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())

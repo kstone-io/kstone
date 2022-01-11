@@ -27,11 +27,13 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	kstonev1alpha1 "tkestack.io/kstone/pkg/generated/clientset/versioned/typed/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/generated/clientset/versioned/typed/kstone/v1alpha2"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	KstoneV1alpha1() kstonev1alpha1.KstoneV1alpha1Interface
+	KstoneV1alpha2() kstonev1alpha2.KstoneV1alpha2Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -39,11 +41,17 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	kstoneV1alpha1 *kstonev1alpha1.KstoneV1alpha1Client
+	kstoneV1alpha2 *kstonev1alpha2.KstoneV1alpha2Client
 }
 
 // KstoneV1alpha1 retrieves the KstoneV1alpha1Client
 func (c *Clientset) KstoneV1alpha1() kstonev1alpha1.KstoneV1alpha1Interface {
 	return c.kstoneV1alpha1
+}
+
+// KstoneV1alpha2 retrieves the KstoneV1alpha2Client
+func (c *Clientset) KstoneV1alpha2() kstonev1alpha2.KstoneV1alpha2Interface {
+	return c.kstoneV1alpha2
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -71,6 +79,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.kstoneV1alpha2, err = kstonev1alpha2.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -84,6 +96,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.kstoneV1alpha1 = kstonev1alpha1.NewForConfigOrDie(c)
+	cs.kstoneV1alpha2 = kstonev1alpha2.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -93,6 +106,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.kstoneV1alpha1 = kstonev1alpha1.New(c)
+	cs.kstoneV1alpha2 = kstonev1alpha2.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

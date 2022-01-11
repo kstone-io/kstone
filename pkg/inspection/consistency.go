@@ -28,7 +28,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/etcd"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/inspection/metrics"
@@ -41,7 +41,7 @@ type ConsistencyInfo struct {
 
 // getEtcdConsistentMetadata gets the etcd consistent metadata.
 func (c *Server) getEtcdConsistentMetadata(
-	cluster *kstonev1alpha1.EtcdCluster,
+	cluster *kstonev1alpha2.EtcdCluster,
 	keyPrefix string,
 	tls *transport.TLSInfo,
 ) (map[featureutil.ConsistencyType][]uint64, error) {
@@ -106,12 +106,12 @@ func (c *Server) getEtcdConsistentMetadata(
 
 // CollectClusterConsistentData collects the etcd metadata info, calculate the difference, and
 // transfer them to prometheus metrics
-func (c *Server) CollectClusterConsistentData(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *Server) CollectClusterConsistentData(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
-			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureConsistency)
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureConsistency)
 		}
 	}()
 	if err != nil {

@@ -31,7 +31,7 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
 	"tkestack.io/kstone/pkg/featureprovider"
@@ -75,13 +75,13 @@ func NewInspectionServer(ctx *featureprovider.FeatureContext) (*Server, error) {
 }
 
 // GetEtcdCluster gets etcdcluster
-func (c *Server) GetEtcdCluster(namespace, name string) (*kstonev1alpha1.EtcdCluster, error) {
-	return c.cli.KstoneV1alpha1().EtcdClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+func (c *Server) GetEtcdCluster(namespace, name string) (*kstonev1alpha2.EtcdCluster, error) {
+	return c.cli.KstoneV1alpha2().EtcdClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 // GetEtcdInspection gets etcdinspection
-func (c *Server) GetEtcdInspection(namespace, name string) (*kstonev1alpha1.EtcdInspection, error) {
-	inspectionTask, err := c.cli.KstoneV1alpha1().EtcdInspections(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+func (c *Server) GetEtcdInspection(namespace, name string) (*kstonev1alpha2.EtcdInspection, error) {
+	inspectionTask, err := c.cli.KstoneV1alpha2().EtcdInspections(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			klog.Errorf("failed to get etcdinspection, err: %v, namespace is %s, name is %s", err, namespace, name)
@@ -93,7 +93,7 @@ func (c *Server) GetEtcdInspection(namespace, name string) (*kstonev1alpha1.Etcd
 
 // DeleteEtcdInspection deletes etcdinspection
 func (c *Server) DeleteEtcdInspection(namespace, name string) error {
-	err := c.cli.KstoneV1alpha1().EtcdInspections(namespace).
+	err := c.cli.KstoneV1alpha2().EtcdInspections(namespace).
 		Delete(context.TODO(), name, metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		klog.Errorf(
@@ -108,8 +108,8 @@ func (c *Server) DeleteEtcdInspection(namespace, name string) error {
 }
 
 // CreateEtcdInspection creates etcdinspection
-func (c *Server) CreateEtcdInspection(inspection *kstonev1alpha1.EtcdInspection) (*kstonev1alpha1.EtcdInspection, error) {
-	newinspectionTask, err := c.cli.KstoneV1alpha1().EtcdInspections(inspection.Namespace).
+func (c *Server) CreateEtcdInspection(inspection *kstonev1alpha2.EtcdInspection) (*kstonev1alpha2.EtcdInspection, error) {
+	newinspectionTask, err := c.cli.KstoneV1alpha2().EtcdInspections(inspection.Namespace).
 		Create(context.TODO(), inspection, metav1.CreateOptions{})
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		klog.Errorf(
@@ -124,21 +124,21 @@ func (c *Server) CreateEtcdInspection(inspection *kstonev1alpha1.EtcdInspection)
 }
 
 func (c *Server) initInspectionTask(
-	cluster *kstonev1alpha1.EtcdCluster,
-	inspectionFeatureName kstonev1alpha1.KStoneFeature,
-) (*kstonev1alpha1.EtcdInspection, error) {
+	cluster *kstonev1alpha2.EtcdCluster,
+	inspectionFeatureName kstonev1alpha2.KStoneFeature,
+) (*kstonev1alpha2.EtcdInspection, error) {
 	name := cluster.Name + "-" + string(inspectionFeatureName)
-	inspectionTask := &kstonev1alpha1.EtcdInspection{}
+	inspectionTask := &kstonev1alpha2.EtcdInspection{}
 	inspectionTask.ObjectMeta = metav1.ObjectMeta{
 		Name:      name,
 		Namespace: cluster.Namespace,
 		Labels:    cluster.Labels,
 	}
-	inspectionTask.Spec = kstonev1alpha1.EtcdInspectionSpec{
+	inspectionTask.Spec = kstonev1alpha2.EtcdInspectionSpec{
 		InspectionType: string(inspectionFeatureName),
 		ClusterName:    cluster.Name,
 	}
-	inspectionTask.Status = kstonev1alpha1.EtcdInspectionStatus{
+	inspectionTask.Status = kstonev1alpha2.EtcdInspectionStatus{
 		LastUpdatedTime: metav1.Time{
 			Time: time.Now(),
 		},
@@ -152,7 +152,7 @@ func (c *Server) initInspectionTask(
 	return inspectionTask, nil
 }
 
-func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha1.EtcdCluster, *transport.TLSInfo, error) {
+func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha2.EtcdCluster, *transport.TLSInfo, error) {
 	cluster, err := c.GetEtcdCluster(namespace, name)
 	if err != nil {
 		klog.Errorf("failed to get cluster info, namespace is %s, name is %s, err is %v", namespace, name, err)
@@ -174,7 +174,7 @@ func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha1.Etc
 	return cluster, tlsConfig, nil
 }
 
-func (c *Server) Equal(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureName kstonev1alpha1.KStoneFeature) bool {
+func (c *Server) Equal(cluster *kstonev1alpha2.EtcdCluster, inspectionFeatureName kstonev1alpha2.KStoneFeature) bool {
 	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, inspectionFeatureName) {
 		if cluster.Status.FeatureGatesStatus[inspectionFeatureName] != featureutil.FeatureStatusDisabled {
 			return c.checkEqualIfDisabled(cluster, inspectionFeatureName)
@@ -184,7 +184,7 @@ func (c *Server) Equal(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureNam
 	return c.checkEqualIfEnabled(cluster, inspectionFeatureName)
 }
 
-func (c *Server) Sync(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureName kstonev1alpha1.KStoneFeature) error {
+func (c *Server) Sync(cluster *kstonev1alpha2.EtcdCluster, inspectionFeatureName kstonev1alpha2.KStoneFeature) error {
 	if !featureutil.IsFeatureGateEnabled(cluster.ObjectMeta.Annotations, inspectionFeatureName) {
 		return c.cleanInspectionTask(cluster, inspectionFeatureName)
 	}
@@ -192,7 +192,7 @@ func (c *Server) Sync(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureName
 }
 
 // CheckEqualIfDisabled Checks whether the inspection task has been deleted if the inspection feature is disabled.
-func (c *Server) checkEqualIfDisabled(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureName kstonev1alpha1.KStoneFeature) bool {
+func (c *Server) checkEqualIfDisabled(cluster *kstonev1alpha2.EtcdCluster, inspectionFeatureName kstonev1alpha2.KStoneFeature) bool {
 	name := cluster.Name + "-" + string(inspectionFeatureName)
 	if _, err := c.GetEtcdInspection(cluster.Namespace, name); apierrors.IsNotFound(err) {
 		return true
@@ -202,7 +202,7 @@ func (c *Server) checkEqualIfDisabled(cluster *kstonev1alpha1.EtcdCluster, inspe
 
 // CheckEqualIfEnabled check whether the desired inspection task are consistent with the actual task,
 // if the inspection feature is enabled.
-func (c *Server) checkEqualIfEnabled(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureName kstonev1alpha1.KStoneFeature) bool {
+func (c *Server) checkEqualIfEnabled(cluster *kstonev1alpha2.EtcdCluster, inspectionFeatureName kstonev1alpha2.KStoneFeature) bool {
 	name := cluster.Name + "-" + string(inspectionFeatureName)
 	if _, err := c.GetEtcdInspection(cluster.Namespace, name); err == nil {
 		return true
@@ -211,13 +211,13 @@ func (c *Server) checkEqualIfEnabled(cluster *kstonev1alpha1.EtcdCluster, inspec
 }
 
 // CleanInspectionTask cleans inspection task
-func (c *Server) cleanInspectionTask(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureName kstonev1alpha1.KStoneFeature) error {
+func (c *Server) cleanInspectionTask(cluster *kstonev1alpha2.EtcdCluster, inspectionFeatureName kstonev1alpha2.KStoneFeature) error {
 	name := cluster.Name + "-" + string(inspectionFeatureName)
 	return c.DeleteEtcdInspection(cluster.Namespace, name)
 }
 
 // SyncInspectionTask syncs inspection task
-func (c *Server) syncInspectionTask(cluster *kstonev1alpha1.EtcdCluster, inspectionFeatureName kstonev1alpha1.KStoneFeature) error {
+func (c *Server) syncInspectionTask(cluster *kstonev1alpha2.EtcdCluster, inspectionFeatureName kstonev1alpha2.KStoneFeature) error {
 	task, err := c.initInspectionTask(cluster, inspectionFeatureName)
 	if err != nil {
 		return err
