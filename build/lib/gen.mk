@@ -41,4 +41,4 @@ gen.api:
 	 	$(ROOT_PACKAGE)/pkg/generated \
 	 	$(ROOT_PACKAGE)/pkg/apis \
 	 	$(ROOT_PACKAGE)/pkg/apis \
-		"kstone:v1alpha1"
+		"kstone:v1alpha1 kstone:v1alpha2"

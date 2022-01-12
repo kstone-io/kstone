@@ -26,7 +26,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/backup"
 	"tkestack.io/kstone/pkg/inspection/metrics"
 )
@@ -50,8 +50,8 @@ const (
 	OneDaySeconds = 24 * 60 * 60
 )
 
-func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha1.KStoneFeature) bool {
-	if gates, found := annotations[kstonev1alpha1.KStoneFeatureAnno]; found && gates != "" {
+func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha2.KStoneFeature) bool {
+	if gates, found := annotations[kstonev1alpha2.KStoneFeatureAnno]; found && gates != "" {
 		featurelist := strings.Split(gates, ",")
 		for _, item := range featurelist {
 			features := strings.Split(item, "=")
@@ -60,7 +60,7 @@ func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha1.KSt
 			}
 
 			enabled, _ := strconv.ParseBool(features[1])
-			if kstonev1alpha1.KStoneFeature(features[0]) == name && enabled {
+			if kstonev1alpha2.KStoneFeature(features[0]) == name && enabled {
 				return true
 			}
 		}
@@ -68,7 +68,7 @@ func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha1.KSt
 	return false
 }
 
-func GetBackupConfig(cluster *kstonev1alpha1.EtcdCluster) (*backup.Config, error) {
+func GetBackupConfig(cluster *kstonev1alpha2.EtcdCluster) (*backup.Config, error) {
 	var err error
 	cfg, found := cluster.Annotations[backup.AnnoBackupConfig]
 	if !found {
@@ -91,7 +91,7 @@ func GetBackupConfig(cluster *kstonev1alpha1.EtcdCluster) (*backup.Config, error
 	return backupConfig, nil
 }
 
-func IncrFailedInspectionCounter(clusterName string, featureName kstonev1alpha1.KStoneFeature) {
+func IncrFailedInspectionCounter(clusterName string, featureName kstonev1alpha2.KStoneFeature) {
 	labels := map[string]string{
 		"clusterName":    clusterName,
 		"inspectionType": string(featureName),

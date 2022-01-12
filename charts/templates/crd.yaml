@@ -17,7 +17,7 @@ spec:
       - cluster
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1alpha2
       schema:
         openAPIV3Schema:
           description: EtcdCluster is the Schema for the etcdclusters API
@@ -35,6 +35,7 @@ spec:
             metadata:
               type: object
             spec:
+              x-kubernetes-preserve-unknown-fields: true
               description: EtcdClusterSpec defines the desired state of EtcdCluster
               properties:
                 affinity:
@@ -996,11 +997,6 @@ spec:
                   type: string
                 size:
                   type: integer
-                totalCpu:
-                  description: resources
-                  type: integer
-                totalMem:
-                  type: integer
                 version:
                   type: string
               required:
@@ -1010,8 +1006,6 @@ spec:
                 - diskType
                 - name
                 - size
-                - totalCpu
-                - totalMem
                 - version
               type: object
             status:
@@ -1128,7 +1122,7 @@ spec:
       - inspection
   scope: Namespaced
   versions:
-    - name: v1alpha1
+    - name: v1alpha2
       schema:
         openAPIV3Schema:
           description: EtcdInspection is a specification for a EtcdInspection resource

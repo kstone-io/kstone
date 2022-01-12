@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	"tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/backup"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 )
@@ -58,7 +58,7 @@ func NewCOSBackupProvider(config *backup.StorageConfig) backup.Storage {
 	}
 }
 
-func (c *StorageCOS) List(cluster *v1alpha1.EtcdCluster) (interface{}, error) {
+func (c *StorageCOS) List(cluster *v1alpha2.EtcdCluster) (interface{}, error) {
 	// get backup config
 	backupConfig, err := featureutil.GetBackupConfig(cluster)
 	if err != nil {

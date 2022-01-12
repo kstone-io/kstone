@@ -21,13 +21,13 @@ package alarm
 import (
 	"sync"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/inspection"
 )
 
 const (
-	ProviderName = string(kstonev1alpha1.KStoneFeatureAlarm)
+	ProviderName = string(kstonev1alpha2.KStoneFeatureAlarm)
 )
 
 var (
@@ -62,14 +62,14 @@ func initFeatureAlarmInstance(ctx *featureprovider.FeatureContext) (featureprovi
 	return instance, err
 }
 
-func (c *FeatureAlarm) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
-	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureAlarm)
+func (c *FeatureAlarm) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha2.KStoneFeatureAlarm)
 }
 
-func (c *FeatureAlarm) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
-	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureAlarm)
+func (c *FeatureAlarm) Sync(cluster *kstonev1alpha2.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha2.KStoneFeatureAlarm)
 }
 
-func (c *FeatureAlarm) Do(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *FeatureAlarm) Do(inspection *kstonev1alpha2.EtcdInspection) error {
 	return c.inspection.CollectAlarmList(inspection)
 }

@@ -46,7 +46,7 @@ api=$(
 input_dirs=(
   ${api_machinery}
   ${api}
-  "${API_PACKAGE}"/kstone/v1alpha1
+  "${API_PACKAGE}"/kstone/v1alpha2
 )
 
 echo "$(IFS=,; echo "${input_dirs[*]}")"
