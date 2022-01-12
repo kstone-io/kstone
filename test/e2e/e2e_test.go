@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	"tkestack.io/kstone/test/fixtures"
 	"tkestack.io/kstone/test/testfiles"
@@ -99,6 +100,14 @@ var _ = ginkgo.BeforeSuite(func() {
 	err = CreateTmpTestEtcdCluster()
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
+	err = createEtcdCluster(fixtures.DefaultKstoneEtcdOperatorClusterName, 1, kstonev1alpha2.EtcdClusterKstone, fixtures.DefaultFeatureGate, "", "http")
+	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+	podIP, err := getEtcdPodIP()
+	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+	err = createEtcdCluster(fixtures.DefaultImportedClusterName, 3, kstonev1alpha2.EtcdClusterImported, fixtures.DefaultFeatureGate, podIP+":2379", "")
+	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
 }, TestSuiteSetupTimeOut.Seconds())
 
 var _ = ginkgo.AfterSuite(func() {
@@ -111,11 +120,11 @@ var _ = ginkgo.AfterSuite(func() {
 }, TestSuiteTeardownTimeOut.Seconds())
 
 func CreateTmpTestEtcdCluster() error {
-	sts, err := fixtures.StatefulSetFromManifest(fixtures.DefaultTestClusterStatefulsetYaml, v1.NamespaceDefault)
+	sts, err := fixtures.StatefulSetFromManifest(fixtures.DefaultTestClusterStatefulsetYaml, fixtures.DefaultKstoneNamespace)
 	if err != nil {
 		return err
 	}
-	_, err = kubeClient.AppsV1().StatefulSets(v1.NamespaceDefault).Create(context.TODO(), sts, metav1.CreateOptions{})
+	_, err = kubeClient.AppsV1().StatefulSets(fixtures.DefaultKstoneNamespace).Create(context.TODO(), sts, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -123,7 +132,7 @@ func CreateTmpTestEtcdCluster() error {
 	if err != nil {
 		return err
 	}
-	_, err = kubeClient.CoreV1().Services(v1.NamespaceDefault).Create(context.TODO(), svc, metav1.CreateOptions{})
+	_, err = kubeClient.CoreV1().Services(fixtures.DefaultKstoneNamespace).Create(context.TODO(), svc, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -132,7 +141,7 @@ func CreateTmpTestEtcdCluster() error {
 
 func GetTmpTestEtcdClusterPodIP() (string, error) {
 	var podIP string
-	podList, err := kubeClient.CoreV1().Pods(v1.NamespaceDefault).List(context.TODO(), metav1.ListOptions{LabelSelector: "app=etcd-test"})
+	podList, err := kubeClient.CoreV1().Pods(fixtures.DefaultKstoneNamespace).List(context.TODO(), metav1.ListOptions{LabelSelector: "app=etcd-test"})
 	if err != nil {
 		return "", err
 	}
@@ -149,11 +158,11 @@ func GetTmpTestEtcdClusterPodIP() (string, error) {
 }
 
 func DeleteTmpTestEtcdCluster() error {
-	sts, err := fixtures.StatefulSetFromManifest(fixtures.DefaultTestClusterStatefulsetYaml, v1.NamespaceDefault)
+	sts, err := fixtures.StatefulSetFromManifest(fixtures.DefaultTestClusterStatefulsetYaml, fixtures.DefaultKstoneNamespace)
 	if err != nil {
 		return err
 	}
-	err = kubeClient.AppsV1().StatefulSets(v1.NamespaceDefault).Delete(context.TODO(), sts.Name, metav1.DeleteOptions{})
+	err = kubeClient.AppsV1().StatefulSets(fixtures.DefaultKstoneNamespace).Delete(context.TODO(), sts.Name, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -161,7 +170,7 @@ func DeleteTmpTestEtcdCluster() error {
 	if err != nil {
 		return err
 	}
-	err = kubeClient.CoreV1().Services(v1.NamespaceDefault).Delete(context.TODO(), svc.Name, metav1.DeleteOptions{})
+	err = kubeClient.CoreV1().Services(fixtures.DefaultKstoneNamespace).Delete(context.TODO(), svc.Name, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
