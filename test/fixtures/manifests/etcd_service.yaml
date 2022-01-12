@@ -4,7 +4,7 @@ metadata:
   labels:
     app: etcd-test
   name: etcd-test-headless
-  namespace: default
+  namespace: kstone
 spec:
   clusterIP: None
   ports:

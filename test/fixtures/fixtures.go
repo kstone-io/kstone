@@ -33,11 +33,16 @@ import (
 )
 
 const (
-	DefaultFeatureGate                = "monitor=true,consistency=true,healthy=true,request=true,backup=true,alarm=true,backupcheck=true"
-	DefaultTestClusterAddr            = "etcd-test-headless.default.svc.cluster.local:2379"
-	DefaultTestClusterStatefulsetYaml = "etcd_statefulset.yaml"
-	DefaultTestClusterSvcYaml         = "etcd_service.yaml"
-	DefaultKstoneNamespace            = "kstone"
+	DefaultFeatureGate                   = "monitor=true,consistency=true,healthy=true,request=true,backup=true,alarm=true,backupcheck=true"
+	DefaultTestClusterAddr               = "etcd-test-headless.default.svc.cluster.local:2379"
+	DefaultTestClusterStatefulsetYaml    = "etcd_statefulset.yaml"
+	DefaultTestClusterSvcYaml            = "etcd_service.yaml"
+	DefaultKstoneNamespace               = "kstone"
+	DefaultImportedClusterName           = "kstone-test"
+	DefaultImportedPodName               = "etcd-test-0"
+	DefaultNamespace                     = "default"
+	DefaultKstoneEtcdOperatorClusterName = "kstone-etcd-operator-test"
+	DefaultKstoneEtcdOperatorPodName     = "kstone-etcd-operator-test-etcd-0"
 )
 
 func NewEtcdCluster(
@@ -45,8 +50,9 @@ func NewEtcdCluster(
 	replicas uint,
 	clusterType kstonev1alpha2.EtcdClusterType,
 	featureGate,
-	clusterAddr string) *kstonev1alpha2.EtcdCluster {
-	return &kstonev1alpha2.EtcdCluster{
+	clusterAddr,
+	scheme string) *kstonev1alpha2.EtcdCluster {
+	cluster := &kstonev1alpha2.EtcdCluster{
 		TypeMeta: metav1.TypeMeta{APIVersion: kstonev1alpha2.SchemeGroupVersion.String()},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -55,8 +61,6 @@ func NewEtcdCluster(
 			Annotations: map[string]string{
 				"autoTest":     "true",
 				"featureGates": featureGate,
-				"importedAddr": clusterAddr,
-				"extClientURL": fmt.Sprintf("127.0.0.1:2379->%s", clusterAddr),
 				"backup": `
 {
 	"backupPolicy": {
@@ -76,12 +80,19 @@ func NewEtcdCluster(
 		Spec: kstonev1alpha2.EtcdClusterSpec{
 			ClusterType: clusterType,
 			Size:        replicas,
-			DiskSize:    50,
+			DiskSize:    1,
 			DiskType:    "ssd",
-			Repository:  "bitnami/etcd",
-			Version:     "3.5.0",
+			Version:     "3.4.13",
 		},
 	}
+	switch clusterType {
+	case kstonev1alpha2.EtcdClusterImported:
+		cluster.ObjectMeta.Annotations["importedAddr"] = clusterAddr
+		cluster.ObjectMeta.Annotations["extClientURL"] = fmt.Sprintf("127.0.0.1:2379->%s", clusterAddr)
+	case kstonev1alpha2.EtcdClusterKstone:
+		cluster.ObjectMeta.Annotations["scheme"] = scheme
+	}
+	return cluster
 }
 
 func NewEtcdInspection(name string, inspectionType kstonev1alpha2.KStoneFeature) *kstonev1alpha2.EtcdInspection {
