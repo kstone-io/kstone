@@ -31,6 +31,6 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${SCRIPT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
 bash "${CODEGEN_PKG}"/generate-groups.sh "deepcopy,client,informer,lister" \
   tkestack.io/kstone/pkg/generated tkestack.io/kstone/pkg/apis \
-  kstone:v1alpha1 \
+  kstone:v1alpha1 kstone.v1alpha2\
   --output-base "$(dirname "${BASH_SOURCE[0]}")/../../.." \
   --go-header-file "${SCRIPT_ROOT}"/hack/custom-boilerplate.go.txt

@@ -39,7 +39,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	klog "k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/etcd"
 	// register etcd cluster providers
 	_ "tkestack.io/kstone/pkg/clusterprovider/providers"
@@ -49,8 +49,8 @@ import (
 	_ "tkestack.io/kstone/pkg/featureprovider/providers"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
-	informers "tkestack.io/kstone/pkg/generated/informers/externalversions/kstone/v1alpha1"
-	listers "tkestack.io/kstone/pkg/generated/listers/kstone/v1alpha1"
+	informers "tkestack.io/kstone/pkg/generated/informers/externalversions/kstone/v1alpha2"
+	listers "tkestack.io/kstone/pkg/generated/listers/kstone/v1alpha2"
 )
 
 // InspectionController is the controller implementation for etcdinspection resources
@@ -257,7 +257,7 @@ func (c *InspectionController) GetInspectionFeatureProvider(name string) (featur
 	return feature, nil
 }
 
-func (c *InspectionController) doInspectionTask(etcdinspection *kstonev1alpha1.EtcdInspection) error {
+func (c *InspectionController) doInspectionTask(etcdinspection *kstonev1alpha2.EtcdInspection) error {
 	inspectionType := etcdinspection.Spec.InspectionType
 	feature, err := c.GetInspectionFeatureProvider(inspectionType)
 	if err != nil {

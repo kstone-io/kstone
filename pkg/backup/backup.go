@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/controllers/util"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
@@ -178,7 +178,7 @@ func (bak *Server) UpdateEtcdBackup(backup *backupapiv2.EtcdBackup) (*backupapiv
 }
 
 // parseBackupConfig parses backup config
-func (bak *Server) parseBackupConfig(cluster *kstonev1alpha1.EtcdCluster) (*Config, string, error) {
+func (bak *Server) parseBackupConfig(cluster *kstonev1alpha2.EtcdCluster) (*Config, string, error) {
 	annotations := cluster.ObjectMeta.Annotations
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -223,7 +223,7 @@ func (bak *Server) parseBackupConfig(cluster *kstonev1alpha1.EtcdCluster) (*Conf
 }
 
 // initEtcdBackup generates etcd backup
-func (bak *Server) initEtcdBackup(cluster *kstonev1alpha1.EtcdCluster) (*backupapiv2.EtcdBackup, error) {
+func (bak *Server) initEtcdBackup(cluster *kstonev1alpha2.EtcdCluster) (*backupapiv2.EtcdBackup, error) {
 	backupCfg, secretName, err := bak.parseBackupConfig(cluster)
 	if err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func (bak *Server) initEtcdBackup(cluster *kstonev1alpha1.EtcdCluster) (*backupa
 }
 
 // Equal checks whether the backup resource needs to be updated
-func (bak *Server) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+func (bak *Server) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
 	namespace, name := cluster.Namespace, cluster.Name
 
 	backup, err := bak.GetEtcdBackup(name, namespace)
@@ -270,7 +270,7 @@ func (bak *Server) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
 }
 
 // CheckEqualIfDisabled checks whether the backup resource is not found if it is disabled
-func (bak *Server) CheckEqualIfDisabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+func (bak *Server) CheckEqualIfDisabled(cluster *kstonev1alpha2.EtcdCluster) bool {
 	if _, err := bak.GetEtcdBackup(cluster.Name, cluster.Namespace); apierrors.IsNotFound(err) {
 		return true
 	}
@@ -278,7 +278,7 @@ func (bak *Server) CheckEqualIfDisabled(cluster *kstonev1alpha1.EtcdCluster) boo
 }
 
 // CheckEqualIfEnabled checks whether the backup resource is equal if it is enabled
-func (bak *Server) CheckEqualIfEnabled(cluster *kstonev1alpha1.EtcdCluster) bool {
+func (bak *Server) CheckEqualIfEnabled(cluster *kstonev1alpha2.EtcdCluster) bool {
 	namespace, name := cluster.Namespace, cluster.Name
 	backup, err := bak.GetEtcdBackup(name, namespace)
 	if err != nil && apierrors.IsNotFound(err) {
@@ -295,7 +295,7 @@ func (bak *Server) CheckEqualIfEnabled(cluster *kstonev1alpha1.EtcdCluster) bool
 }
 
 // CleanBackup cleans the etcdbackup if it is disabled.
-func (bak *Server) CleanBackup(cluster *kstonev1alpha1.EtcdCluster) error {
+func (bak *Server) CleanBackup(cluster *kstonev1alpha2.EtcdCluster) error {
 	err := bak.DeleteEtcdBackup(cluster.Name, cluster.Namespace)
 	if err != nil {
 		klog.Errorf("failed to delete etcd backup, namespace is %s, name is %s, err is %v", cluster.Namespace, cluster.Name, err)
@@ -304,7 +304,7 @@ func (bak *Server) CleanBackup(cluster *kstonev1alpha1.EtcdCluster) error {
 }
 
 // SyncBackup synchronizes the etcdbackup if it is enabled.
-func (bak *Server) SyncBackup(cluster *kstonev1alpha1.EtcdCluster) error {
+func (bak *Server) SyncBackup(cluster *kstonev1alpha2.EtcdCluster) error {
 	namespace, name := cluster.Namespace, cluster.Name
 	newBackup, err := bak.initEtcdBackup(cluster)
 	if err != nil {

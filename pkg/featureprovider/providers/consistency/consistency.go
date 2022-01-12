@@ -21,13 +21,13 @@ package consistency
 import (
 	"sync"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/inspection"
 )
 
 const (
-	ProviderName = string(kstonev1alpha1.KStoneFeatureConsistency)
+	ProviderName = string(kstonev1alpha2.KStoneFeatureConsistency)
 )
 
 var (
@@ -62,14 +62,14 @@ func initFeatureConsistencyInstance(ctx *featureprovider.FeatureContext) (featur
 	return instance, err
 }
 
-func (c *FeatureConsistency) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
-	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureConsistency)
+func (c *FeatureConsistency) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha2.KStoneFeatureConsistency)
 }
 
-func (c *FeatureConsistency) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
-	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureConsistency)
+func (c *FeatureConsistency) Sync(cluster *kstonev1alpha2.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha2.KStoneFeatureConsistency)
 }
 
-func (c *FeatureConsistency) Do(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *FeatureConsistency) Do(inspection *kstonev1alpha2.EtcdInspection) error {
 	return c.inspection.CollectClusterConsistentData(inspection)
 }

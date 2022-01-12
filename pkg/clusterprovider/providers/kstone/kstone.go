@@ -36,15 +36,16 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	"tkestack.io/kstone/pkg/controllers/util"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
 
 const (
-	providerName    = kstonev1alpha1.EtcdClusterKstone
-	AnnoImportedURI = "importedAddr"
+	providerName              = kstonev1alpha2.EtcdClusterKstone
+	AnnoImportedURI           = "importedAddr"
+	defaultEmptyResourceValue = "0"
 )
 
 var (
@@ -54,7 +55,7 @@ var (
 
 // EtcdClusterKstone is responsible for synchronizing kstone.tkestack.io/etcdcluster to kstone-etcd-operator
 type EtcdClusterKstone struct {
-	name kstonev1alpha1.EtcdClusterType
+	name kstonev1alpha2.EtcdClusterType
 	ctx  *clusterprovider.ClusterContext
 }
 
@@ -71,7 +72,7 @@ func init() {
 func initEtcdClusterKstoneInstance(ctx *clusterprovider.ClusterContext) (clusterprovider.Cluster, error) {
 	once.Do(func() {
 		instance = &EtcdClusterKstone{
-			name: kstonev1alpha1.EtcdClusterKstone,
+			name: kstonev1alpha2.EtcdClusterKstone,
 			ctx: &clusterprovider.ClusterContext{
 				Clientbuilder: ctx.Clientbuilder,
 				Client:        ctx.Clientbuilder.DynamicClientOrDie(),
@@ -81,12 +82,12 @@ func initEtcdClusterKstoneInstance(ctx *clusterprovider.ClusterContext) (cluster
 	return instance, nil
 }
 
-func (c *EtcdClusterKstone) BeforeCreate(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) BeforeCreate(cluster *kstonev1alpha2.EtcdCluster) error {
 	return nil
 }
 
 // Create creates an etcd cluster
-func (c *EtcdClusterKstone) Create(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) Create(cluster *kstonev1alpha2.EtcdCluster) error {
 	etcdRes := schema.GroupVersionResource{Group: "etcd.tkestack.io", Version: "v1alpha1", Resource: "etcdclusters"}
 	etcdcluster := map[string]interface{}{
 		"apiVersion": "etcd.tkestack.io/v1alpha1",
@@ -118,7 +119,7 @@ func (c *EtcdClusterKstone) Create(cluster *kstonev1alpha1.EtcdCluster) error {
 }
 
 // AfterCreate handles etcdcluster after created
-func (c *EtcdClusterKstone) AfterCreate(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) AfterCreate(cluster *kstonev1alpha2.EtcdCluster) error {
 	if cluster.Annotations["scheme"] == "https" {
 		cluster.Annotations["certName"] = fmt.Sprintf("%s/%s-etcd-client-cert", cluster.Namespace, cluster.Name)
 	}
@@ -151,12 +152,12 @@ func (c *EtcdClusterKstone) AfterCreate(cluster *kstonev1alpha1.EtcdCluster) err
 }
 
 // BeforeUpdate handles etcdcluster before updated
-func (c *EtcdClusterKstone) BeforeUpdate(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) BeforeUpdate(cluster *kstonev1alpha2.EtcdCluster) error {
 	return nil
 }
 
 // Update updates cluster of kstone-etcd-operator
-func (c *EtcdClusterKstone) Update(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) Update(cluster *kstonev1alpha2.EtcdCluster) error {
 	etcdRes := schema.GroupVersionResource{Group: "etcd.tkestack.io", Version: "v1alpha1", Resource: "etcdclusters"}
 	etcd, err := c.ctx.Client.Resource(etcdRes).
 		Namespace(cluster.Namespace).
@@ -182,7 +183,7 @@ func (c *EtcdClusterKstone) Update(cluster *kstonev1alpha1.EtcdCluster) error {
 
 // Equal checks etcdcluster, if not equal, sync etcdclusters.etcd.tkestack.io
 // if equal, nothing to do
-func (c *EtcdClusterKstone) Equal(cluster *kstonev1alpha1.EtcdCluster) (bool, error) {
+func (c *EtcdClusterKstone) Equal(cluster *kstonev1alpha2.EtcdCluster) (bool, error) {
 	etcdRes := schema.GroupVersionResource{Group: "etcd.tkestack.io", Version: "v1alpha1", Resource: "etcdclusters"}
 	etcd, err := c.ctx.Client.Resource(etcdRes).
 		Namespace(cluster.Namespace).
@@ -217,22 +218,7 @@ func (c *EtcdClusterKstone) Equal(cluster *kstonev1alpha1.EtcdCluster) (bool, er
 		return false, nil
 	}
 
-	oldCPU, _, _ := unstructured.NestedString(etcd.Object, "spec", "template", "resources", "requests", "cpu")
-	if oldCPU != strconv.Itoa(int(cluster.Spec.TotalCpu)) {
-		klog.Info("cpu is different")
-		return false, nil
-	}
-
-	oldMemory, _, _ := unstructured.NestedString(
-		etcd.Object,
-		"spec",
-		"template",
-		"resources",
-		"requests",
-		"memory",
-	)
-	if strings.TrimRight(oldMemory, "Gi") != strconv.Itoa(int(cluster.Spec.TotalMem)) {
-		klog.Info("memory is different")
+	if !c.resourceEqual(cluster, etcd) {
 		return false, nil
 	}
 
@@ -258,28 +244,28 @@ func (c *EtcdClusterKstone) Equal(cluster *kstonev1alpha1.EtcdCluster) (bool, er
 }
 
 // AfterUpdate handles etcdcluster after updated
-func (c *EtcdClusterKstone) AfterUpdate(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) AfterUpdate(cluster *kstonev1alpha2.EtcdCluster) error {
 	return nil
 }
 
 // BeforeDelete handles etcdcluster before deleted
-func (c *EtcdClusterKstone) BeforeDelete(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) BeforeDelete(cluster *kstonev1alpha2.EtcdCluster) error {
 	return nil
 }
 
 // Delete handles delete
-func (c *EtcdClusterKstone) Delete(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) Delete(cluster *kstonev1alpha2.EtcdCluster) error {
 	return nil
 }
 
 // AfterDelete handles etcdcluster after deleted
-func (c *EtcdClusterKstone) AfterDelete(cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) AfterDelete(cluster *kstonev1alpha2.EtcdCluster) error {
 	return nil
 }
 
 // Status checks etcd member and returns new status
-func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstonev1alpha1.EtcdCluster) (kstonev1alpha1.EtcdClusterStatus, error) {
-	var phase kstonev1alpha1.EtcdClusterPhase
+func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstonev1alpha2.EtcdCluster) (kstonev1alpha2.EtcdClusterStatus, error) {
+	var phase kstonev1alpha2.EtcdClusterPhase
 
 	status := cluster.Status
 
@@ -296,7 +282,7 @@ func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstone
 			endpoints = append(endpoints, addr)
 			status.ServiceName = addr
 		} else {
-			status.Phase = kstonev1alpha1.EtcdCluterCreating
+			status.Phase = kstonev1alpha2.EtcdCluterCreating
 			return status, nil
 		}
 	}
@@ -307,21 +293,21 @@ func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstone
 		tlsConfig,
 	)
 	if err != nil || len(members) == 0 || int(cluster.Spec.Size) != len(members) {
-		if status.Phase == kstonev1alpha1.EtcdClusterRunning {
-			status.Phase = kstonev1alpha1.EtcdClusterUnknown
+		if status.Phase == kstonev1alpha2.EtcdClusterRunning {
+			status.Phase = kstonev1alpha2.EtcdClusterUnknown
 		}
 		return status, err
 	}
 
 	status.Members, phase = clusterprovider.GetEtcdClusterMemberStatus(members, tlsConfig)
-	if status.Phase == kstonev1alpha1.EtcdClusterRunning || phase != kstonev1alpha1.EtcdClusterUnknown {
+	if status.Phase == kstonev1alpha2.EtcdClusterRunning || phase != kstonev1alpha2.EtcdClusterUnknown {
 		status.Phase = phase
 	}
 	return status, err
 }
 
 // updateEtcdSpec update spec
-func (c *EtcdClusterKstone) updateEtcdSpec(etcd *unstructured.Unstructured, cluster *kstonev1alpha1.EtcdCluster) error {
+func (c *EtcdClusterKstone) updateEtcdSpec(etcd *unstructured.Unstructured, cluster *kstonev1alpha2.EtcdCluster) error {
 	newSpec := c.generateEtcdSpec(cluster)
 
 	spec, found, err := unstructured.NestedMap(etcd.Object, "spec")
@@ -338,7 +324,7 @@ func (c *EtcdClusterKstone) updateEtcdSpec(etcd *unstructured.Unstructured, clus
 }
 
 // generateEtcdSpec generate spec with etcdcluster
-func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha1.EtcdCluster) map[string]interface{} {
+func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster) map[string]interface{} {
 	extraServerCertSANsStr := cluster.Annotations["extraServerCertSANs"]
 	extraServerCertSANList := make([]interface{}, 0)
 	for _, certSAN := range strings.Split(extraServerCertSANsStr, ",") {
@@ -384,18 +370,24 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha1.EtcdCluster
 					},
 				},
 			},
-			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
-					"cpu":    fmt.Sprintf("%d", cluster.Spec.TotalCpu),
-					"memory": fmt.Sprintf("%dGi", cluster.Spec.TotalMem),
-				},
-				"limits": map[string]interface{}{
-					"cpu":    fmt.Sprintf("%d", cluster.Spec.TotalCpu),
-					"memory": fmt.Sprintf("%dGi", cluster.Spec.TotalMem),
-				},
-			},
 		},
 	}
+
+	resources := make(map[string]interface{})
+	if cluster.Spec.Resources.Limits != nil {
+		resources["limits"] = map[string]interface{}{
+			"cpu":    cluster.Spec.Resources.Limits.Cpu().String(),
+			"memory": cluster.Spec.Resources.Limits.Memory().String(),
+		}
+	}
+	if cluster.Spec.Resources.Requests != nil {
+		resources["requests"] = map[string]interface{}{
+			"cpu":    cluster.Spec.Resources.Requests.Cpu().String(),
+			"memory": cluster.Spec.Resources.Requests.Memory().String(),
+		}
+	}
+
+	spec["template"].(map[string]interface{})["resources"] = resources
 
 	if cluster.Annotations["scheme"] == "https" {
 		spec["secure"] = map[string]interface{}{
@@ -415,4 +407,46 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha1.EtcdCluster
 		}
 	}
 	return spec
+}
+
+// resourceEqual checks if old resource is equal to desired resource
+// Note that if Resources.Limits.Cpu or other resource is not exists,
+// kubernetes will check and return a default Quantity Object
+// So there will be no nil pointer panic
+func (c *EtcdClusterKstone) resourceEqual(cluster *kstonev1alpha2.EtcdCluster, etcd *unstructured.Unstructured) bool {
+	resourceTypeNames := []corev1.ResourceName{corev1.ResourceRequestsCPU, corev1.ResourceRequestsMemory, corev1.ResourceLimitsCPU, corev1.ResourceLimitsMemory}
+	for _, resourceTypeName := range resourceTypeNames {
+		r := strings.Split(string(resourceTypeName), ".")
+		resourceType, resourceName := r[0], r[1]
+		oldResource := c.getOldResource(etcd, resourceType, resourceName)
+		desiredResource := c.getDesiredResource(cluster, resourceTypeName)
+		if oldResource != desiredResource {
+			info := fmt.Sprintf("%s %s is different", resourceName, resourceType)
+			klog.Info(info)
+			return false
+		}
+	}
+	return true
+}
+
+func (c *EtcdClusterKstone) getOldResource(etcd *unstructured.Unstructured, resourceType, resourceName string) string {
+	resource, _, _ := unstructured.NestedString(etcd.Object, "spec", "template", "resources", resourceType, resourceName)
+	if resource == "" {
+		resource = defaultEmptyResourceValue
+	}
+	return resource
+}
+
+func (c *EtcdClusterKstone) getDesiredResource(cluster *kstonev1alpha2.EtcdCluster, resourceTypeName corev1.ResourceName) string {
+	switch resourceTypeName {
+	case corev1.ResourceLimitsCPU:
+		return cluster.Spec.Resources.Limits.Cpu().String()
+	case corev1.ResourceLimitsMemory:
+		return cluster.Spec.Resources.Limits.Memory().String()
+	case corev1.ResourceRequestsCPU:
+		return cluster.Spec.Resources.Requests.Cpu().String()
+	case corev1.ResourceRequestsMemory:
+		return cluster.Spec.Resources.Requests.Memory().String()
+	}
+	return ""
 }

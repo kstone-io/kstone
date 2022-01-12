@@ -21,7 +21,7 @@ package inspection
 import (
 	"k8s.io/klog/v2"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/etcd"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	"tkestack.io/kstone/pkg/inspection/metrics"
@@ -29,12 +29,12 @@ import (
 
 // CollectMemberHealthy collects the health of etcd, and
 // transfer them to prometheus metrics
-func (c *Server) CollectMemberHealthy(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *Server) CollectMemberHealthy(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
 	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
-			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha1.KStoneFeatureHealthy)
+			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureHealthy)
 		}
 	}()
 	if err != nil {

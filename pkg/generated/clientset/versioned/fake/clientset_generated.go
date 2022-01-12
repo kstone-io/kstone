@@ -29,6 +29,8 @@ import (
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	kstonev1alpha1 "tkestack.io/kstone/pkg/generated/clientset/versioned/typed/kstone/v1alpha1"
 	fakekstonev1alpha1 "tkestack.io/kstone/pkg/generated/clientset/versioned/typed/kstone/v1alpha1/fake"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/generated/clientset/versioned/typed/kstone/v1alpha2"
+	fakekstonev1alpha2 "tkestack.io/kstone/pkg/generated/clientset/versioned/typed/kstone/v1alpha2/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -81,4 +83,9 @@ var _ clientset.Interface = &Clientset{}
 // KstoneV1alpha1 retrieves the KstoneV1alpha1Client
 func (c *Clientset) KstoneV1alpha1() kstonev1alpha1.KstoneV1alpha1Interface {
 	return &fakekstonev1alpha1.FakeKstoneV1alpha1{Fake: &c.Fake}
+}
+
+// KstoneV1alpha2 retrieves the KstoneV1alpha2Client
+func (c *Clientset) KstoneV1alpha2() kstonev1alpha2.KstoneV1alpha2Interface {
+	return &fakekstonev1alpha2.FakeKstoneV1alpha2{Fake: &c.Fake}
 }

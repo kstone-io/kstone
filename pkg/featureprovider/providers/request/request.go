@@ -21,13 +21,13 @@ package request
 import (
 	"sync"
 
-	kstonev1alpha1 "tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/inspection"
 )
 
 const (
-	ProviderName = string(kstonev1alpha1.KStoneFeatureRequest)
+	ProviderName = string(kstonev1alpha2.KStoneFeatureRequest)
 )
 
 var (
@@ -62,14 +62,14 @@ func initFeatureRequestInstance(ctx *featureprovider.FeatureContext) (featurepro
 	return instance, err
 }
 
-func (c *FeatureRequest) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
-	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureRequest)
+func (c *FeatureRequest) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha2.KStoneFeatureRequest)
 }
 
-func (c *FeatureRequest) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
-	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureRequest)
+func (c *FeatureRequest) Sync(cluster *kstonev1alpha2.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha2.KStoneFeatureRequest)
 }
 
-func (c *FeatureRequest) Do(inspection *kstonev1alpha1.EtcdInspection) error {
+func (c *FeatureRequest) Do(inspection *kstonev1alpha2.EtcdInspection) error {
 	return c.inspection.CollectEtcdClusterRequest(inspection)
 }
