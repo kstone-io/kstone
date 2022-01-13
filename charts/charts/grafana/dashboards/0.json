@@ -512,6 +512,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
+      "decimals": null,
       "editable": true,
       "error": false,
       "fieldConfig": {
@@ -522,6 +523,7 @@
       },
       "fill": 0,
       "fillGradient": 0,
+      "grid": {},
       "gridPos": {
         "h": 9,
         "w": 12,
@@ -529,7 +531,7 @@
         "y": 17
       },
       "hiddenSeries": false,
-      "id": 41,
+      "id": 82,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -557,30 +559,33 @@
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
-      "stack": true,
+      "stack": false,
       "steppedLine": false,
       "targets": [
         {
-          "expr": "etcd_debugging_mvcc_watcher_total{job=\"$job\"}",
+          "exemplar": true,
+          "expr": "etcd_debugging_mvcc_db_total_size_in_bytes{job=\"$job\"}/etcd_server_quota_backend_bytes{job=\"$job\"}",
           "format": "time_series",
+          "hide": false,
+          "instant": false,
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}_mvcc_watcher_total",
-          "metric": "grpc_server_handled_total",
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
+          "metric": "",
           "refId": "A",
-          "step": 60
+          "step": 120
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "The total number of wathcher",
+      "title": "DB Usage Rate",
       "tooltip": {
         "msResolution": false,
         "shared": true,
         "sort": 0,
-        "value_type": "individual"
+        "value_type": "cumulative"
       },
       "type": "graph",
       "xaxis": {
@@ -592,20 +597,20 @@
       },
       "yaxes": [
         {
-          "format": "short",
-          "label": "",
+          "$$hashKey": "object:192",
+          "format": "percentunit",
           "logBase": 1,
           "max": null,
           "min": null,
           "show": true
         },
         {
+          "$$hashKey": "object:193",
           "format": "short",
-          "label": null,
           "logBase": 1,
           "max": null,
           "min": null,
-          "show": true
+          "show": false
         }
       ],
       "yaxis": {
@@ -736,54 +741,72 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "fill": 1,
+      "editable": true,
+      "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 12,
         "y": 26
       },
       "hiddenSeries": false,
-      "id": 67,
+      "id": 41,
       "legend": {
+        "alignAsTable": true,
         "avg": false,
-        "current": false,
-        "max": false,
+        "current": true,
+        "max": true,
         "min": false,
         "show": true,
+        "sort": "current",
+        "sortDesc": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
+      "linewidth": 2,
+      "links": [],
+      "nullPointMode": "connected",
       "options": {
         "alertThreshold": true
       },
+      "paceLength": 10,
       "percentage": false,
       "pluginVersion": "8.0.3",
-      "pointradius": 2,
+      "pointradius": 5,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
-      "stack": false,
+      "stack": true,
       "steppedLine": false,
       "targets": [
         {
-          "expr": "etcd_debugging_mvcc_pending_events_total{job=\"$job\"}",
+          "expr": "etcd_debugging_mvcc_watcher_total{job=\"$job\"}",
+          "format": "time_series",
           "interval": "",
-          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
-          "refId": "A"
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}_mvcc_watcher_total",
+          "metric": "grpc_server_handled_total",
+          "refId": "A",
+          "step": 60
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "The total number of pending events",
+      "title": "The total number of wathcher",
       "tooltip": {
+        "msResolution": false,
         "shared": true,
         "sort": 0,
         "value_type": "individual"
@@ -799,7 +822,7 @@
       "yaxes": [
         {
           "format": "short",
-          "label": null,
+          "label": "",
           "logBase": 1,
           "max": null,
           "min": null,
@@ -934,47 +957,34 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "editable": true,
-      "error": false,
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 0,
+      "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 35
       },
       "hiddenSeries": false,
-      "id": 29,
+      "id": 67,
       "legend": {
-        "alignAsTable": true,
         "avg": false,
-        "current": true,
-        "max": true,
+        "current": false,
+        "max": false,
         "min": false,
         "show": true,
-        "sort": "current",
-        "sortDesc": true,
         "total": false,
-        "values": true
+        "values": false
       },
       "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "connected",
+      "linewidth": 1,
+      "nullPointMode": "null",
       "options": {
         "alertThreshold": true
       },
-      "paceLength": 10,
       "percentage": false,
       "pluginVersion": "8.0.3",
-      "pointradius": 5,
+      "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
@@ -983,10 +993,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "process_resident_memory_bytes{job=\"$job\"}",
-          "format": "time_series",
+          "expr": "etcd_debugging_mvcc_pending_events_total{job=\"$job\"}",
           "interval": "",
-          "intervalFactor": 1,
           "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
           "refId": "A"
         }
@@ -995,9 +1003,8 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Memory",
+      "title": "The total number of pending events",
       "tooltip": {
-        "msResolution": false,
         "shared": true,
         "sort": 0,
         "value_type": "individual"
@@ -1012,7 +1019,7 @@
       },
       "yaxes": [
         {
-          "format": "bytes",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1262,12 +1269,12 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 6,
+        "w": 12,
         "x": 12,
-        "y": 42
+        "y": 43
       },
       "hiddenSeries": false,
-      "id": 20,
+      "id": 29,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -1275,6 +1282,8 @@
         "max": true,
         "min": false,
         "show": true,
+        "sort": "current",
+        "sortDesc": true,
         "total": false,
         "values": true
       },
@@ -1297,21 +1306,19 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(etcd_network_peer_received_bytes_total{job=\"$job\"}[5m])) by (job,instance)",
+          "expr": "process_resident_memory_bytes{job=\"$job\"}",
           "format": "time_series",
           "interval": "",
-          "intervalFactor": 2,
+          "intervalFactor": 1,
           "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
-          "metric": "etcd_network_peer_received_bytes_total",
-          "refId": "A",
-          "step": 120
+          "refId": "A"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Peer Traffic In",
+      "title": "Memory",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1328,7 +1335,7 @@
       },
       "yaxes": [
         {
-          "format": "Bps",
+          "format": "bytes",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1338,112 +1345,6 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "$datasource",
-      "decimals": null,
-      "editable": true,
-      "error": false,
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 0,
-      "fillGradient": 0,
-      "grid": {},
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 42
-      },
-      "hiddenSeries": false,
-      "id": 16,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "connected",
-      "options": {
-        "alertThreshold": true
-      },
-      "paceLength": 10,
-      "percentage": false,
-      "pluginVersion": "8.0.3",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum(rate(etcd_network_peer_sent_bytes_total{job=\"$job\"}[5m])) by (job,instance)",
-          "format": "time_series",
-          "hide": false,
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
-          "metric": "etcd_network_peer_sent_bytes_total",
-          "refId": "A",
-          "step": 120
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Peer Traffic Out",
-      "tooltip": {
-        "msResolution": false,
-        "shared": true,
-        "sort": 0,
-        "value_type": "cumulative"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "Bps",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
           "logBase": 1,
           "max": null,
           "min": null,
@@ -1562,7 +1463,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "decimals": 0,
       "editable": true,
       "error": false,
       "fieldConfig": {
@@ -1575,22 +1475,19 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 6,
         "x": 12,
-        "y": 50
+        "y": 51
       },
       "hiddenSeries": false,
-      "id": 19,
+      "id": 20,
       "legend": {
         "alignAsTable": true,
         "avg": false,
         "current": true,
         "max": true,
         "min": false,
-        "rightSide": false,
         "show": true,
-        "sort": "current",
-        "sortDesc": true,
         "total": false,
         "values": true
       },
@@ -1613,20 +1510,21 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "changes(etcd_server_leader_changes_seen_total{job=\"$job\"}[6h]) ",
+          "expr": "sum(rate(etcd_network_peer_received_bytes_total{job=\"$job\"}[5m])) by (job,instance)",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
-          "metric": "etcd_server_leader_changes_seen_total",
+          "metric": "etcd_network_peer_received_bytes_total",
           "refId": "A",
-          "step": 60
+          "step": 120
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Total Leader Elections Per Day",
+      "title": "Peer Traffic In",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1643,7 +1541,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "Bps",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1653,6 +1551,112 @@
         {
           "format": "short",
           "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "decimals": null,
+      "editable": true,
+      "error": false,
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "grid": {},
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 51
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": true,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pluginVersion": "8.0.3",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(etcd_network_peer_sent_bytes_total{job=\"$job\"}[5m])) by (job,instance)",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
+          "metric": "etcd_network_peer_sent_bytes_total",
+          "refId": "A",
+          "step": 120
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Peer Traffic Out",
+      "tooltip": {
+        "msResolution": false,
+        "shared": true,
+        "sort": 0,
+        "value_type": "cumulative"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "Bps",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
           "logBase": 1,
           "max": null,
           "min": null,
@@ -1802,39 +1806,42 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "description": "indicates how many proposals are queued to commit. Rising pending proposals suggests there is a high client load or the member cannot commit proposals.",
+      "decimals": 0,
+      "editable": true,
+      "error": false,
       "fieldConfig": {
         "defaults": {
           "links": []
         },
         "overrides": []
       },
-      "fill": 1,
+      "fill": 0,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 59
       },
       "hiddenSeries": false,
-      "id": 5,
+      "id": 19,
       "legend": {
         "alignAsTable": true,
         "avg": false,
         "current": true,
         "max": true,
         "min": false,
+        "rightSide": false,
         "show": true,
-        "sort": "max",
+        "sort": "current",
         "sortDesc": true,
         "total": false,
         "values": true
       },
       "lines": true,
-      "linewidth": 1,
+      "linewidth": 2,
       "links": [],
-      "nullPointMode": "null",
+      "nullPointMode": "connected",
       "options": {
         "alertThreshold": true
       },
@@ -1850,10 +1857,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(etcd_server_proposals_pending{job=\"$job\"}) by (job,instance)",
+          "expr": "changes(etcd_server_leader_changes_seen_total{job=\"$job\"}[6h]) ",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{job}}_{{instance}}_{{endpoint}} Proposals pending",
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
+          "metric": "etcd_server_leader_changes_seen_total",
           "refId": "A",
           "step": 60
         }
@@ -1862,8 +1870,9 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Proposals Pending",
+      "title": "Total Leader Elections Per Day",
       "tooltip": {
+        "msResolution": false,
         "shared": true,
         "sort": 0,
         "value_type": "individual"
@@ -2007,34 +2016,46 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
+      "description": "indicates how many proposals are queued to commit. Rising pending proposals suggests there is a high client load or the member cannot commit proposals.",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 67
       },
       "hiddenSeries": false,
-      "id": 71,
+      "id": 5,
       "legend": {
+        "alignAsTable": true,
         "avg": false,
-        "current": false,
-        "max": false,
+        "current": true,
+        "max": true,
         "min": false,
         "show": true,
+        "sort": "max",
+        "sortDesc": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
+      "links": [],
       "nullPointMode": "null",
       "options": {
         "alertThreshold": true
       },
+      "paceLength": 10,
       "percentage": false,
       "pluginVersion": "8.0.3",
-      "pointradius": 2,
+      "pointradius": 5,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
@@ -2043,18 +2064,19 @@
       "steppedLine": false,
       "targets": [
         {
-          "exemplar": true,
-          "expr": "etcd_server_slow_apply_total{job=\"$job\"}",
-          "interval": "",
-          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
-          "refId": "A"
+          "expr": "sum(etcd_server_proposals_pending{job=\"$job\"}) by (job,instance)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}} Proposals pending",
+          "refId": "A",
+          "step": 60
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "The total number of slow apply",
+      "title": "Proposals Pending",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2220,7 +2242,7 @@
         "y": 75
       },
       "hiddenSeries": false,
-      "id": 69,
+      "id": 71,
       "legend": {
         "avg": false,
         "current": false,
@@ -2247,7 +2269,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "etcd_debugging_mvcc_slow_watcher_total{job=\"$job\"}",
+          "exemplar": true,
+          "expr": "etcd_server_slow_apply_total{job=\"$job\"}",
           "interval": "",
           "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
           "refId": "A"
@@ -2257,7 +2280,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "The total number of slow watcher",
+      "title": "The total number of slow apply",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2389,7 +2412,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "description": "auth revision increase",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2399,17 +2421,15 @@
         "y": 84
       },
       "hiddenSeries": false,
-      "id": 75,
+      "id": 69,
       "legend": {
-        "alignAsTable": true,
         "avg": false,
-        "current": true,
-        "max": true,
+        "current": false,
+        "max": false,
         "min": false,
-        "rightSide": false,
         "show": true,
         "total": false,
-        "values": true
+        "values": false
       },
       "lines": true,
       "linewidth": 1,
@@ -2428,7 +2448,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(etcd_debugging_auth_revision{job=\"$job\"}[5m])",
+          "expr": "etcd_debugging_mvcc_slow_watcher_total{job=\"$job\"}",
           "interval": "",
           "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
           "refId": "A"
@@ -2438,7 +2458,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Auth Revison Increase",
+      "title": "The total number of slow watcher",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2454,7 +2474,7 @@
       },
       "yaxes": [
         {
-          "format": "count/5m",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -2588,13 +2608,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "description": "Abnormally high snapshot duration (snapshot_save_total_duration_seconds) indicates disk issues and might cause the cluster to be unstable.",
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "description": "auth revision increase",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2604,27 +2618,27 @@
         "y": 93
       },
       "hiddenSeries": false,
-      "id": 9,
+      "id": 75,
       "legend": {
+        "alignAsTable": true,
         "avg": false,
-        "current": false,
-        "max": false,
+        "current": true,
+        "max": true,
         "min": false,
+        "rightSide": false,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
-      "links": [],
       "nullPointMode": "null",
       "options": {
         "alertThreshold": true
       },
-      "paceLength": 10,
       "percentage": false,
       "pluginVersion": "8.0.3",
-      "pointradius": 5,
+      "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
@@ -2633,19 +2647,17 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(etcd_debugging_snap_save_total_duration_seconds_sum{job=\"$job\"}[1m])) by (job)",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "{{job}} The total latency distributions of save called by snapshot",
-          "refId": "A",
-          "step": 30
+          "expr": "increase(etcd_debugging_auth_revision{job=\"$job\"}[5m])",
+          "interval": "",
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
+          "refId": "A"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Snapshot Duration",
+      "title": "Auth Revison Increase",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2661,7 +2673,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "count/5m",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -2780,6 +2792,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
+      "description": "Abnormally high snapshot duration (snapshot_save_total_duration_seconds) indicates disk issues and might cause the cluster to be unstable.",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -2795,7 +2808,7 @@
         "y": 102
       },
       "hiddenSeries": false,
-      "id": 8,
+      "id": 9,
       "legend": {
         "avg": false,
         "current": false,
@@ -2824,19 +2837,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(etcd_network_client_grpc_received_bytes_total{job=\"$job\"}[1m]))  by (job) ",
+          "expr": "sum(rate(etcd_debugging_snap_save_total_duration_seconds_sum{job=\"$job\"}[1m])) by (job)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{job}}  The total number of bytes received by grpc clients",
+          "legendFormat": "{{job}} The total latency distributions of save called by snapshot",
           "refId": "A",
-          "step": 30
-        },
-        {
-          "expr": "sum(rate(etcd_network_client_grpc_sent_bytes_total{job=\"$job\"}[1m]))  by (job) ",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "{{job}}  The total number of bytes sent to grpc clients",
-          "refId": "B",
           "step": 30
         }
       ],
@@ -2844,7 +2849,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Network",
+      "title": "Snapshot Duration",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2998,6 +3003,113 @@
         "w": 12,
         "x": 12,
         "y": 111
+      },
+      "hiddenSeries": false,
+      "id": 8,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pluginVersion": "8.0.3",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(etcd_network_client_grpc_received_bytes_total{job=\"$job\"}[1m]))  by (job) ",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}  The total number of bytes received by grpc clients",
+          "refId": "A",
+          "step": 30
+        },
+        {
+          "expr": "sum(rate(etcd_network_client_grpc_sent_bytes_total{job=\"$job\"}[1m]))  by (job) ",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}  The total number of bytes sent to grpc clients",
+          "refId": "B",
+          "step": 30
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Network",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 120
       },
       "hiddenSeries": false,
       "id": 52,
