@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package alarm
+package backupcheck
 
 import (
 	"sync"
@@ -26,34 +26,34 @@ import (
 	"tkestack.io/kstone/pkg/inspection"
 )
 
-const (
-	ProviderName = string(kstonev1alpha1.KStoneFeatureAlarm)
-)
-
 var (
 	once     sync.Once
-	instance *FeatureAlarm
+	instance *FeatureBackupCheck
 )
 
-type FeatureAlarm struct {
+type FeatureBackupCheck struct {
 	name       string
 	inspection *inspection.Server
 	ctx        *featureprovider.FeatureContext
 }
 
+const (
+	ProviderName = string(kstonev1alpha1.KStoneFeatureBackupCheck)
+)
+
 func init() {
 	featureprovider.RegisterFeatureFactory(
 		ProviderName,
 		func(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
-			return initFeatureAlarmInstance(ctx)
+			return initFeatureBackupCheckInstance(ctx)
 		},
 	)
 }
 
-func initFeatureAlarmInstance(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
+func initFeatureBackupCheckInstance(ctx *featureprovider.FeatureContext) (featureprovider.Feature, error) {
 	var err error
 	once.Do(func() {
-		instance = &FeatureAlarm{
+		instance = &FeatureBackupCheck{
 			name: ProviderName,
 			ctx:  ctx,
 		}
@@ -62,14 +62,14 @@ func initFeatureAlarmInstance(ctx *featureprovider.FeatureContext) (featureprovi
 	return instance, err
 }
 
-func (c *FeatureAlarm) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
-	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureAlarm)
+func (c *FeatureBackupCheck) Equal(cluster *kstonev1alpha1.EtcdCluster) bool {
+	return c.inspection.Equal(cluster, kstonev1alpha1.KStoneFeatureBackupCheck)
 }
 
-func (c *FeatureAlarm) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
-	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureAlarm)
+func (c *FeatureBackupCheck) Sync(cluster *kstonev1alpha1.EtcdCluster) error {
+	return c.inspection.Sync(cluster, kstonev1alpha1.KStoneFeatureBackupCheck)
 }
 
-func (c *FeatureAlarm) Do(inspection *kstonev1alpha1.EtcdInspection) error {
-	return c.inspection.CollectAlarmList(inspection)
+func (c *FeatureBackupCheck) Do(inspection *kstonev1alpha1.EtcdInspection) error {
+	return c.inspection.StatBackupFiles(inspection)
 }

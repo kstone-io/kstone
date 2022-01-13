@@ -21,7 +21,6 @@ package router
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -39,6 +38,10 @@ import (
 	_ "tkestack.io/kstone/pkg/backup/providers"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
+	"tkestack.io/kstone/pkg/featureprovider"
+	// import feature provider
+	_ "tkestack.io/kstone/pkg/featureprovider/providers"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 )
 
@@ -67,6 +70,7 @@ func NewRouter() *gin.Engine {
 
 	r.GET("/apis/etcd/:etcdName", EtcdKeyList)
 	r.GET("/apis/backup/:etcdName", BackupList)
+	r.GET("/apis/features", FeatureList)
 	return r
 }
 
@@ -267,18 +271,10 @@ func EtcdKeyList(ctx *gin.Context) {
 func BackupList(ctx *gin.Context) {
 	etcdName := ctx.Param("etcdName")
 
-	kubeconfigPath := ""
-
-	// generate etcd client
-	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
-	if err != nil {
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusInternalServerError, err)
-		return
-	}
+	clientBuilder := util.NewSimpleClientBuilder("")
 
 	// generate k8s client
-	clusterClient, err := clientset.NewForConfig(cfg)
+	clusterClient, err := clientset.NewForConfig(clientBuilder.ConfigOrDie())
 	if err != nil {
 		klog.Errorf(err.Error())
 		ctx.JSON(http.StatusInternalServerError, err)
@@ -294,41 +290,33 @@ func BackupList(ctx *gin.Context) {
 		return
 	}
 
-	// generate backup config
-	strCfg, found := cluster.Annotations[backup.AnnoBackupConfig]
-	if !found || strCfg == "" {
-		err = fmt.Errorf(
-			"backup config not found, annotation key %s not exists, namespace is %s, name is %s",
-			backup.AnnoBackupConfig,
-			cluster.Namespace,
-			cluster.Name,
-		)
-		klog.Errorf(err.Error())
-		ctx.JSON(http.StatusOK, []interface{}{})
-		return
-	}
-	backupConfig := &backup.Config{}
-	err = json.Unmarshal([]byte(strCfg), backupConfig)
+	// get backup config
+	backupConfig, err := featureutil.GetBackupConfig(cluster)
 	if err != nil {
-		klog.Errorf(err.Error())
+		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		ctx.JSON(http.StatusInternalServerError, err)
-		return
 	}
 
-	// generate backup provider
-	backupProvider, err := backup.GetBackupProvider(string(backupConfig.StorageType), &backup.ProviderConfig{
-		Kubeconfig: kubeconfigPath,
+	// get specified backup storage provider
+	storage, err := backup.GetBackupStorageProvider(string(backupConfig.StorageType), &backup.StorageConfig{
+		KubeCli: clientBuilder.ClientOrDie(),
 	})
 	if err != nil {
 		klog.Errorf(err.Error())
 		ctx.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	resp, err := backupProvider.List(cluster)
+	resp, err := storage.List(cluster)
 	if err != nil {
 		klog.Errorf(err.Error())
 		ctx.JSON(http.StatusInternalServerError, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, resp)
+}
+
+// FeatureList returns all features
+func FeatureList(ctx *gin.Context) {
+	features := featureprovider.ListFeatureProvider()
+	ctx.JSON(http.StatusOK, features)
 }

@@ -23,8 +23,6 @@ import (
 	"sync"
 
 	klog "k8s.io/klog/v2"
-
-	"tkestack.io/kstone/pkg/apis/kstone/v1alpha1"
 )
 
 var (
@@ -32,38 +30,30 @@ var (
 	Providers = make(map[string]Factory)
 )
 
-type Provider interface {
-	List(cluster *v1alpha1.EtcdCluster) (interface{}, error)
-}
+type Factory func(cfg *StorageConfig) (Storage, error)
 
-type ProviderConfig struct {
-	Kubeconfig string
-}
-
-type Factory func(cfg *ProviderConfig) (Provider, error)
-
-// RegisterBackupFactory registers the specified backup provider
-func RegisterBackupFactory(name string, factory Factory) {
+// RegisterBackupStorageFactory registers the specified backup storage provider
+func RegisterBackupStorageFactory(name string, factory Factory) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	if _, found := Providers[name]; found {
-		klog.V(2).Infof("backup provider:%s was registered twice", name)
+		klog.V(2).Infof("backup storage provider:%s was registered twice", name)
 	}
 
-	klog.V(2).Infof("register backup provider:%s", name)
+	klog.V(2).Infof("register backup storage provider:%s", name)
 	Providers[name] = factory
 }
 
-// GetBackupProvider gets the specified backup provider
-func GetBackupProvider(name string, config *ProviderConfig) (Provider, error) {
+// GetBackupStorageProvider gets the specified backup storage provider
+func GetBackupStorageProvider(name string, config *StorageConfig) (Storage, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	f, found := Providers[name]
 
 	klog.V(1).Infof("get provider name %s,status:%t", name, found)
 	if !found {
-		return nil, errors.New("fatal error,backup provider not found")
+		return nil, errors.New("fatal error,backup storage provider not found")
 	}
 	return f(config)
 }

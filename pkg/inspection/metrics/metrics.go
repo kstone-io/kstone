@@ -85,6 +85,27 @@ var (
 		Name:      "etcd_node_raft_index_diff_total",
 		Help:      "The raft index difference between all member",
 	}, []string{"clusterName"})
+
+	EtcdBackupFiles = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "etcd_backup_files",
+		Help:      "The Number of backup files in the last day",
+	}, []string{"clusterName"})
+
+	EtcdFailedBackupFiles = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "etcd_failed_backup_files",
+		Help:      "The Number of failed backup files in the last day",
+	}, []string{"clusterName"})
+
+	EtcdInspectionFailedNum = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "kstone",
+		Subsystem: "inspection",
+		Name:      "failed_num",
+		Help:      "The total Number of failed inspection",
+	}, []string{"clusterName", "inspectionType"})
 )
 
 func init() {
@@ -97,4 +118,7 @@ func init() {
 	prometheus.MustRegister(EtcdNodeIndexDiff)
 	prometheus.MustRegister(EtcdNodeRaftAppliedIndexDiff)
 	prometheus.MustRegister(EtcdNodeRaftIndexDiff)
+	prometheus.MustRegister(EtcdBackupFiles)
+	prometheus.MustRegister(EtcdFailedBackupFiles)
+	prometheus.MustRegister(EtcdInspectionFailedNum)
 }

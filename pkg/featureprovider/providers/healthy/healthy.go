@@ -57,7 +57,7 @@ func initFeatureHealthyInstance(ctx *featureprovider.FeatureContext) (featurepro
 			name: ProviderName,
 			ctx:  ctx,
 		}
-		instance.inspection, err = inspection.NewInspectionServer(ctx.ClientBuilder)
+		instance.inspection, err = inspection.NewInspectionServer(ctx)
 	})
 	return instance, err
 }

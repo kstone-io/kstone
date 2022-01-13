@@ -30,9 +30,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	informerscorev1 "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	listerscorev1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
@@ -61,6 +63,9 @@ type ClusterController struct {
 	// platformclientset is a clientset for our own API group
 	platformclientset clientset.Interface
 
+	secretLister listerscorev1.SecretLister
+	secretSynced cache.InformerSynced
+
 	etcdclusterLister listers.EtcdClusterLister
 	etcdclusterSynced cache.InformerSynced
 
@@ -86,6 +91,7 @@ func NewEtcdclusterController(
 	clientbuilder util.ClientBuilder,
 	kubeclientset kubernetes.Interface,
 	platformclientset clientset.Interface,
+	secretInformer informerscorev1.SecretInformer,
 	etcdclusterInformer informers.EtcdClusterInformer) *ClusterController {
 
 	// Create event broadcaster
@@ -105,6 +111,8 @@ func NewEtcdclusterController(
 		clientbuilder:     clientbuilder,
 		kubeclientset:     kubeclientset,
 		platformclientset: platformclientset,
+		secretLister:      secretInformer.Lister(),
+		secretSynced:      secretInformer.Informer().HasSynced,
 		etcdclusterLister: etcdclusterInformer.Lister(),
 		etcdclusterSynced: etcdclusterInformer.Informer().HasSynced,
 		workqueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "EtcdClusters"),
@@ -112,7 +120,7 @@ func NewEtcdclusterController(
 	}
 
 	controller.syncHandler = controller.syncEtcdCluster
-	controller.tlsGetter = etcd.NewTLSSecretGetter(clientbuilder)
+	controller.tlsGetter = etcd.NewTLSSecretCacheGetter(controller.secretLister)
 
 	klog.Info("Setting up event handlers")
 	// Set up an event handler for when EtcdCluster resources change
@@ -139,7 +147,7 @@ func (c *ClusterController) Run(threadiness int, stopCh <-chan struct{}) error {
 
 	// Wait for the caches to be synced before starting workers
 	klog.Info("Waiting for informer caches to sync")
-	if ok := cache.WaitForCacheSync(stopCh, c.etcdclusterSynced); !ok {
+	if ok := cache.WaitForCacheSync(stopCh, c.secretSynced, c.etcdclusterSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
@@ -386,7 +394,10 @@ func (c *ClusterController) reconcileEtcdCluster(cluster *kstonev1alpha1.EtcdClu
 }
 
 func (c *ClusterController) GetFeatureProvider(name string) (featureprovider.Feature, error) {
-	ctx := &featureprovider.FeatureContext{ClientBuilder: c.clientbuilder}
+	ctx := &featureprovider.FeatureContext{
+		ClientBuilder: c.clientbuilder,
+		TLSGetter:     c.tlsGetter,
+	}
 	feature, err := featureprovider.GetFeatureProvider(name, ctx)
 	if err != nil {
 		return nil, err
