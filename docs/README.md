@@ -8,7 +8,10 @@ In this page You can find kstone documentation.
 ## Installation
 please refer to [installation guide](installation)
 
-## backup
+## Backup
 please refer to [backup guide](backup)
+
+## Proposal
+please refer to [proposal list](proposal)
 
 [releases]: https://github.com/tkestack/kstone/releases
