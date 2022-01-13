@@ -17,7 +17,7 @@
   "gnetId": 3070,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1640766483206,
+  "iteration": 1642043560459,
   "links": [],
   "panels": [
     {
@@ -636,7 +636,7 @@
       "fillGradient": 0,
       "grid": {},
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 0,
         "y": 26
@@ -860,7 +860,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 34
+        "y": 35
       },
       "hiddenSeries": false,
       "id": 76,
@@ -1060,7 +1060,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 42
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 22,
@@ -1164,7 +1164,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 42
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 21,
@@ -1375,7 +1375,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 50
+        "y": 51
       },
       "hiddenSeries": false,
       "id": 61,
@@ -1688,7 +1688,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 59
       },
       "hiddenSeries": false,
       "id": 40,
@@ -1926,7 +1926,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 67
       },
       "hiddenSeries": false,
       "id": 46,
@@ -2026,7 +2026,7 @@
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 12,
         "y": 67
@@ -2132,7 +2132,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 75
+        "y": 76
       },
       "hiddenSeries": false,
       "id": 2,
@@ -2239,7 +2239,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 75
+        "y": 76
       },
       "hiddenSeries": false,
       "id": 71,
@@ -2329,7 +2329,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 84
+        "y": 85
       },
       "hiddenSeries": false,
       "id": 65,
@@ -2418,7 +2418,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 84
+        "y": 85
       },
       "hiddenSeries": false,
       "id": 69,
@@ -2513,7 +2513,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 93
+        "y": 94
       },
       "hiddenSeries": false,
       "id": 7,
@@ -2615,7 +2615,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 93
+        "y": 94
       },
       "hiddenSeries": false,
       "id": 75,
@@ -2707,7 +2707,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 102
+        "y": 103
       },
       "hiddenSeries": false,
       "id": 74,
@@ -2805,7 +2805,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 102
+        "y": 103
       },
       "hiddenSeries": false,
       "id": 9,
@@ -2904,7 +2904,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 111
+        "y": 112
       },
       "hiddenSeries": false,
       "id": 50,
@@ -3002,7 +3002,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 111
+        "y": 112
       },
       "hiddenSeries": false,
       "id": 8,
@@ -3108,8 +3108,8 @@
       "gridPos": {
         "h": 9,
         "w": 12,
-        "x": 12,
-        "y": 120
+        "x": 0,
+        "y": 121
       },
       "hiddenSeries": false,
       "id": 52,
@@ -3196,7 +3196,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 120
+        "y": 130
       },
       "id": 78,
       "panels": [],
@@ -3302,7 +3302,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 121
+        "y": 131
       },
       "id": 63,
       "interval": null,
@@ -3369,7 +3369,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 121
+        "y": 131
       },
       "hiddenSeries": false,
       "id": 56,
@@ -3471,7 +3471,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 130
+        "y": 140
       },
       "hiddenSeries": false,
       "id": 58,
@@ -3574,7 +3574,110 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 130
+        "y": 140
+      },
+      "hiddenSeries": false,
+      "id": 54,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": true,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pluginVersion": "8.0.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "topk(15, sum(rate(kstone_inspection_etcd_request_total{clusterName=\"$job\"}[5m])) by (clusterName,etcdPrefix,grpcMethod,resourceName))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{etcdPrefix}}_{{grpcMethod}}_{{resourceName}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Hot Write QPS",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 149
       },
       "hiddenSeries": false,
       "id": 81,
@@ -3692,107 +3795,174 @@
       }
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "$datasource",
+      "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "links": []
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
         },
         "overrides": []
       },
-      "fill": 1,
-      "fillGradient": 0,
       "gridPos": {
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 139
+        "y": 149
       },
-      "hiddenSeries": false,
-      "id": 54,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
+      "id": 85,
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
-      "paceLength": 10,
-      "percentage": false,
-      "pluginVersion": "8.0.3",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
       "targets": [
         {
-          "expr": "topk(15, sum(rate(kstone_inspection_etcd_request_total{clusterName=\"$job\"}[5m])) by (clusterName,etcdPrefix,grpcMethod,resourceName))",
-          "format": "time_series",
+          "exemplar": true,
+          "expr": "kstone_inspection_etcd_backup_files",
           "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "{{etcdPrefix}}_{{grpcMethod}}_{{resourceName}}",
+          "legendFormat": "{{clusterName}}",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "kstone_inspection_etcd_failed_backup_files",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{clusterName}}_failed",
+          "refId": "B"
+        }
+      ],
+      "title": "The number of backup file in the last day",
+      "type": "timeseries"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 158
+      },
+      "id": 84,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "kstone_inspection_failed_num",
+          "interval": "",
+          "legendFormat": "{{clusterName}}_{{inspectionType}}",
           "refId": "A"
         }
       ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Hot Write QPS",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "title": "The total number of failed inspection",
+      "type": "timeseries"
     }
   ],
   "refresh": false,
@@ -3825,9 +3995,9 @@
       {
         "allValue": null,
         "current": {
-          "selected": true,
-          "text": "demo0x00",
-          "value": "demo0x00"
+          "selected": false,
+          "text": "demo",
+          "value": "demo"
         },
         "datasource": "$datasource",
         "definition": "query_result(sum by (job) (increase(etcd_server_has_leader{}[$__range])))",
