@@ -58,4 +58,8 @@ kube:
   token: ${token}
   target: kubernetes.default.svc.cluster.local:443
 
+auth:
+  tokenProvider: jwt
+  tokenGeneratorProvider: jwt
+
 serviceAccountName: kstone
