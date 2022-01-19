@@ -1,0 +1,14 @@
+title: kstone-api supports authentication
+proposal-number: 1
+authors:
+  - "@lianghao208"
+reviewers:
+  - "@tangcong"
+  - "@engow"
+  - "@maudL1n"
+approvers:
+  - "@tangcong"
+  - "@engow"
+creation-date: 2022-01-13
+last-updated: 2022-01-13
+status: implementable
