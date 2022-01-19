@@ -11,4 +11,7 @@
 ## 备份
 请参考 [备份文档](backup)
 
+## 提案
+请参考 [提案](proposal)
+
 [releases]: https://github.com/tkestack/kstone/releases
