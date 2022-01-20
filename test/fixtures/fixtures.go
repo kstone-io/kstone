@@ -33,16 +33,18 @@ import (
 )
 
 const (
-	DefaultFeatureGate                   = "monitor=true,consistency=true,healthy=true,request=true,backup=true,alarm=true,backupcheck=true"
-	DefaultTestClusterAddr               = "etcd-test-headless.default.svc.cluster.local:2379"
-	DefaultTestClusterStatefulsetYaml    = "etcd_statefulset.yaml"
-	DefaultTestClusterSvcYaml            = "etcd_service.yaml"
-	DefaultKstoneNamespace               = "kstone"
-	DefaultImportedClusterName           = "kstone-test"
-	DefaultImportedPodName               = "etcd-test-0"
-	DefaultNamespace                     = "default"
-	DefaultKstoneEtcdOperatorClusterName = "kstone-etcd-operator-test"
-	DefaultKstoneEtcdOperatorPodName     = "kstone-etcd-operator-test-etcd-0"
+	DefaultFeatureGate                        = "monitor=true,consistency=true,healthy=true,request=true,backup=true,alarm=true,backupcheck=true"
+	DefaultTestClusterAddr                    = "etcd-test-headless.default.svc.cluster.local:2379"
+	DefaultTestClusterStatefulsetYaml         = "etcd_statefulset.yaml"
+	DefaultTestClusterSvcYaml                 = "etcd_service.yaml"
+	DefaultKstoneNamespace                    = "kstone"
+	DefaultImportedClusterName                = "kstone-test"
+	DefaultImportedPodName                    = "etcd-test-0"
+	DefaultNamespace                          = "default"
+	DefaultHTTPKstoneEtcdOperatorClusterName  = "kstone-etcd-operator-http-test"
+	DefaultHTTPKstoneEtcdOperatorPodName      = "kstone-etcd-operator-http-test-etcd-0"
+	DefaultHTTPSKstoneEtcdOperatorClusterName = "kstone-etcd-operator-https-test"
+	DefaultHTTPSKstoneEtcdOperatorPodName     = "kstone-etcd-operator-https-test-etcd-0"
 )
 
 func NewEtcdCluster(

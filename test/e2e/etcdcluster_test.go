@@ -38,8 +38,9 @@ import (
 	"tkestack.io/kstone/test/fixtures"
 )
 
-var _ = ginkgo.Describe("kstone-etcd-operator etcdcluster", getGinkgoFunc(fixtures.DefaultKstoneEtcdOperatorClusterName, fixtures.DefaultKstoneEtcdOperatorPodName))
 var _ = ginkgo.Describe("imported etcdcluster", getGinkgoFunc(fixtures.DefaultImportedClusterName, fixtures.DefaultImportedPodName))
+var _ = ginkgo.Describe("kstone-etcd-operator http etcdcluster", getGinkgoFunc(fixtures.DefaultHTTPKstoneEtcdOperatorClusterName, fixtures.DefaultHTTPKstoneEtcdOperatorPodName))
+var _ = ginkgo.Describe("kstone-etcd-operator https etcdcluster", getGinkgoFunc(fixtures.DefaultHTTPSKstoneEtcdOperatorClusterName, fixtures.DefaultHTTPSKstoneEtcdOperatorPodName))
 
 func getGinkgoFunc(clusterName, podName string) func() {
 	return func() {
@@ -381,7 +382,7 @@ func PrintTraceInfo(clusterName, podName string) {
 	cmd1 := "kubectl describe po " + podName + " -n " + fixtures.DefaultKstoneNamespace
 	cmd2 := "kubectl describe cluster " + clusterName + " -n " + fixtures.DefaultKstoneNamespace
 	cmd3 := "kubectl describe etcd " + clusterName + " -n " + fixtures.DefaultKstoneNamespace
-	cmd4 := "kubectl logs po " + podName + " -n " + fixtures.DefaultKstoneNamespace
+	cmd4 := "kubectl logs " + podName + " -n " + fixtures.DefaultKstoneNamespace
 	cmds := []string{cmd1, cmd2, cmd3, cmd4}
 	nodeName, err := os.Hostname()
 	if err != nil {
@@ -393,7 +394,7 @@ func PrintTraceInfo(clusterName, podName string) {
 	for _, cmd := range cmds {
 		cmnd, err := exec.Command("sh", "-c", cmd).Output()
 		if err != nil {
-			klog.Error("failed to exec command, err is %v", err)
+			klog.Errorf("failed to exec command, command is %s, err is %s", cmd, err)
 		} else {
 			klog.Info(string(cmnd))
 		}
