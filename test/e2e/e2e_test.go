@@ -100,7 +100,10 @@ var _ = ginkgo.BeforeSuite(func() {
 	err = CreateTmpTestEtcdCluster()
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
-	err = createEtcdCluster(fixtures.DefaultKstoneEtcdOperatorClusterName, 1, kstonev1alpha2.EtcdClusterKstone, fixtures.DefaultFeatureGate, "", "http")
+	err = createEtcdCluster(fixtures.DefaultHTTPKstoneEtcdOperatorClusterName, 1, kstonev1alpha2.EtcdClusterKstone, fixtures.DefaultFeatureGate, "", "http")
+	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+	err = createEtcdCluster(fixtures.DefaultHTTPSKstoneEtcdOperatorClusterName, 1, kstonev1alpha2.EtcdClusterKstone, fixtures.DefaultFeatureGate, "", "https")
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	podIP, err := getEtcdPodIP()
