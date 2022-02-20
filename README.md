@@ -38,7 +38,8 @@ kstone consists of kstone-etcdcluster-controller,kstone-etcdinspection-controlle
 
 ### [kstone-etcd-operator](https://github.com/tkestack/kstone-etcd-operator)
 
-kstone-etcd-operator provides rich etcd cluster management capabilities.It will also be open source soon.
+kstone-etcd-operator provides rich etcd cluster management capabilities.
+please refer to [kstone-etcd-operator](https://github.com/tkestack/kstone-etcd-operator/blob/main/README.md) document page for more information.
 
 ### [kstone-dashboard](https://github.com/tkestack/kstone-dashboard)
 

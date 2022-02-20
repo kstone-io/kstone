@@ -49,7 +49,8 @@ Kstone 由5个组件组成：
 
 ### [kstone-etcd-operator](https://github.com/tkestack/kstone-etcd-operator)
 
-kstone-etcd-operator提供丰富的集群管理能力(此组件也即将开源)。
+kstone-etcd-operator提供丰富的etcd集群管理能力。
+更多信息请参考[kstone-etcd-operator](https://github.com/tkestack/kstone-etcd-operator/blob/main/README.md) 文档页面。
 
 ### kstone-api
 
