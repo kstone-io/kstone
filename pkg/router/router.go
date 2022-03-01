@@ -43,6 +43,8 @@ import (
 	_ "tkestack.io/kstone/pkg/featureprovider/providers"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
+	// import token and authenticator provider
+	_ "tkestack.io/kstone/pkg/authentication/providers"
 )
 
 var (
