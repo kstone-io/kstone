@@ -19,17 +19,23 @@
 package app
 
 import (
-	"flag"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"k8s.io/klog/v2"
 
+	"tkestack.io/kstone/cmd/kstone-api/config"
 	"tkestack.io/kstone/pkg/middlewares"
 	kstoneRouter "tkestack.io/kstone/pkg/router"
 )
 
+type APIServerCommand struct {
+	token         string
+	authenticator string
+}
+
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
 func NewAPIServerCommand() *cobra.Command {
+	ac := &APIServerCommand{}
 	cmd := &cobra.Command{
 		Use: "kstone-apiserver",
 		Long: `The Kstone API server validates and configures data
@@ -40,22 +46,24 @@ other components interact, such as kstone-controller, kstone-dashboard.`,
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			defer klog.Flush()
-			if err := Run(); err != nil {
+			cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+				klog.V(1).Infof("FLAG: --%s=%q", flag.Name, flag.Value)
+			})
+			if err := ac.Run(); err != nil {
 				return err
 			}
 			return nil
 		},
 	}
 
-	klog.InitFlags(nil)
-	cmd.Flags().AddGoFlagSet(flag.CommandLine)
-
+	fs := cmd.PersistentFlags()
+	ac.AddFlags(fs)
 	return cmd
 }
 
-func Run() error {
+func (c *APIServerCommand) Run() error {
 	klog.Info("start kstone-api")
+	config.CreateConfigFromFlags(c.token, c.authenticator)
 	router := kstoneRouter.NewRouter()
 	router.Use(middlewares.Cors())
 	err := router.Run()
@@ -63,4 +71,19 @@ func Run() error {
 		return err
 	}
 	return nil
+}
+
+func (c *APIServerCommand) AddFlags(fs *pflag.FlagSet) {
+	fs.StringVar(
+		&c.token,
+		"token",
+		"jwt",
+		"specify the authentication token type.",
+	)
+	fs.StringVar(
+		&c.authenticator,
+		"authenticator",
+		"bearertoken",
+		"specify the authenticator type.",
+	)
 }
