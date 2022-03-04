@@ -21,4 +21,6 @@ package providers
 import (
 	// import cos provider
 	_ "tkestack.io/kstone/pkg/backup/providers/cos"
+	// import s3 provider
+	_ "tkestack.io/kstone/pkg/backup/providers/s3"
 )
