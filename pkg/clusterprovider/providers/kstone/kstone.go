@@ -93,8 +93,9 @@ func (c *EtcdClusterKstone) Create(cluster *kstonev1alpha2.EtcdCluster) error {
 		"apiVersion": "etcd.tkestack.io/v1alpha1",
 		"kind":       "EtcdCluster",
 		"metadata": map[string]interface{}{
-			"name":      cluster.Name,
-			"namespace": cluster.Namespace,
+			"name":        cluster.Name,
+			"namespace":   cluster.Namespace,
+			"annotations": cluster.Annotations,
 		},
 		"spec": c.generateEtcdSpec(cluster),
 	}
