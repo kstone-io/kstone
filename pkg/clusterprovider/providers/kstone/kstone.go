@@ -391,17 +391,21 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 	spec["template"].(map[string]interface{})["resources"] = resources
 
 	if cluster.Annotations["scheme"] == "https" {
-		spec["secure"] = map[string]interface{}{
-			"tls": map[string]interface{}{
-				"autoTLSCert": map[string]interface{}{
-					"autoGenerateClientCert": true,
-					"autoGeneratePeerCert":   true,
-					"autoGenerateServerCert": true,
-					"extraServerCertSANs":    extraServerCertSANList,
-				},
-			},
+		autoTLSCert := map[string]interface{}{
+			"autoGenerateClientCert": true,
+			"autoGeneratePeerCert":   true,
+			"autoGenerateServerCert": true,
+			"extraServerCertSANs":    extraServerCertSANList,
+		}
+		if cluster.Spec.AuthConfig.TLSSecret != "" {
+			autoTLSCert["externalCASecret"] = cluster.Spec.AuthConfig.TLSSecret
 		}
 
+		spec["secure"] = map[string]interface{}{
+			"tls": map[string]interface{}{
+				"autoTLSCert": autoTLSCert,
+			},
+		}
 		spec["template"].(map[string]interface{})["extraArgs"] = []interface{}{
 			"logger=zap",
 			"client-cert-auth=true",
