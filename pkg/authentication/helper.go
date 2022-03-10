@@ -20,6 +20,8 @@ package authentication
 
 import (
 	"io/ioutil"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -88,4 +90,20 @@ func GetPrivateKey() (string, error) {
 		return "", err
 	}
 	return string(key), nil
+}
+
+func GeneratePasswordHash(password string) (string, error) {
+	ph, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(ph), nil
+}
+
+func IsDefaultUser(username, password string) bool {
+	return username == DefaultUsername && password == DefaultPassword
+}
+
+func CheckPassword(hashedPassword, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
