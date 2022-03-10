@@ -33,7 +33,9 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	klog "k8s.io/klog/v2"
 
+	"tkestack.io/kstone/pkg/authentication/request"
 	"tkestack.io/kstone/pkg/backup"
+	"tkestack.io/kstone/pkg/middlewares"
 	// import backup provider
 	_ "tkestack.io/kstone/pkg/backup/providers"
 	"tkestack.io/kstone/pkg/controllers/util"
@@ -62,17 +64,28 @@ const (
 // NewRouter generates router
 func NewRouter() *gin.Engine {
 	r := gin.Default()
+	public := r.Group("/apis")
 
-	r.GET("/apis/:resource", ReverseProxy())
-	r.POST("/apis/:resource", ReverseProxy())
-	r.GET("/apis/:resource/:name", ReverseProxy())
-	r.PUT("/apis/:resource/:name", ReverseProxy())
-	r.PATCH("/apis/:resource/:name", ReverseProxy())
-	r.DELETE("/apis/:resource/:name", ReverseProxy())
+	public.GET("/:resource", ReverseProxy())
+	public.POST("/:resource", ReverseProxy())
+	public.GET("/:resource/:name", ReverseProxy())
+	public.PUT("/:resource/:name", ReverseProxy())
+	public.PATCH("/:resource/:name", ReverseProxy())
+	public.DELETE("/:resource/:name", ReverseProxy())
 
-	r.GET("/apis/etcd/:etcdName", EtcdKeyList)
-	r.GET("/apis/backup/:etcdName", BackupList)
-	r.GET("/apis/features", FeatureList)
+	public.GET("/etcd/:etcdName", EtcdKeyList)
+	public.GET("/backup/:etcdName", BackupList)
+	public.GET("/features", FeatureList)
+
+	public.POST("/login", Login)
+
+	private := r.Group("/apis")
+	private.Use(middlewares.Auth())
+	private.GET("/users", UserList)
+	private.PUT("/user", UserUpdate)
+	private.POST("/user", UserAdd)
+	private.DELETE("/user", UserDelete)
+
 	return r
 }
 
@@ -321,4 +334,54 @@ func BackupList(ctx *gin.Context) {
 func FeatureList(ctx *gin.Context) {
 	features := featureprovider.ListFeatureProvider()
 	ctx.JSON(http.StatusOK, features)
+}
+
+// UserList list all users
+func UserList(ctx *gin.Context) {
+	rsp, err := request.UserListRequest(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, *rsp)
+		return
+	}
+	ctx.JSON(http.StatusOK, *rsp)
+}
+
+// UserUpdate updates users info
+func UserUpdate(ctx *gin.Context) {
+	rsp, err := request.UserUpdateRequest(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, *rsp)
+		return
+	}
+	ctx.JSON(http.StatusOK, *rsp)
+}
+
+// UserAdd adds user
+func UserAdd(ctx *gin.Context) {
+	rsp, err := request.UserAddRequest(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, *rsp)
+		return
+	}
+	ctx.JSON(http.StatusOK, *rsp)
+}
+
+// UserDelete deletes user
+func UserDelete(ctx *gin.Context) {
+	rsp, err := request.UserDeleteRequest(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, *rsp)
+		return
+	}
+	ctx.JSON(http.StatusOK, *rsp)
+}
+
+// Login returns login info
+func Login(ctx *gin.Context) {
+	rsp, ok, err := request.LoginRequest(ctx)
+	if !ok || err != nil {
+		ctx.JSON(http.StatusUnauthorized, *rsp)
+		return
+	}
+	ctx.JSON(http.StatusOK, *rsp)
 }

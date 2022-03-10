@@ -143,7 +143,7 @@ func GenerateToken(username, hashedPassword string) (string, error) {
 
 	t, err := NewTokenGenerator("", key, authentication.SignMethodRS256)
 	if err != nil {
-		klog.Errorf("login error: %v", err)
+		klog.Errorf("new token generator error: %v", err)
 		return "", err
 	}
 
