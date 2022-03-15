@@ -62,7 +62,7 @@ Response example:
   "username":"admin",
   // this will be true when login with default username and password
   "reset_password": true,
-  "data":"eyJhbGciOiJSUzI1N.xxx.xxx"
+  "token":"eyJhbGciOiJSUzI1N.xxx.xxx"
 }
 ```
 - **Authenticator**: Compare user and password with `kstone-api-user` configmap configuration.
@@ -221,6 +221,56 @@ A few work needs to be done:
 3. Implement the TokenGenerator interface to generate a token if needed.(optional if reusing JWTTokenAuthenticator)
 
 4. Implement the Store interface to update users information.(add users, reset password etc.)
+
+### REST API
+
+#### Login
+
+- request example
+
+```json
+POST /apis/login
+{
+  "username":"admin",
+  "password":"adm1n@kstone.io"
+}
+```
+
+- response example
+
+```json
+{
+  "username": "admin",
+  // this will be true when login with default username and password
+  "reset_password": true,
+  "token": "eyJhbGciOiJSUzI1N.xxx.xxx",
+  "message": ""
+}
+```
+> if `reset_password` is true, kstone-dashboard will redirect to reset password page.
+
+#### Request with Authentication
+
+- request example
+
+```json
+GET /apis/users
+
+Header:
+kstone-api-jwt: eyJhbGciOiJSUzI1N.xxx.xxx
+```
+
+- response example
+
+```json
+{
+  "username": "",
+  // this will be true when login with default username and password
+  "reset_password": false,
+  "token": "",
+  "message": "admin,admin-2,admin3"
+}
+```
 
 ## Testing Plan
 
