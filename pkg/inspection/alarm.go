@@ -35,7 +35,7 @@ var alarmTypeList = []string{"NOSPACE", "CORRUPT"}
 // transfer them to prometheus metrics
 func (c *Server) CollectAlarmList(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
-	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
+	cluster, clientConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
 			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureAlarm)
@@ -46,7 +46,7 @@ func (c *Server) CollectAlarmList(inspection *kstonev1alpha2.EtcdInspection) err
 		return err
 	}
 
-	alarms, err := clusterprovider.GetEtcdAlarms([]string{cluster.Status.ServiceName}, tlsConfig)
+	alarms, err := clusterprovider.GetEtcdAlarms([]string{cluster.Status.ServiceName}, clientConfig)
 	if err != nil {
 		return err
 	}

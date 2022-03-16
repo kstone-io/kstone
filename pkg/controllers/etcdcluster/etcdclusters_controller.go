@@ -83,7 +83,8 @@ type ClusterController struct {
 	recorder record.EventRecorder
 
 	clientbuilder util.ClientBuilder
-	tlsGetter     etcd.TLSGetter
+
+	clientConfigGetter etcd.ClientConfigGetter
 }
 
 // NewEtcdclusterController returns a new etcdcluster controller
@@ -120,7 +121,7 @@ func NewEtcdclusterController(
 	}
 
 	controller.syncHandler = controller.syncEtcdCluster
-	controller.tlsGetter = etcd.NewTLSSecretCacheGetter(controller.secretLister)
+	controller.clientConfigGetter = etcd.NewClientConfigSecretCacheGetter(controller.secretLister)
 
 	klog.Info("Setting up event handlers")
 	// Set up an event handler for when EtcdCluster resources change
@@ -395,8 +396,8 @@ func (c *ClusterController) reconcileEtcdCluster(cluster *kstonev1alpha2.EtcdClu
 
 func (c *ClusterController) GetFeatureProvider(name string) (featureprovider.Feature, error) {
 	ctx := &featureprovider.FeatureContext{
-		ClientBuilder: c.clientbuilder,
-		TLSGetter:     c.tlsGetter,
+		ClientBuilder:      c.clientbuilder,
+		ClientConfigGetter: c.clientConfigGetter,
 	}
 	feature, err := featureprovider.GetFeatureProvider(name, ctx)
 	if err != nil {
@@ -570,12 +571,12 @@ func (c *ClusterController) handleClusterStatus(
 			secretName = annotations[util.ClusterTLSSecretName]
 		}
 	}
-	tlsConfig, err := c.tlsGetter.Config(cluster.Name, secretName)
+	clientConfig, err := c.clientConfigGetter.New(cluster.Name, secretName)
 	if err != nil {
 		return cluster, err
 	}
 
-	status, err := provider.Status(tlsConfig, cluster)
+	status, err := provider.Status(clientConfig, cluster)
 	if err != nil {
 		c.recorder.Eventf(
 			cluster,

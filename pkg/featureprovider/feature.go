@@ -36,6 +36,6 @@ type Feature interface {
 	Do(task *v1alpha2.EtcdInspection) error
 }
 type FeatureContext struct {
-	ClientBuilder util.ClientBuilder
-	TLSGetter     etcd.TLSGetter
+	ClientBuilder      util.ClientBuilder
+	ClientConfigGetter etcd.ClientConfigGetter
 }

@@ -29,7 +29,7 @@ import (
 )
 
 // handleCOS saves etcd cluster's backup to specificed COS path.
-func handleCOS(ctx context.Context, kubecli kubernetes.Interface, s *api.COSBackupSource, endpoints []string, clientTLSSecret, namespace string, insecureSkipVerify bool, isPeriodic bool, maxBackup int) (bs *api.BackupStatus, err error) {
+func handleCOS(ctx context.Context, kubecli kubernetes.Interface, s *api.COSBackupSource, endpoints []string, clientTLSSecret, basicAuthSecret, namespace string, insecureSkipVerify bool, isPeriodic bool, maxBackup int) (bs *api.BackupStatus, err error) {
 	var cli *cosfactory.COSClient
 	if len(s.COSSecret) > 0 {
 		cli, err = cosfactory.NewClientFromSecret(kubecli, namespace, s.COSSecret)
@@ -52,7 +52,12 @@ func handleCOS(ctx context.Context, kubecli kubernetes.Interface, s *api.COSBack
 		return nil, err
 	}
 
-	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewCOSWriter(cli.COS), tlsConfig, endpoints, namespace)
+	var username, password string
+	if username, password, err = generateUsernamePassword(kubecli, basicAuthSecret, namespace); err != nil {
+		return nil, err
+	}
+
+	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewCOSWriter(cli.COS), tlsConfig, endpoints, namespace, username, password)
 
 	rev, etcdVersion, now, err := bm.SaveSnap(ctx, s.Path, isPeriodic)
 	if err != nil {
