@@ -28,7 +28,7 @@ import (
 )
 
 // handleABS saves etcd cluster's backup to specificed ABS path.
-func handleABS(ctx context.Context, kubecli kubernetes.Interface, s *api.ABSBackupSource, endpoints []string, clientTLSSecret,
+func handleABS(ctx context.Context, kubecli kubernetes.Interface, s *api.ABSBackupSource, endpoints []string, clientTLSSecret, basicAuthSecret,
 	namespace string, insecureSkipVerify, isPeriodic bool, maxBackup int) (*api.BackupStatus, error) {
 	// TODO: controls NewClientFromSecret with ctx. This depends on upstream kubernetes to support API calls with ctx.
 	cli, err := absfactory.NewClientFromSecret(kubecli, namespace, s.ABSSecret)
@@ -40,7 +40,13 @@ func handleABS(ctx context.Context, kubecli kubernetes.Interface, s *api.ABSBack
 	if tlsConfig, err = generateTLSConfigWithVerify(kubecli, clientTLSSecret, namespace, insecureSkipVerify); err != nil {
 		return nil, err
 	}
-	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewABSWriter(cli.ABS), tlsConfig, endpoints, namespace)
+
+	var username, password string
+	if username, password, err = generateUsernamePassword(kubecli, basicAuthSecret, namespace); err != nil {
+		return nil, err
+	}
+
+	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewABSWriter(cli.ABS), tlsConfig, endpoints, namespace, username, password)
 
 	rev, etcdVersion, now, err := bm.SaveSnap(ctx, s.Path, isPeriodic)
 	if err != nil {

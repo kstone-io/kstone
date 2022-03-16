@@ -23,7 +23,6 @@ import (
 	"sync"
 	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,14 +45,14 @@ const (
 )
 
 type Server struct {
-	cli       *clientset.Clientset
-	kubeCli   kubernetes.Interface
-	client    map[string]*clientv3.Client
-	wchan     map[string]clientv3.WatchChan
-	watcher   map[string]clientv3.Watcher
-	eventCh   map[string]chan *clientv3.Event
-	mux       sync.Mutex
-	tlsGetter etcd.TLSGetter
+	cli                *clientset.Clientset
+	kubeCli            kubernetes.Interface
+	client             map[string]*clientv3.Client
+	wchan              map[string]clientv3.WatchChan
+	watcher            map[string]clientv3.Watcher
+	eventCh            map[string]chan *clientv3.Event
+	mux                sync.Mutex
+	clientConfigGetter etcd.ClientConfigGetter
 }
 
 // NewInspectionServer generates the server of inspection
@@ -64,13 +63,13 @@ func NewInspectionServer(ctx *featureprovider.FeatureContext) (*Server, error) {
 		return nil, err
 	}
 	return &Server{
-		kubeCli:   ctx.ClientBuilder.ClientOrDie(),
-		cli:       cli,
-		client:    make(map[string]*clientv3.Client),
-		wchan:     make(map[string]clientv3.WatchChan),
-		watcher:   make(map[string]clientv3.Watcher),
-		eventCh:   make(map[string]chan *clientv3.Event),
-		tlsGetter: ctx.TLSGetter,
+		kubeCli:            ctx.ClientBuilder.ClientOrDie(),
+		cli:                cli,
+		client:             make(map[string]*clientv3.Client),
+		wchan:              make(map[string]clientv3.WatchChan),
+		watcher:            make(map[string]clientv3.Watcher),
+		eventCh:            make(map[string]chan *clientv3.Event),
+		clientConfigGetter: ctx.ClientConfigGetter,
 	}, nil
 }
 
@@ -152,7 +151,7 @@ func (c *Server) initInspectionTask(
 	return inspectionTask, nil
 }
 
-func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha2.EtcdCluster, *transport.TLSInfo, error) {
+func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha2.EtcdCluster, *etcd.ClientConfig, error) {
 	cluster, err := c.GetEtcdCluster(namespace, name)
 	if err != nil {
 		klog.Errorf("failed to get cluster info, namespace is %s, name is %s, err is %v", namespace, name, err)
@@ -166,12 +165,12 @@ func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha2.Etc
 			secretName = annotations[util.ClusterTLSSecretName]
 		}
 	}
-	tlsConfig, err := c.tlsGetter.Config(cluster.Name, secretName)
+	clientConfig, err := c.clientConfigGetter.New(cluster.Name, secretName)
 	if err != nil {
 		klog.Errorf("failed to get cluster, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return nil, nil, err
 	}
-	return cluster, tlsConfig, nil
+	return cluster, clientConfig, nil
 }
 
 func (c *Server) Equal(cluster *kstonev1alpha2.EtcdCluster, inspectionFeatureName kstonev1alpha2.KStoneFeature) bool {

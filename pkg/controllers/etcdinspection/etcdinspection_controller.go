@@ -80,7 +80,7 @@ type InspectionController struct {
 
 	clientbuilder util.ClientBuilder
 
-	tlsGetter etcd.TLSGetter
+	clientConfigGetter etcd.ClientConfigGetter
 }
 
 func NewInspectionControllerMetric() http.Handler {
@@ -131,7 +131,7 @@ func NewEtcdInspectionController(
 		recorder: recorder,
 	}
 	controller.syncHandler = controller.doClusterInspection
-	controller.tlsGetter = etcd.NewTLSSecretCacheGetter(controller.secretLister)
+	controller.clientConfigGetter = etcd.NewClientConfigSecretCacheGetter(controller.secretLister)
 
 	klog.Info("Setting up event handlers")
 	// Set up an event handler for when etcdinspection resources change
@@ -247,8 +247,8 @@ func (c *InspectionController) enqueueEtcdInspection(obj interface{}) {
 
 func (c *InspectionController) GetInspectionFeatureProvider(name string) (featureprovider.Feature, error) {
 	ctx := &featureprovider.FeatureContext{
-		ClientBuilder: c.clientbuilder,
-		TLSGetter:     c.tlsGetter,
+		ClientBuilder:      c.clientbuilder,
+		ClientConfigGetter: c.clientConfigGetter,
 	}
 	feature, err := featureprovider.GetFeatureProvider(name, ctx)
 	if err != nil {

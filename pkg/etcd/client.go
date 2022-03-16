@@ -22,8 +22,8 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -33,33 +33,69 @@ import (
 	"tkestack.io/kstone/pkg/controllers/util"
 )
 
-type TLSGetter interface {
-	Config(path string, sc string) (*transport.TLSInfo, error)
+type ClientConfigGetter interface {
+	New(path string, sc string) (*ClientConfig, error)
 }
 
-type TLSSecret struct {
+type ClientConfigSecret struct {
 	kubeCli      kubernetes.Interface
 	secretLister listerscorev1.SecretLister
-	secretGetter func(t *TLSSecret, namespace, secretName string) (*v1.Secret, error)
+	secretGetter func(t *ClientConfigSecret, namespace, secretName string) (*v1.Secret, error)
 }
 
-func NewTLSSecretGetter(clientBuilder util.ClientBuilder) *TLSSecret {
-	return &TLSSecret{
+type ClientConfig struct {
+	// Endpoints is a list of URLs.
+	Endpoints []string
+
+	// DialTimeout is the timeout for failing to establish a connection.
+	DialTimeout time.Duration
+
+	// DialKeepAliveTime is the time after which client pings the server to see if
+	// transport is alive.
+	DialKeepAliveTime time.Duration
+
+	// DialKeepAliveTimeout is the time that the client waits for a response for the
+	// keep-alive probe. If the response is not received in this time, the connection is closed.
+	DialKeepAliveTimeout time.Duration
+
+	// SecureConfig is secure config for authentication
+	SecureConfig
+}
+
+type SecureConfig struct {
+	// Cert is a cert for authentication.
+	Cert string
+
+	// Key is a key for authentication.
+	Key string
+
+	// CaCert is a CA cert for authentication.
+	CaCert string
+
+	// Username is a user name for authentication.
+	Username string
+
+	// Password is a password for authentication.
+	Password string
+}
+
+func NewClientConfigSecretGetter(clientBuilder util.ClientBuilder) *ClientConfigSecret {
+	return &ClientConfigSecret{
 		kubeCli:      clientBuilder.ClientOrDie(),
 		secretGetter: Secret,
 	}
 }
 
-func NewTLSSecretCacheGetter(secretLister listerscorev1.SecretLister) *TLSSecret {
-	return &TLSSecret{
+func NewClientConfigSecretCacheGetter(secretLister listerscorev1.SecretLister) *ClientConfigSecret {
+	return &ClientConfigSecret{
 		secretLister: secretLister,
 		secretGetter: SecretCache,
 	}
 }
 
-func (t *TLSSecret) Config(path string, sc string) (*transport.TLSInfo, error) {
+func (t *ClientConfigSecret) New(path string, sc string) (*ClientConfig, error) {
 	if sc == "" {
-		return nil, nil
+		return &ClientConfig{}, nil
 	}
 	items := strings.Split(sc, "/")
 	namespace := "default"
@@ -81,24 +117,28 @@ func (t *TLSSecret) Config(path string, sc string) (*transport.TLSInfo, error) {
 	cert := secret.Data[CliCertFile]
 	key := secret.Data[CliKeyFile]
 	ca := secret.Data[CliCAFile]
+	username := secret.Data[CliUsername]
+	password := secret.Data[CliPassword]
 	caFile, certFile, keyFile, err := GetTLSConfigPath(path, cert, key, ca)
 	if err != nil {
 		klog.Errorf("failed to get tls config path, name %s,err is %v", secretName, err)
 		return nil, err
 	}
-	cfg := &transport.TLSInfo{
-		TrustedCAFile: caFile,
-		KeyFile:       keyFile,
-		CertFile:      certFile,
-	}
-
-	return cfg, nil
+	return &ClientConfig{
+		SecureConfig: SecureConfig{
+			CaCert:   caFile,
+			Cert:     certFile,
+			Key:      keyFile,
+			Username: string(username),
+			Password: string(password),
+		},
+	}, nil
 }
 
-func SecretCache(t *TLSSecret, namespace, secretName string) (*v1.Secret, error) {
+func SecretCache(t *ClientConfigSecret, namespace, secretName string) (*v1.Secret, error) {
 	return t.secretLister.Secrets(namespace).Get(secretName)
 }
 
-func Secret(t *TLSSecret, namespace, secretName string) (*v1.Secret, error) {
+func Secret(t *ClientConfigSecret, namespace, secretName string) (*v1.Secret, error) {
 	return t.kubeCli.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 }
