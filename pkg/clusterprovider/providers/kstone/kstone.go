@@ -411,6 +411,10 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 			"client-cert-auth=true",
 		}
 	}
+
+	if cluster.Annotations["repository"] != "" {
+		spec["repository"] = cluster.Annotations["repository"]
+	}
 	return spec
 }
 
