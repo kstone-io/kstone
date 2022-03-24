@@ -421,6 +421,12 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 	if cluster.Annotations["repository"] != "" {
 		spec["repository"] = cluster.Annotations["repository"]
 	}
+
+	affinity := &cluster.Spec.Affinity
+	if affinity != nil {
+		spec["template"].(map[string]interface{})["affinity"] = affinity
+	}
+
 	return spec
 }
 
