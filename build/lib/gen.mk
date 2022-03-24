@@ -23,9 +23,10 @@ GOGO_PROTOBUF_DIR = $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 EXT_PB_APIS = "k8s.io/api/core/v1 k8s.io/api/apps/v1"
 # set the code generator image version
 CODE_GENERATOR_VERSION := v1.21.3
+CONTROLLER_GEN_VERSION := v0.6.2
 
 .PHONY: gen.run
-gen.run: gen.api
+gen.run: gen.api gen.crd
 
 # ==============================================================================
 # Generator
@@ -42,3 +43,11 @@ gen.api:
 	 	$(ROOT_PACKAGE)/pkg/apis \
 	 	$(ROOT_PACKAGE)/pkg/apis \
 		"kstone:v1alpha1 kstone:v1alpha2"
+
+gen.crd:
+	@$(DOCKER) run -it --rm \
+		-v $(ROOT_DIR):/go/src/$(ROOT_PACKAGE) \
+		-w /go/src/$(ROOT_PACKAGE) \
+		$(REGISTRY_PREFIX)/controller-gen:$(CONTROLLER_GEN_VERSION) \
+		controller-gen \
+		crd paths=/go/src/$(ROOT_PACKAGE)/pkg/apis/kstone/v1alpha2/... output:crd:dir=/go/src/$(ROOT_PACKAGE)/deploy/crds output:stdout
