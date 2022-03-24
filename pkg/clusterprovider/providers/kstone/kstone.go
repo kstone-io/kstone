@@ -427,6 +427,10 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 		spec["template"].(map[string]interface{})["affinity"] = affinity
 	}
 
+	if cluster.Spec.Tolerations != nil && len(cluster.Spec.Tolerations) > 0 {
+		spec["template"].(map[string]interface{})["tolerations"] = cluster.Spec.Tolerations
+	}
+
 	return spec
 }
 
