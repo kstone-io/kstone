@@ -261,7 +261,7 @@ func (prom *PrometheusMonitor) Equal(cluster *kstonev1alpha2.EtcdCluster) bool {
 		clusterEndpoints = append(clusterEndpoints, endPoint+":"+items[2])
 	}
 
-	endpoints, err := prom.GetEtcdEndpoint(DefaultEtcdPromNamespace, cluster.Name)
+	endpoints, err := prom.GetEtcdEndpoint(cluster.GetNamespace(), cluster.Name)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			klog.Errorf("get endpoint failed, err is %v", err)
@@ -363,12 +363,12 @@ func (prom *PrometheusMonitor) initEtcdServiceMonitor(cluster *kstonev1alpha2.Et
 	servicemonitor := &promapiv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cluster.Name,
-			Namespace: DefaultEtcdPromNamespace,
+			Namespace: cluster.GetNamespace(),
 			Labels:    labels,
 		},
 		Spec: promapiv1.ServiceMonitorSpec{
 			Endpoints:         endpointList,
-			NamespaceSelector: promapiv1.NamespaceSelector{MatchNames: []string{DefaultEtcdPromNamespace}},
+			NamespaceSelector: promapiv1.NamespaceSelector{MatchNames: []string{cluster.GetNamespace()}},
 			Selector: metav1.LabelSelector{MatchLabels: map[string]string{
 				"etcdName": cluster.Name,
 			}},
@@ -414,7 +414,7 @@ func (prom *PrometheusMonitor) initEtcdSvc(cluster *kstonev1alpha2.EtcdCluster) 
 	svr := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cluster.Name,
-			Namespace: DefaultEtcdPromNamespace,
+			Namespace: cluster.GetNamespace(),
 			Labels:    labelMap,
 		},
 		Spec: corev1.ServiceSpec{
@@ -469,7 +469,7 @@ func (prom *PrometheusMonitor) initEtcdEndpoint(cluster *kstonev1alpha2.EtcdClus
 	ep := &corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cluster.Name,
-			Namespace: DefaultEtcdPromNamespace,
+			Namespace: cluster.GetNamespace(),
 			Labels:    cluster.ObjectMeta.Labels,
 		},
 		Subsets: subsets,
@@ -502,7 +502,7 @@ func (prom *PrometheusMonitor) CheckEqualIfEnabled(cluster *kstonev1alpha2.EtcdC
 		clusterEndpoints = append(clusterEndpoints, endPoint+":"+items[2])
 	}
 
-	endpoints, err := prom.GetEtcdEndpoint(DefaultEtcdPromNamespace, cluster.Name)
+	endpoints, err := prom.GetEtcdEndpoint(cluster.GetNamespace(), cluster.Name)
 	if err != nil {
 		klog.Errorf("get endpoint failed, cluster name %s,err is %v", cluster.Name, err)
 		return false
@@ -540,7 +540,7 @@ func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha2.Etc
 		klog.Errorf("init etcdSvc failed, err is %v, cluster is %s", nErr, taskName)
 		return nErr
 	}
-	curSvc, err := prom.GetEtcdService(DefaultEtcdPromNamespace, taskName)
+	curSvc, err := prom.GetEtcdService(cluster.GetNamespace(), taskName)
 	if apierrors.IsNotFound(err) {
 		_, err = prom.CreateEtcdService(newSvc)
 		if err != nil {
@@ -566,7 +566,7 @@ func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha2.Etc
 		if err != nil {
 			return err
 		}
-		curEp, err := prom.GetEtcdEndpoint(DefaultEtcdPromNamespace, taskName)
+		curEp, err := prom.GetEtcdEndpoint(cluster.GetNamespace(), taskName)
 		if apierrors.IsNotFound(err) {
 			_, err = prom.CreateEtcdEndpoint(newEp)
 			if err != nil {
@@ -591,7 +591,7 @@ func (prom *PrometheusMonitor) SyncPrometheusMonitor(cluster *kstonev1alpha2.Etc
 	if err != nil {
 		return err
 	}
-	curServiceMonitor, err := prom.GetServiceMonitorTask(DefaultEtcdPromNamespace, taskName)
+	curServiceMonitor, err := prom.GetServiceMonitorTask(cluster.GetNamespace(), taskName)
 	if apierrors.IsNotFound(err) {
 		_, err = prom.CreateServiceMonitor(newServiceMonitor)
 		if err != nil {

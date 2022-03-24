@@ -351,6 +351,21 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 	envBytes, _ := json.Marshal(cluster.Spec.Env)
 	_ = json.Unmarshal(envBytes, &env)
 
+	persistentVolumeClaimSpec := map[string]interface{}{
+		"accessModes": []interface{}{
+			"ReadWriteOnce",
+		},
+		"resources": map[string]interface{}{
+			"requests": map[string]interface{}{
+				"storage": fmt.Sprintf("%dGi", cluster.Spec.DiskSize),
+			},
+		},
+	}
+
+	if cluster.Spec.DiskType != "" {
+		persistentVolumeClaimSpec["storageClassName"] = cluster.Spec.DiskType
+	}
+
 	spec := map[string]interface{}{
 		"size":    int64(cluster.Spec.Size),
 		"version": cluster.Spec.Version,
@@ -358,19 +373,10 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 			"extraArgs": []interface{}{
 				"logger=zap",
 			},
-			"labels":      labels,
-			"annotations": annotations,
-			"env":         env,
-			"persistentVolumeClaimSpec": map[string]interface{}{
-				"accessModes": []interface{}{
-					"ReadWriteOnce",
-				},
-				"resources": map[string]interface{}{
-					"requests": map[string]interface{}{
-						"storage": fmt.Sprintf("%dGi", cluster.Spec.DiskSize),
-					},
-				},
-			},
+			"labels":                    labels,
+			"annotations":               annotations,
+			"env":                       env,
+			"persistentVolumeClaimSpec": persistentVolumeClaimSpec,
 		},
 	}
 
