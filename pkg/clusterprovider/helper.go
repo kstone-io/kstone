@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
 	"k8s.io/klog/v2"
 
 	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
@@ -71,16 +70,13 @@ func populateExtensionCientURLMap(extensionClientURLs string) (map[string]string
 func GetRuntimeEtcdMembers(
 	endpoints []string,
 	extensionClientURLs string,
-	tls *transport.TLSInfo) ([]kstonev1alpha2.MemberStatus, error) {
+	config *etcd.ClientConfig) ([]kstonev1alpha2.MemberStatus, error) {
 	etcdMembers := make([]kstonev1alpha2.MemberStatus, 0)
 
-	ca, cert, key := "", "", ""
-	if tls != nil {
-		ca, cert, key = tls.TrustedCAFile, tls.CertFile, tls.KeyFile
-	}
+	config.Endpoints = endpoints
 
 	// GetMemberList
-	client, err := etcd.NewClientv3(ca, cert, key, endpoints)
+	client, err := etcd.NewClientv3(config)
 	if err != nil {
 		klog.Errorf("failed to get new etcd clientv3,err is %v ", err)
 		return etcdMembers, err
@@ -163,11 +159,11 @@ func GetRuntimeEtcdMembers(
 // GetEtcdClusterMemberStatus check healthy of cluster and member
 func GetEtcdClusterMemberStatus(
 	members []kstonev1alpha2.MemberStatus,
-	tls *transport.TLSInfo) ([]kstonev1alpha2.MemberStatus, kstonev1alpha2.EtcdClusterPhase) {
+	config *etcd.ClientConfig) ([]kstonev1alpha2.MemberStatus, kstonev1alpha2.EtcdClusterPhase) {
 	clusterStatus := kstonev1alpha2.EtcdClusterRunning
 	newMembers := make([]kstonev1alpha2.MemberStatus, 0)
 	for _, m := range members {
-		healthy, err := etcd.MemberHealthy(m.ExtensionClientUrl, tls)
+		healthy, err := etcd.MemberHealthy(m.ExtensionClientUrl, config)
 		if err != nil {
 			m.Status = kstonev1alpha2.MemberPhaseUnKnown
 		} else {
@@ -191,15 +187,12 @@ func GetEtcdClusterMemberStatus(
 // GetEtcdAlarms get alarm list of etcd
 func GetEtcdAlarms(
 	endpoints []string,
-	tls *transport.TLSInfo) ([]EtcdAlarm, error) {
+	config *etcd.ClientConfig) ([]EtcdAlarm, error) {
 	etcdAlarms := make([]EtcdAlarm, 0)
 
-	ca, cert, key := "", "", ""
-	if tls != nil {
-		ca, cert, key = tls.TrustedCAFile, tls.CertFile, tls.KeyFile
-	}
+	config.Endpoints = endpoints
 
-	client, err := etcd.NewClientv3(ca, cert, key, endpoints)
+	client, err := etcd.NewClientv3(config)
 	if err != nil {
 		klog.Errorf("failed to get new etcd clientv3, err is %v ", err)
 		return etcdAlarms, err

@@ -19,11 +19,11 @@
 package clusterprovider
 
 import (
-	"go.etcd.io/etcd/client/pkg/v3/transport"
 	"k8s.io/client-go/dynamic"
 
 	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/controllers/util"
+	"tkestack.io/kstone/pkg/etcd"
 )
 
 // Cluster is an abstract, pluggable interface for etcd clusters.
@@ -54,7 +54,7 @@ type Cluster interface {
 	Equal(cluster *kstonev1alpha2.EtcdCluster) (bool, error)
 
 	// Status gets the cluster status
-	Status(tlsConfig *transport.TLSInfo, cluster *kstonev1alpha2.EtcdCluster) (kstonev1alpha2.EtcdClusterStatus, error)
+	Status(config *etcd.ClientConfig, cluster *kstonev1alpha2.EtcdCluster) (kstonev1alpha2.EtcdClusterStatus, error)
 }
 
 type ClusterContext struct {

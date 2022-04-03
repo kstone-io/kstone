@@ -27,7 +27,7 @@ import (
 )
 
 // handleOSS saves etcd cluster's backup to specificed OSS path.
-func handleOSS(ctx context.Context, kubecli kubernetes.Interface, s *api.OSSBackupSource, endpoints []string, clientTLSSecret,
+func handleOSS(ctx context.Context, kubecli kubernetes.Interface, s *api.OSSBackupSource, endpoints []string, clientTLSSecret, basicAuthSecret,
 	namespace string, insecureSkipVerify, isPeriodic bool, maxBackup int) (*api.BackupStatus, error) {
 	if s.Endpoint == "" {
 		s.Endpoint = "http://oss-cn-hangzhou.aliyuncs.com"
@@ -43,7 +43,12 @@ func handleOSS(ctx context.Context, kubecli kubernetes.Interface, s *api.OSSBack
 		return nil, err
 	}
 
-	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewOSSWriter(cli.OSS), tlsConfig, endpoints, namespace)
+	var username, password string
+	if username, password, err = generateUsernamePassword(kubecli, basicAuthSecret, namespace); err != nil {
+		return nil, err
+	}
+
+	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewOSSWriter(cli.OSS), tlsConfig, endpoints, namespace, username, password)
 
 	rev, etcdVersion, now, err := bm.SaveSnap(ctx, s.Path, isPeriodic)
 	if err != nil {

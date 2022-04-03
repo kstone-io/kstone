@@ -29,7 +29,7 @@ import (
 
 // TODO: replace this with generic backend interface for other options (PV, Azure)
 // handleS3 saves etcd cluster's backup to specificed S3 path.
-func handleS3(ctx context.Context, kubecli kubernetes.Interface, s *api.S3BackupSource, endpoints []string, clientTLSSecret,
+func handleS3(ctx context.Context, kubecli kubernetes.Interface, s *api.S3BackupSource, endpoints []string, clientTLSSecret, basicAuthSecret,
 	namespace string, insecureSkipVerify, isPeriodic bool, maxBackup int) (*api.BackupStatus, error) {
 	// TODO: controls NewClientFromSecret with ctx. This depends on upstream kubernetes to support API calls with ctx.
 	cli, err := s3factory.NewClientFromSecret(kubecli, namespace, s.Endpoint, s.AWSSecret, s.ForcePathStyle)
@@ -42,7 +42,13 @@ func handleS3(ctx context.Context, kubecli kubernetes.Interface, s *api.S3Backup
 	if tlsConfig, err = generateTLSConfigWithVerify(kubecli, clientTLSSecret, namespace, insecureSkipVerify); err != nil {
 		return nil, err
 	}
-	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewS3Writer(cli.S3), tlsConfig, endpoints, namespace)
+
+	var username, password string
+	if username, password, err = generateUsernamePassword(kubecli, basicAuthSecret, namespace); err != nil {
+		return nil, err
+	}
+
+	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewS3Writer(cli.S3), tlsConfig, endpoints, namespace, username, password)
 
 	rev, etcdVersion, now, err := bm.SaveSnap(ctx, s.Path, isPeriodic)
 	if err != nil {

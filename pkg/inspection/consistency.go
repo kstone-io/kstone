@@ -24,7 +24,6 @@ import (
 	"strings"
 	"sync"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/klog/v2"
 
@@ -43,7 +42,7 @@ type ConsistencyInfo struct {
 func (c *Server) getEtcdConsistentMetadata(
 	cluster *kstonev1alpha2.EtcdCluster,
 	keyPrefix string,
-	tls *transport.TLSInfo,
+	cli *etcd.ClientConfig,
 ) (map[featureutil.ConsistencyType][]uint64, error) {
 
 	var mu sync.Mutex
@@ -56,10 +55,6 @@ func (c *Server) getEtcdConsistentMetadata(
 	for _, member := range cluster.Status.Members {
 		member := member
 		g.Go(func() error {
-			ca, cert, key := "", "", ""
-			if tls != nil {
-				ca, cert, key = tls.TrustedCAFile, tls.CertFile, tls.KeyFile
-			}
 			backendStorage, extensionClientURL := etcd.EtcdV3Backend, member.ExtensionClientUrl
 			if strings.HasPrefix(member.Version, "2") {
 				backendStorage = etcd.EtcdV2Backend
@@ -69,7 +64,10 @@ func (c *Server) getEtcdConsistentMetadata(
 				klog.Errorf("failed to get etcd stat backend,backend %s,err is %v", extensionClientURL, err)
 				return err
 			}
-			err = backend.Init(ca, cert, key, extensionClientURL)
+
+			cli.Endpoints = []string{extensionClientURL}
+
+			err = backend.Init(cli)
 			if err != nil {
 				klog.Errorf(
 					"failed to get new etcd clientv3,cluster name is %s,endpoint is %s,err is %v",
@@ -108,7 +106,7 @@ func (c *Server) getEtcdConsistentMetadata(
 // transfer them to prometheus metrics
 func (c *Server) CollectClusterConsistentData(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
-	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
+	cluster, clientConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
 			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureConsistency)
@@ -119,7 +117,7 @@ func (c *Server) CollectClusterConsistentData(inspection *kstonev1alpha2.EtcdIns
 		return err
 	}
 	endpointMetadataDiff := make(map[featureutil.ConsistencyType]uint64)
-	endpointMetadata, err := c.getEtcdConsistentMetadata(cluster, DefaultInspectionPath, tlsConfig)
+	endpointMetadata, err := c.getEtcdConsistentMetadata(cluster, DefaultInspectionPath, clientConfig)
 	if err != nil {
 		klog.Errorf("failed to getEtcdConsistentMetadata, etcd cluster %s, err is %v", cluster.Name, err)
 	} else {

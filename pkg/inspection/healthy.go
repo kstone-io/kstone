@@ -31,7 +31,7 @@ import (
 // transfer them to prometheus metrics
 func (c *Server) CollectMemberHealthy(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
-	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
+	cluster, clientConfig, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
 			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureHealthy)
@@ -43,7 +43,7 @@ func (c *Server) CollectMemberHealthy(inspection *kstonev1alpha2.EtcdInspection)
 	}
 
 	for _, m := range cluster.Status.Members {
-		healthy, hErr := etcd.MemberHealthy(m.ExtensionClientUrl, tlsConfig)
+		healthy, hErr := etcd.MemberHealthy(m.ExtensionClientUrl, clientConfig)
 		labels := map[string]string{
 			"clusterName": cluster.Name,
 			"endpoint":    m.Endpoint,

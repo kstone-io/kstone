@@ -28,7 +28,7 @@ import (
 )
 
 // handleGCS saves etcd cluster's backup to specificed GCS path.
-func handleGCS(ctx context.Context, kubecli kubernetes.Interface, s *api.GCSBackupSource, endpoints []string, clientTLSSecret,
+func handleGCS(ctx context.Context, kubecli kubernetes.Interface, s *api.GCSBackupSource, endpoints []string, clientTLSSecret, basicAuthSecret,
 	namespace string, insecureSkipVerify, isPeriodic bool, maxBackup int) (*api.BackupStatus, error) {
 	// TODO: controls NewClientFromSecret with ctx. This depends on upstream kubernetes to support API calls with ctx.
 	cli, err := gcsfactory.NewClientFromSecret(ctx, kubecli, namespace, s.GCPSecret)
@@ -41,7 +41,13 @@ func handleGCS(ctx context.Context, kubecli kubernetes.Interface, s *api.GCSBack
 	if tlsConfig, err = generateTLSConfigWithVerify(kubecli, clientTLSSecret, namespace, insecureSkipVerify); err != nil {
 		return nil, err
 	}
-	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewGCSWriter(cli.GCS), tlsConfig, endpoints, namespace)
+
+	var username, password string
+	if username, password, err = generateUsernamePassword(kubecli, basicAuthSecret, namespace); err != nil {
+		return nil, err
+	}
+
+	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewGCSWriter(cli.GCS), tlsConfig, endpoints, namespace, username, password)
 
 	rev, etcdVersion, now, err := bm.SaveSnap(ctx, s.Path, isPeriodic)
 	if err != nil {

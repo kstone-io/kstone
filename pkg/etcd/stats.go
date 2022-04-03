@@ -37,7 +37,7 @@ const (
 type Stat interface {
 
 	// Init create etcd client
-	Init(ca, cert, key, endpoint string) error
+	Init(config *ClientConfig) error
 
 	// GetTotalKeyNum counts the number of total keys
 	GetTotalKeyNum(ctx context.Context, keyPrefix string) (uint64, error)
@@ -69,9 +69,9 @@ func NewEtcdStatBackend(storageBackend string) (Stat, error) {
 	}
 }
 
-func (c *StatV3) Init(ca, cert, key, endpoint string) error {
+func (c *StatV3) Init(config *ClientConfig) error {
 	var err error
-	c.cli, err = NewClientv3(ca, cert, key, []string{endpoint})
+	c.cli, err = NewClientv3(config)
 	if err != nil {
 		return err
 	}
@@ -106,9 +106,9 @@ func (c *StatV3) Close() error {
 	return c.cli.Close()
 }
 
-func (c *StatV2) Init(ca, cert, key, endpoint string) error {
+func (c *StatV2) Init(config *ClientConfig) error {
 	var err error
-	c.cli, err = NewShortConnectionClientv2(ca, cert, key, []string{endpoint})
+	c.cli, err = NewShortConnectionClientv2(config)
 	if err != nil {
 		return err
 	}

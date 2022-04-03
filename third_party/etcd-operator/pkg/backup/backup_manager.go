@@ -36,17 +36,21 @@ type BackupManager struct {
 
 	endpoints     []string
 	namespace     string
+	username      string
+	password      string
 	etcdTLSConfig *tls.Config
 
 	bw writer.Writer
 }
 
 // NewBackupManagerFromWriter creates a BackupManager with backup writer.
-func NewBackupManagerFromWriter(kubecli kubernetes.Interface, bw writer.Writer, tc *tls.Config, endpoints []string, namespace string) *BackupManager {
+func NewBackupManagerFromWriter(kubecli kubernetes.Interface, bw writer.Writer, tc *tls.Config, endpoints []string, namespace, username, password string) *BackupManager {
 	return &BackupManager{
 		kubecli:       kubecli,
 		endpoints:     endpoints,
 		namespace:     namespace,
+		username:      username,
+		password:      password,
 		etcdTLSConfig: tc,
 		bw:            bw,
 	}
@@ -105,14 +109,14 @@ func (bm *BackupManager) EnsureMaxBackup(ctx context.Context, basePath string, m
 // etcdClientWithMaxRevision gets the etcd endpoint with the maximum kv store revision
 // and returns the etcd client of that member.
 func (bm *BackupManager) etcdClientWithMaxRevision(ctx context.Context) (*clientv3.Client, int64, error) {
-	etcdcli, rev, err := getClientWithMaxRev(ctx, bm.endpoints, bm.etcdTLSConfig)
+	etcdcli, rev, err := getClientWithMaxRev(ctx, bm.endpoints, bm.etcdTLSConfig, bm.username, bm.password)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get etcd client with maximum kv store revision: %v", err)
 	}
 	return etcdcli, rev, nil
 }
 
-func getClientWithMaxRev(ctx context.Context, endpoints []string, tc *tls.Config) (*clientv3.Client, int64, error) {
+func getClientWithMaxRev(ctx context.Context, endpoints []string, tc *tls.Config, username, password string) (*clientv3.Client, int64, error) {
 	mapEps := make(map[string]*clientv3.Client)
 	var maxClient *clientv3.Client
 	maxRev := int64(0)
@@ -123,6 +127,8 @@ func getClientWithMaxRev(ctx context.Context, endpoints []string, tc *tls.Config
 			Endpoints:   []string{endpoint},
 			DialTimeout: constants.DefaultDialTimeout,
 			TLS:         tc,
+			Username:    username,
+			Password:    password,
 		}
 		etcdcli, err := clientv3.New(cfg)
 		if err != nil {
