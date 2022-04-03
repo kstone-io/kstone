@@ -187,21 +187,19 @@ func EtcdKeyList(ctx *gin.Context) {
 			secretName = annotations["certName"]
 		}
 	}
-	tlsGetter := etcd.NewTLSSecretGetter(util.NewSimpleClientBuilder(""))
+	clientConfigGetter := etcd.NewClientConfigSecretGetter(util.NewSimpleClientBuilder(""))
 	klog.Infof("secretName: %s", secretName)
-	tlsConfig, err := tlsGetter.Config(cluster.Name, secretName)
+	config, err := clientConfigGetter.New(cluster.Name, secretName)
 	if err != nil {
 		klog.Errorf(err.Error())
 		ctx.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	ca, cert, key := "", "", ""
-	if tlsConfig != nil {
-		ca, cert, key = tlsConfig.TrustedCAFile, tlsConfig.CertFile, tlsConfig.KeyFile
-	}
-	klog.Infof("endpoint: %s, ca: %s, cert: %s, key: %s", cluster.Status.ServiceName, ca, cert, key)
-	client, err := etcd.NewClientv3(ca, cert, key, []string{cluster.Status.ServiceName})
+	config.Endpoints = []string{cluster.Status.ServiceName}
+
+	klog.Infof("endpoint: %s, ca: %s, cert: %s, key: %s", cluster.Status.ServiceName, config.CaCert, config.Cert, config.Key)
+	client, err := etcd.NewClientv3(config)
 	if err != nil {
 		klog.Errorf(err.Error())
 		ctx.JSON(http.StatusInternalServerError, err)

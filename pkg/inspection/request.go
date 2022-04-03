@@ -50,7 +50,7 @@ type RequestInfo struct {
 // CollectEtcdClusterRequest collects request of etcd
 func (c *Server) CollectEtcdClusterRequest(inspection *kstonev1alpha2.EtcdInspection) error {
 	namespace, name := inspection.Namespace, inspection.Spec.ClusterName
-	cluster, tlsConfig, err := c.GetEtcdClusterInfo(namespace, name)
+	cluster, config, err := c.GetEtcdClusterInfo(namespace, name)
 	defer func() {
 		if err != nil {
 			featureutil.IncrFailedInspectionCounter(name, kstonev1alpha2.KStoneFeatureRequest)
@@ -79,12 +79,9 @@ func (c *Server) CollectEtcdClusterRequest(inspection *kstonev1alpha2.EtcdInspec
 		}
 	}
 
-	ca, cert, key := "", "", ""
-	if tlsConfig != nil {
-		ca, cert, key = tlsConfig.TrustedCAFile, tlsConfig.CertFile, tlsConfig.KeyFile
-	}
+	config.Endpoints = clusterprovider.GetStorageMemberEndpoints(cluster)
 
-	client, err := etcd.NewClientv3(ca, cert, key, clusterprovider.GetStorageMemberEndpoints(cluster))
+	client, err := etcd.NewClientv3(config)
 	if err != nil {
 		klog.Errorf("failed to get new etcd clientv3,err is %v", err)
 		return err

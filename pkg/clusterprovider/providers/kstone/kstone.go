@@ -27,7 +27,6 @@ import (
 	"strings"
 	"sync"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,6 +38,7 @@ import (
 	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	"tkestack.io/kstone/pkg/controllers/util"
+	"tkestack.io/kstone/pkg/etcd"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
 
@@ -264,7 +264,7 @@ func (c *EtcdClusterKstone) AfterDelete(cluster *kstonev1alpha2.EtcdCluster) err
 }
 
 // Status checks etcd member and returns new status
-func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstonev1alpha2.EtcdCluster) (kstonev1alpha2.EtcdClusterStatus, error) {
+func (c *EtcdClusterKstone) Status(config *etcd.ClientConfig, cluster *kstonev1alpha2.EtcdCluster) (kstonev1alpha2.EtcdClusterStatus, error) {
 	var phase kstonev1alpha2.EtcdClusterPhase
 
 	status := cluster.Status
@@ -290,7 +290,7 @@ func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstone
 	members, err := clusterprovider.GetRuntimeEtcdMembers(
 		endpoints,
 		cluster.Annotations[util.ClusterExtensionClientURL],
-		tlsConfig,
+		config,
 	)
 	if err != nil || len(members) == 0 || int(cluster.Spec.Size) != len(members) {
 		if status.Phase == kstonev1alpha2.EtcdClusterRunning {
@@ -299,7 +299,7 @@ func (c *EtcdClusterKstone) Status(tlsConfig *transport.TLSInfo, cluster *kstone
 		return status, err
 	}
 
-	status.Members, phase = clusterprovider.GetEtcdClusterMemberStatus(members, tlsConfig)
+	status.Members, phase = clusterprovider.GetEtcdClusterMemberStatus(members, config)
 	if status.Phase == kstonev1alpha2.EtcdClusterRunning || phase != kstonev1alpha2.EtcdClusterUnknown {
 		status.Phase = phase
 	}

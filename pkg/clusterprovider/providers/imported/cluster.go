@@ -21,10 +21,10 @@ package imported
 import (
 	"sync"
 
-	"go.etcd.io/etcd/client/pkg/v3/transport"
 	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/clusterprovider"
 	"tkestack.io/kstone/pkg/controllers/util"
+	"tkestack.io/kstone/pkg/etcd"
 )
 
 const (
@@ -106,7 +106,7 @@ func (c *EtcdClusterImported) Equal(cluster *kstonev1alpha2.EtcdCluster) (bool, 
 }
 
 // Status gets the imported etcd cluster status
-func (c *EtcdClusterImported) Status(tlsConfig *transport.TLSInfo, cluster *kstonev1alpha2.EtcdCluster) (kstonev1alpha2.EtcdClusterStatus, error) {
+func (c *EtcdClusterImported) Status(config *etcd.ClientConfig, cluster *kstonev1alpha2.EtcdCluster) (kstonev1alpha2.EtcdClusterStatus, error) {
 	status := cluster.Status
 
 	annotations := cluster.ObjectMeta.Annotations
@@ -129,13 +129,13 @@ func (c *EtcdClusterImported) Status(tlsConfig *transport.TLSInfo, cluster *ksto
 	members, err := clusterprovider.GetRuntimeEtcdMembers(
 		endpoints,
 		cluster.Annotations[util.ClusterExtensionClientURL],
-		tlsConfig,
+		config,
 	)
 	if err != nil && len(members) == 0 {
 		status.Phase = kstonev1alpha2.EtcdClusterUnknown
 		return status, err
 	}
 
-	status.Members, status.Phase = clusterprovider.GetEtcdClusterMemberStatus(members, tlsConfig)
+	status.Members, status.Phase = clusterprovider.GetEtcdClusterMemberStatus(members, config)
 	return status, err
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/coreos/etcd-operator/pkg/util/etcdutil"
 	"github.com/coreos/etcd-operator/pkg/util/k8sutil"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -51,6 +52,17 @@ func generateTLSConfigWithVerify(kubecli kubernetes.Interface, clientTLSSecret, 
 		tlsConfig.InsecureSkipVerify = insecureSkipVerify
 	}
 	return tlsConfig, nil
+}
+
+func generateUsernamePassword(kubecli kubernetes.Interface, basicAuthSecret, namespace string) (username, password string, err error) {
+	if len(basicAuthSecret) != 0 {
+		secret, err := kubecli.CoreV1().Secrets(namespace).Get(basicAuthSecret, metav1.GetOptions{})
+		if err != nil {
+			return "", "", err
+		}
+		username, password = string(secret.Data["username"]), string(secret.Data["password"])
+	}
+	return "", "", nil
 }
 
 func isPeriodicBackup(ebSpec *api.BackupSpec) bool {

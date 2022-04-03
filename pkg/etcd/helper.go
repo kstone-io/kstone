@@ -44,28 +44,14 @@ const (
 	CliCertFile = "client.pem"
 	CliKeyFile  = "client-key.pem"
 	CliCAFile   = "ca.pem"
+	CliUsername = "username"
+	CliPassword = "password"
 )
 
-// secureConfig config of https
-type secureConfig struct {
-	cert   string
-	key    string
-	cacert string
-}
-
-func initConfig(cacert, cert, key string) *secureConfig {
-	scfg := &secureConfig{
-		cert:   cert,
-		key:    key,
-		cacert: cacert,
-	}
-	return scfg
-}
-
 // NewClientv3 generates etcd client v3
-func NewClientv3(cacert, cert, key string, endpoints []string) (*clientv3.Client, error) {
-	scfg := initConfig(cacert, cert, key)
-	cfg, err := newClientv3Config(endpoints, DefaultDialTimeout, DefaultKeepAliveTime, DefaultKeepAliveTimeOut, scfg)
+func NewClientv3(config *ClientConfig) (*clientv3.Client, error) {
+	setDefaultConfig(config)
+	cfg, err := newClientv3Config(config)
 	if err != nil {
 		klog.Errorf("get new clientv3 cfg failed:%s", err)
 		return nil, err
@@ -80,36 +66,44 @@ func NewClientv3(cacert, cert, key string, endpoints []string) (*clientv3.Client
 	return client, nil
 }
 
+func setDefaultConfig(config *ClientConfig) {
+	if config.DialTimeout == 0 {
+		config.DialTimeout = DefaultDialTimeout
+	}
+	if config.DialKeepAliveTime == 0 {
+		config.DialKeepAliveTime = DefaultKeepAliveTime
+	}
+	if config.DialKeepAliveTimeout == 0 {
+		config.DialKeepAliveTimeout = DefaultKeepAliveTimeOut
+	}
+}
+
 // newClientv3Config generates config of etcd client v3
-func newClientv3Config(
-	endpoints []string,
-	dialTimeout,
-	keepAliveTime,
-	keepAliveTimeout time.Duration,
-	scfg *secureConfig) (*clientv3.Config, error) {
+func newClientv3Config(config *ClientConfig) (*clientv3.Config, error) {
+	cfg := &clientv3.Config{
+		Endpoints:            config.Endpoints,
+		DialTimeout:          config.DialTimeout,
+		DialKeepAliveTime:    config.DialKeepAliveTime,
+		DialKeepAliveTimeout: config.DialKeepAliveTimeout,
+		Username:             config.Username,
+		Password:             config.Password,
+	}
 	// set tls if any one tls option set
 	var cfgtls *transport.TLSInfo
 	tlsinfo := transport.TLSInfo{}
-	if scfg.cert != "" {
-		tlsinfo.CertFile = scfg.cert
+	if config.Cert != "" {
+		tlsinfo.CertFile = config.Cert
 		cfgtls = &tlsinfo
 	}
 
-	if scfg.key != "" {
-		tlsinfo.KeyFile = scfg.key
+	if config.Key != "" {
+		tlsinfo.KeyFile = config.Key
 		cfgtls = &tlsinfo
 	}
 
-	if scfg.cacert != "" {
-		tlsinfo.TrustedCAFile = scfg.cacert
+	if config.CaCert != "" {
+		tlsinfo.TrustedCAFile = config.CaCert
 		cfgtls = &tlsinfo
-	}
-
-	cfg := &clientv3.Config{
-		Endpoints:            endpoints,
-		DialTimeout:          dialTimeout,
-		DialKeepAliveTime:    keepAliveTime,
-		DialKeepAliveTimeout: keepAliveTimeout,
 	}
 
 	if cfgtls != nil {
@@ -206,18 +200,13 @@ func AddMemberWithCmd(isLearner bool, endpoints, peerURL, ca, cert, key string) 
 }
 
 // MemberHealthy checks healthy of member
-func MemberHealthy(endpoint string, tls *transport.TLSInfo) (bool, error) {
-	ca, cert, key := "", "", ""
-	if tls != nil {
-		ca, cert, key = tls.TrustedCAFile, tls.CertFile, tls.KeyFile
-	}
-
+func MemberHealthy(endpoint string, cli *ClientConfig) (bool, error) {
 	backend, err := NewEtcdHealthCheckBackend(HealthCheckHTTP)
 	if err != nil {
 		klog.Errorf("failed to get healthcheck backend,method %s,err is %v", HealthCheckHTTP, err)
 		return false, err
 	}
-	err = backend.Init(ca, cert, key, endpoint)
+	err = backend.Init(cli.CaCert, cli.Cert, cli.Key, endpoint)
 	if err != nil {
 		klog.Errorf("failed to init healthcheck client,endpoint is %s,err is %v", endpoint, err)
 		return false, err
@@ -231,10 +220,9 @@ func MemberHealthy(endpoint string, tls *transport.TLSInfo) (bool, error) {
 	return true, nil
 }
 
-// NewShortConnectionClientv2 generates etcd client v2 of short connection
-func NewShortConnectionClientv2(cacert, cert, key string, endpoints []string) (*clientv2.Client, error) {
-	scfg := initConfig(cacert, cert, key)
-	cfg, err := newClientv2Config(endpoints, DefaultDialTimeout, DefaultCommandTimeOut, scfg, true)
+func NewShortConnectionClientv2(config *ClientConfig) (*clientv2.Client, error) {
+	setDefaultConfig(config)
+	cfg, err := newClientv2Config(config)
 	if err != nil {
 		klog.Errorf("get new clientv2 cfg failed:%s", err)
 		return nil, err
@@ -250,31 +238,25 @@ func NewShortConnectionClientv2(cacert, cert, key string, endpoints []string) (*
 }
 
 // newClientv2Config generates config of etcd client v2
-func newClientv2Config(
-	eps []string,
-	dialTimeout,
-	commandTimeOut time.Duration,
-	scfg *secureConfig,
-	short bool) (*clientv2.Config, error) {
-	tr, err := getTransport(dialTimeout, commandTimeOut, scfg, short)
+func newClientv2Config(config *ClientConfig) (*clientv2.Config, error) {
+	tr, err := getTransport(config.DialTimeout, DefaultCommandTimeOut, config.SecureConfig, true)
 	if err != nil {
 		return nil, err
 	}
-
-	cfg := clientv2.Config{
+	return &clientv2.Config{
 		Transport:               tr,
-		Endpoints:               eps,
-		HeaderTimeoutPerRequest: dialTimeout,
-	}
-
-	return &cfg, nil
+		Endpoints:               config.Endpoints,
+		HeaderTimeoutPerRequest: config.DialTimeout,
+		Username:                config.Username,
+		Password:                config.Password,
+	}, nil
 }
 
 // getTransport gets *http.Transport
-func getTransport(dialTimeout, totalTimeout time.Duration, scfg *secureConfig, short bool) (*http.Transport, error) {
-	cafile := scfg.cacert
-	certfile := scfg.cert
-	keyfile := scfg.key
+func getTransport(dialTimeout, totalTimeout time.Duration, scfg SecureConfig, short bool) (*http.Transport, error) {
+	cafile := scfg.CaCert
+	certfile := scfg.Cert
+	keyfile := scfg.Key
 
 	tls := transport.TLSInfo{
 		CertFile:           certfile,

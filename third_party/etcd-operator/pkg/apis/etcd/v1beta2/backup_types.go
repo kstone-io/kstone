@@ -92,6 +92,11 @@ type BackupSpec struct {
 	ClientTLSSecret string `json:"clientTLSSecret,omitempty"`
 	// insecure-skip-tsl-verify
 	InsecureSkipVerify bool `json:"insecureSkipVerify, omitempty"`
+	// BasicAuthSecret is the secret containing the etcd user password
+	// data:
+	//    "username": xx
+	//    "password": xxxx
+	BasicAuthSecret string `json:"basicAuthSecret,omitempty"`
 }
 
 // BackupSource contains the supported backup sources.
