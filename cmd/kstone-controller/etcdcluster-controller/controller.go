@@ -19,11 +19,19 @@
 package etcdclustercontroller
 
 import (
+	"context"
 	"io"
+	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	klog "k8s.io/klog/v2"
 
 	"tkestack.io/kstone/pkg/controllers/etcdcluster"
@@ -33,10 +41,12 @@ import (
 )
 
 type EtcdClusterCommand struct {
-	out           io.Writer
-	kubeconfig    string
-	masterURL     string
-	labelSelector string
+	out                io.Writer
+	kubeconfig         string
+	masterURL          string
+	labelSelector      string
+	leaseLockName      string
+	leaseLockNamespace string
 }
 
 // NewEtcdClusterControllerCommand creates a *cobra.Command object with default parameters
@@ -92,11 +102,26 @@ func (c *EtcdClusterCommand) Run() error {
 	kubeInformerFactory.Start(stopCh)
 	informerFactory.Start(stopCh)
 
-	if err = controller.Run(2, stopCh); err != nil {
-		klog.Fatalf("Error running etcd controller: %s", err.Error())
+	leaderElectionConfig, err := c.makeLeaderElectionConfig(kubeClient, controller, stopCh)
+	if err != nil {
+		klog.Fatalf("Error to generate leader election config: %v", err)
 		return err
 	}
-	return nil
+
+	// use a Go context so we can tell the leaderelection code when we
+	// want to step down
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		<-stopCh
+		klog.Info("Received termination, signaling shutdown")
+		cancel()
+	}()
+
+	// start the leader election code loop
+	leaderelection.RunOrDie(ctx, *leaderElectionConfig)
+	return err
 }
 
 func (c *EtcdClusterCommand) AddFlags(fs *pflag.FlagSet) {
@@ -119,4 +144,83 @@ func (c *EtcdClusterCommand) AddFlags(fs *pflag.FlagSet) {
 		"",
 		"The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.",
 	)
+	fs.StringVar(
+		&c.leaseLockName,
+		"lease-lock-name",
+		"kstone-etcdcluster-controller",
+		"the lease lock resource name",
+	)
+	fs.StringVar(&c.leaseLockNamespace,
+		"lease-lock-namespace",
+		"kstone",
+		"the lease lock resource namespace",
+	)
+}
+
+func (c *EtcdClusterCommand) makeLeaderElectionConfig(kubeClient *kubernetes.Clientset, controller *etcdcluster.ClusterController, stopCh <-chan struct{}) (*leaderelection.LeaderElectionConfig, error) {
+	if c.leaseLockName == "" {
+		klog.Fatal("unable to get lease lock resource name (missing lease-lock-name flag).")
+	}
+	if c.leaseLockNamespace == "" {
+		klog.Fatal("unable to get lease lock resource namespace (missing lease-lock-namespace flag).")
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		klog.Errorf("unable to get hostname: %v", err)
+		return nil, err
+	}
+	// add a uniquifier so that two processes on the same host don't accidentally both become active
+	id := hostname + "_" + string(uuid.NewUUID())
+
+	// we use the Lease lock type since edits to Leases are less common
+	// and fewer objects in the cluster watch "all Leases".
+	lock := &resourcelock.LeaseLock{
+		LeaseMeta: metav1.ObjectMeta{
+			Name:      c.leaseLockName,
+			Namespace: c.leaseLockNamespace,
+		},
+		Client: kubeClient.CoordinationV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity: id,
+		},
+	}
+
+	// start the leader election code loop
+	return &leaderelection.LeaderElectionConfig{
+		Lock: lock,
+		// IMPORTANT: you MUST ensure that any code you have that
+		// is protected by the lease must terminate **before**
+		// you call cancel. Otherwise, you could have a background
+		// loop still running and another process could
+		// get elected before your background loop finished, violating
+		// the stated goal of the lease.
+		ReleaseOnCancel: true,
+		LeaseDuration:   60 * time.Second,
+		RenewDeadline:   15 * time.Second,
+		RetryPeriod:     5 * time.Second,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: func(ctx context.Context) {
+				// we're notified when we start - this is where you would
+				// usually put your code
+				if err := controller.Run(2, stopCh); err != nil {
+					klog.Fatalf("Error running etcd controller: %s", err.Error())
+				}
+			},
+			OnStoppedLeading: func() {
+				// we can do cleanup here
+				klog.Infof("leader lost: %s", id)
+				os.Exit(0)
+			},
+			OnNewLeader: func(identity string) {
+				// we're notified when new leader elected
+				if identity == id {
+					// I just got the lock
+					return
+				}
+				klog.Infof("new leader elected: %s", identity)
+			},
+		},
+	}, nil
+
 }
