@@ -26,6 +26,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"time"
+	"tkestack.io/kstone/pkg/middlewares"
 
 	"github.com/gin-gonic/gin"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -35,7 +36,6 @@ import (
 
 	"tkestack.io/kstone/pkg/authentication/request"
 	"tkestack.io/kstone/pkg/backup"
-	"tkestack.io/kstone/pkg/middlewares"
 	// import backup provider
 	_ "tkestack.io/kstone/pkg/backup/providers"
 	"tkestack.io/kstone/pkg/controllers/util"
@@ -65,22 +65,23 @@ const (
 func NewRouter() *gin.Engine {
 	r := gin.Default()
 	public := r.Group("/apis")
+	private := r.Group("/apis")
 
-	public.GET("/:resource", ReverseProxy())
-	public.POST("/:resource", ReverseProxy())
-	public.GET("/:resource/:name", ReverseProxy())
-	public.PUT("/:resource/:name", ReverseProxy())
-	public.PATCH("/:resource/:name", ReverseProxy())
-	public.DELETE("/:resource/:name", ReverseProxy())
-
-	public.GET("/etcd/:etcdName", EtcdKeyList)
-	public.GET("/backup/:etcdName", BackupList)
-	public.GET("/features", FeatureList)
+	private.Use(middlewares.Auth())
 
 	public.POST("/login", Login)
 
-	private := r.Group("/apis")
-	private.Use(middlewares.Auth())
+	private.GET("/:resource", ReverseProxy())
+	private.POST("/:resource", ReverseProxy())
+	private.GET("/:resource/:name", ReverseProxy())
+	private.PUT("/:resource/:name", ReverseProxy())
+	private.PATCH("/:resource/:name", ReverseProxy())
+	private.DELETE("/:resource/:name", ReverseProxy())
+
+	private.GET("/etcd/:etcdName", EtcdKeyList)
+	private.GET("/backup/:etcdName", BackupList)
+	private.GET("/features", FeatureList)
+
 	private.GET("/users", UserList)
 	private.PUT("/user", UserUpdate)
 	private.POST("/user", UserAdd)
