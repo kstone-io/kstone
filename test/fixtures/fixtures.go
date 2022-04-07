@@ -83,7 +83,6 @@ func NewEtcdCluster(
 			ClusterType: clusterType,
 			Size:        replicas,
 			DiskSize:    1,
-			DiskType:    "ssd",
 			Version:     "3.4.13",
 		},
 	}
