@@ -93,8 +93,9 @@ func (c *EtcdClusterKstone) Create(cluster *kstonev1alpha2.EtcdCluster) error {
 		"apiVersion": "etcd.tkestack.io/v1alpha1",
 		"kind":       "EtcdCluster",
 		"metadata": map[string]interface{}{
-			"name":      cluster.Name,
-			"namespace": cluster.Namespace,
+			"name":        cluster.Name,
+			"namespace":   cluster.Namespace,
+			"annotations": cluster.Annotations,
 		},
 		"spec": c.generateEtcdSpec(cluster),
 	}
@@ -350,6 +351,21 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 	envBytes, _ := json.Marshal(cluster.Spec.Env)
 	_ = json.Unmarshal(envBytes, &env)
 
+	persistentVolumeClaimSpec := map[string]interface{}{
+		"accessModes": []interface{}{
+			"ReadWriteOnce",
+		},
+		"resources": map[string]interface{}{
+			"requests": map[string]interface{}{
+				"storage": fmt.Sprintf("%dGi", cluster.Spec.DiskSize),
+			},
+		},
+	}
+
+	if cluster.Spec.DiskType != "" {
+		persistentVolumeClaimSpec["storageClassName"] = cluster.Spec.DiskType
+	}
+
 	spec := map[string]interface{}{
 		"size":    int64(cluster.Spec.Size),
 		"version": cluster.Spec.Version,
@@ -357,19 +373,10 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 			"extraArgs": []interface{}{
 				"logger=zap",
 			},
-			"labels":      labels,
-			"annotations": annotations,
-			"env":         env,
-			"persistentVolumeClaimSpec": map[string]interface{}{
-				"accessModes": []interface{}{
-					"ReadWriteOnce",
-				},
-				"resources": map[string]interface{}{
-					"requests": map[string]interface{}{
-						"storage": fmt.Sprintf("%dGi", cluster.Spec.DiskSize),
-					},
-				},
-			},
+			"labels":                    labels,
+			"annotations":               annotations,
+			"env":                       env,
+			"persistentVolumeClaimSpec": persistentVolumeClaimSpec,
 		},
 	}
 
@@ -390,22 +397,40 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 	spec["template"].(map[string]interface{})["resources"] = resources
 
 	if cluster.Annotations["scheme"] == "https" {
-		spec["secure"] = map[string]interface{}{
-			"tls": map[string]interface{}{
-				"autoTLSCert": map[string]interface{}{
-					"autoGenerateClientCert": true,
-					"autoGeneratePeerCert":   true,
-					"autoGenerateServerCert": true,
-					"extraServerCertSANs":    extraServerCertSANList,
-				},
-			},
+		autoTLSCert := map[string]interface{}{
+			"autoGenerateClientCert": true,
+			"autoGeneratePeerCert":   true,
+			"autoGenerateServerCert": true,
+			"extraServerCertSANs":    extraServerCertSANList,
+		}
+		if cluster.Spec.AuthConfig.TLSSecret != "" {
+			autoTLSCert["externalCASecret"] = cluster.Spec.AuthConfig.TLSSecret
 		}
 
+		spec["secure"] = map[string]interface{}{
+			"tls": map[string]interface{}{
+				"autoTLSCert": autoTLSCert,
+			},
+		}
 		spec["template"].(map[string]interface{})["extraArgs"] = []interface{}{
 			"logger=zap",
 			"client-cert-auth=true",
 		}
 	}
+
+	if cluster.Annotations["repository"] != "" {
+		spec["repository"] = cluster.Annotations["repository"]
+	}
+
+	affinity := &cluster.Spec.Affinity
+	if affinity != nil {
+		spec["template"].(map[string]interface{})["affinity"] = affinity
+	}
+
+	if cluster.Spec.Tolerations != nil && len(cluster.Spec.Tolerations) > 0 {
+		spec["template"].(map[string]interface{})["tolerations"] = cluster.Spec.Tolerations
+	}
+
 	return spec
 }
 

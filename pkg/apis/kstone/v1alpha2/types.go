@@ -104,6 +104,9 @@ type EtcdClusterSpec struct {
 	ClusterType EtcdClusterType `json:"clusterType" protobuf:"bytes,12,opt,name=clusterType,casttype=EtcdClusterType"` // ClusterType specifies the etcd cluster provider.
 
 	Resources corev1.ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,13,opt,name=resources"` // Resources specifies requests and limits
+	// If specified, the pod's tolerations.
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // AuthConfig defines tls
