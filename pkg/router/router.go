@@ -26,7 +26,6 @@ import (
 	"net/http/httputil"
 	"os"
 	"time"
-	"tkestack.io/kstone/pkg/middlewares"
 
 	"github.com/gin-gonic/gin"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -34,6 +33,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	klog "k8s.io/klog/v2"
 
+	// import token and authenticator provider
+	_ "tkestack.io/kstone/pkg/authentication/providers"
 	"tkestack.io/kstone/pkg/authentication/request"
 	"tkestack.io/kstone/pkg/backup"
 	// import backup provider
@@ -45,8 +46,7 @@ import (
 	_ "tkestack.io/kstone/pkg/featureprovider/providers"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
-	// import token and authenticator provider
-	_ "tkestack.io/kstone/pkg/authentication/providers"
+	"tkestack.io/kstone/pkg/middlewares"
 )
 
 var (
