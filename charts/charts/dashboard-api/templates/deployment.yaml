@@ -70,4 +70,4 @@ spec:
         - name: certs
           secret:
             defaultMode: 420
-            secretName: kstone-api-key
+            secretName: {{ include "dashboard-api.fullname" . }}-key
