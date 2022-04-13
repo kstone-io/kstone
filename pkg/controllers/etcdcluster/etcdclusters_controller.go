@@ -571,7 +571,8 @@ func (c *ClusterController) handleClusterStatus(
 			secretName = annotations[util.ClusterTLSSecretName]
 		}
 	}
-	clientConfig, err := c.clientConfigGetter.New(cluster.Name, secretName)
+	path := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	clientConfig, err := c.clientConfigGetter.New(path, secretName)
 	if err != nil {
 		return cluster, err
 	}

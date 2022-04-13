@@ -58,8 +58,14 @@ var (
 const (
 	GroupName   = "kstone.tkestack.io"
 	VersionName = "v1alpha2"
-	Namespace   = "kstone"
 )
+
+var Namespace string
+
+//init
+func Init(namespace string) {
+	Namespace = namespace
+}
 
 // NewRouter generates router
 func NewRouter() *gin.Engine {
@@ -114,11 +120,7 @@ func ReverseProxy() gin.HandlerFunc {
 			switch resource {
 			case "etcdclusters":
 				if name == "" {
-					if req.Method == http.MethodGet {
-						path = fmt.Sprintf("/apis/%s/%s/%s", GroupName, VersionName, resource)
-					} else if req.Method == http.MethodPost || req.Method == http.MethodPut {
-						path = fmt.Sprintf("/apis/%s/%s/namespaces/%s/%s", GroupName, VersionName, Namespace, resource)
-					}
+					path = fmt.Sprintf("/apis/%s/%s/namespaces/%s/%s", GroupName, VersionName, Namespace, resource)
 				} else {
 					path = fmt.Sprintf("/apis/%s/%s/namespaces/%s/%s/%s", GroupName, VersionName, Namespace, resource, name)
 				}
@@ -173,7 +175,7 @@ func EtcdKeyList(ctx *gin.Context) {
 		return
 	}
 
-	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters("kstone").
+	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters(Namespace).
 		Get(context.TODO(), etcdName, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())
@@ -190,7 +192,8 @@ func EtcdKeyList(ctx *gin.Context) {
 	}
 	clientConfigGetter := etcd.NewClientConfigSecretGetter(util.NewSimpleClientBuilder(""))
 	klog.Infof("secretName: %s", secretName)
-	config, err := clientConfigGetter.New(cluster.Name, secretName)
+	path := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	config, err := clientConfigGetter.New(path, secretName)
 	if err != nil {
 		klog.Errorf(err.Error())
 		ctx.JSON(http.StatusInternalServerError, err)

@@ -33,7 +33,6 @@ const (
 	DataUnauthorized = "failed to authenticate user"
 	UserUnknown      = "unknown"
 
-	DefaultConfigMapName   = "kstone-api-user"
 	DefaultKeyPath         = "/app/certs/private.key"
 	DefaultKstoneNamespace = "kstone"
 	DefaultUsername        = "admin"
@@ -46,6 +45,12 @@ type Response struct {
 	ResetPassword bool   `json:"reset_password"`
 	Token         string `json:"token"`
 	Message       string `json:"message"`
+}
+
+var DefaultConfigMapName = "kstone-api-user"
+
+func InitAuthConfig(name string) {
+	DefaultConfigMapName = name
 }
 
 func SuccessResponse(username string, message string) *Response {

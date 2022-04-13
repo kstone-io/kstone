@@ -244,8 +244,9 @@ func (bak *Server) initEtcdBackup(cluster *kstonev1alpha2.EtcdCluster) (*backupa
 			StorageType:     backupCfg.StorageType,
 			ClientTLSSecret: secretName,
 			//	InsecureSkipVerify: true,
-			BackupPolicy: backupCfg.StoragePolicy,
-			BackupSource: backupCfg.BackupSource,
+			BackupPolicy:    backupCfg.StoragePolicy,
+			BackupSource:    backupCfg.BackupSource,
+			BasicAuthSecret: secretName,
 		},
 	}
 	return backup, nil

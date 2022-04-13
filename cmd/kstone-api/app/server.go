@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"k8s.io/klog/v2"
+	"tkestack.io/kstone/pkg/authentication"
 
 	"tkestack.io/kstone/cmd/kstone-api/config"
 	"tkestack.io/kstone/pkg/middlewares"
@@ -31,6 +32,8 @@ import (
 type APIServerCommand struct {
 	token         string
 	authenticator string
+	namespace     string
+	authCfg       string
 }
 
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -64,6 +67,9 @@ other components interact, such as kstone-controller, kstone-dashboard.`,
 func (c *APIServerCommand) Run() error {
 	klog.Info("start kstone-api")
 	config.CreateConfigFromFlags(c.token, c.authenticator)
+	kstoneRouter.Init(c.namespace)
+	authentication.InitAuthConfig(c.authCfg)
+
 	router := kstoneRouter.NewRouter()
 	router.Use(middlewares.Cors())
 	err := router.Run()
@@ -86,4 +92,12 @@ func (c *APIServerCommand) AddFlags(fs *pflag.FlagSet) {
 		"bearertoken",
 		"specify the authenticator type.",
 	)
+	fs.StringVar(&c.namespace,
+		"namespace",
+		"kstone",
+		"for differ api use ns")
+	fs.StringVar(&c.authCfg,
+		"auth",
+		"kstone-api-user",
+		"default auth config name")
 }
