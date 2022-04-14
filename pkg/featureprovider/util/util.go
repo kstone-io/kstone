@@ -19,15 +19,10 @@
 package util
 
 import (
-	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
-	"k8s.io/klog/v2"
-
 	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
-	"tkestack.io/kstone/pkg/backup"
 	"tkestack.io/kstone/pkg/inspection/metrics"
 )
 
@@ -66,29 +61,6 @@ func IsFeatureGateEnabled(annotations map[string]string, name kstonev1alpha2.KSt
 		}
 	}
 	return false
-}
-
-func GetBackupConfig(cluster *kstonev1alpha2.EtcdCluster) (*backup.Config, error) {
-	var err error
-	cfg, found := cluster.Annotations[backup.AnnoBackupConfig]
-	if !found {
-		err = fmt.Errorf(
-			"backup config not found, annotation key %s not exists, namespace is %s, name is %s",
-			backup.AnnoBackupConfig,
-			cluster.Namespace,
-			cluster.Name,
-		)
-		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
-		return nil, err
-	}
-
-	backupConfig := &backup.Config{}
-	err = json.Unmarshal([]byte(cfg), backupConfig)
-	if err != nil {
-		klog.Errorf(err.Error())
-		return nil, err
-	}
-	return backupConfig, nil
 }
 
 func IncrFailedInspectionCounter(clusterName string, featureName kstonev1alpha2.KStoneFeature) {

@@ -60,14 +60,14 @@ func NewCOSBackupProvider(config *backup.StorageConfig) backup.Storage {
 
 func (c *StorageCOS) List(cluster *v1alpha2.EtcdCluster) (interface{}, error) {
 	// get backup config
-	backupConfig, err := featureutil.GetBackupConfig(cluster)
+	backupConfig, err := backup.GetBackupConfig(cluster)
 	if err != nil {
 		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		return nil, err
 	}
 	klog.V(3).Infof("backup config is %v", backupConfig)
 
-	secret, err := c.kubeCli.CoreV1().Secrets("kstone").Get(context.TODO(), backupConfig.COS.COSSecret, v1.GetOptions{})
+	secret, err := c.kubeCli.CoreV1().Secrets(cluster.Namespace).Get(context.TODO(), backupConfig.COS.COSSecret, v1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())
 		return nil, err

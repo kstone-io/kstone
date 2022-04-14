@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"tkestack.io/kstone/pkg/etcd"
 
 	backupapiv2 "github.com/coreos/etcd-operator/pkg/apis/etcd/v1beta2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -240,15 +241,32 @@ func (bak *Server) initEtcdBackup(cluster *kstonev1alpha2.EtcdCluster) (*backupa
 			Labels:    cluster.ObjectMeta.Labels,
 		},
 		Spec: backupapiv2.BackupSpec{
-			EtcdEndpoints:   []string{cluster.Status.ServiceName},
-			StorageType:     backupCfg.StorageType,
-			ClientTLSSecret: secretName,
-			//	InsecureSkipVerify: true,
-			BackupPolicy:    backupCfg.StoragePolicy,
-			BackupSource:    backupCfg.BackupSource,
-			BasicAuthSecret: secretName,
+			EtcdEndpoints: []string{cluster.Status.ServiceName},
+			StorageType:   backupCfg.StorageType,
+			//ClientTLSSecret: secretName,
+			//InsecureSkipVerify: true,
+			BackupPolicy: backupCfg.StoragePolicy,
+			BackupSource: backupCfg.BackupSource,
+			//BasicAuthSecret: secretName,
 		},
 	}
+	//load secretConfig
+	clientConfigGetter := etcd.NewClientConfigSecretGetter(util.NewSimpleClientBuilder(""))
+	klog.Infof("secretName: %s", secretName)
+	path := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	config, err := clientConfigGetter.New(path, secretName)
+	if err != nil {
+		klog.Errorf("failed to get cluster, namespace is %s, name is %s, err is %v", cluster.Namespace, cluster.Name, err)
+		return nil, err
+	}
+	if config.Username != "" {
+		backup.Spec.BasicAuthSecret = secretName
+	}
+	if config.CaCert != "" {
+		backup.Spec.ClientTLSSecret = secretName
+		backup.Spec.InsecureSkipVerify = true
+	}
+
 	return backup, nil
 }
 

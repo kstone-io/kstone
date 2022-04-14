@@ -44,7 +44,6 @@ import (
 	"tkestack.io/kstone/pkg/featureprovider"
 	// import feature provider
 	_ "tkestack.io/kstone/pkg/featureprovider/providers"
-	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	"tkestack.io/kstone/pkg/middlewares"
 )
@@ -308,7 +307,7 @@ func BackupList(ctx *gin.Context) {
 	}
 
 	// get backup config
-	backupConfig, err := featureutil.GetBackupConfig(cluster)
+	backupConfig, err := backup.GetBackupConfig(cluster)
 	if err != nil {
 		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		ctx.JSON(http.StatusInternalServerError, err)
