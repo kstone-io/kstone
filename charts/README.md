@@ -14,9 +14,6 @@
   - For production environment (recommended): Worker >= 4 vCPU 8 GB of Memory.
   - For test environment (minimum): Worker >= 2 vCPU 2 GB of Memory.
   - Can access the managed etcd.
-- Safety warning:
-  - The current version of kstone-dashboard does not support authentication.
-  Please pay attention to data security and try not to expose it to the public network.
   
 ## 2 Install on TKE
 
