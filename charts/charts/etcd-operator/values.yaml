@@ -8,7 +8,7 @@ image:
   repository: tkestack/kstone-etcd-operator-amd64
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v0.0.1-alpha.1"
+  tag: "v0.0.1-alpha.3"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -50,3 +50,7 @@ tolerations: []
 affinity: {}
 
 serviceAccountName: kstone
+
+service:
+  type: ClusterIP
+  port: 443
