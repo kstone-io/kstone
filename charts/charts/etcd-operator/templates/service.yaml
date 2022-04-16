@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "etcd-operator.fullname" . }}
+  labels:
+    {{- include "etcd-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+      name: tcp
+  selector:
+    {{- include "etcd-operator.selectorLabels" . | nindent 4 }}

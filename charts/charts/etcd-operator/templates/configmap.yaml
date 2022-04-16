@@ -11,3 +11,60 @@ metadata:
     cloud.tencent.com/kstone-config-version: 0.0.1
   name: etcd-version-global-config
   namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+data:
+  tls.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIDSTCCAjGgAwIBAgIUQxapCztxSiDvusPIrujEiA+k4q0wDQYJKoZIhvcNAQEL
+    BQAwUTELMAkGA1UEBhMCQ04xCzAJBgNVBAgMAkdEMQswCQYDVQQHDAJTWjEPMA0G
+    A1UECgwGS3N0b25lMRcwFQYDVQQDDA5Lc3RvbmUgUm9vdCBDQTAeFw0yMjA0MTUx
+    MDIwMjBaFw0zMjA0MTIxMDIwMjBaME8xCzAJBgNVBAYTAkNOMQswCQYDVQQIDAJH
+    RDELMAkGA1UEBwwCU1oxDzANBgNVBAoMBktzdG9uZTEVMBMGA1UEAwwMKi5rc3Rv
+    bmUuc3ZjMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2zOVN79sFHPh
+    Uu9E1g4h212pujyAcVEKsJ59mUSsj54CTrCZJBgP4U2w9DxAYPwB8sE4SY7mCNJ4
+    MLwGJwUW9rmHovLDQHIqhD1uhT7HEwY64l5AuLgOtGtiwB2ybaOsPtJyPbYLz4kY
+    UG1CAvwziPfn+TntcFzbRsJ2YE3BooHIzjSB3tnbZGyCPHjfw9YpnFV0jdnapY2M
+    yhhIfHtqiM9XjvE8A+bkJ1mukBtPbQUGPqz5k3/pZkIFjeGJaGp1Hj+Gun8A8ubt
+    vi4ZDjXrjVSZKRkQL/M9n2WyF8IJ5aqvXgcy5xAyFL5BXxF4lpvNJZ00pyblb5/d
+    m3t61G8KYQIDAQABoxswGTAXBgNVHREEEDAOggwqLmtzdG9uZS5zdmMwDQYJKoZI
+    hvcNAQELBQADggEBAE1KRq6fSEHoYUvbuL0UffGEdi00l5+f6auYB+57YImAnibS
+    /J2I+Kjg5yzjpDXrNivXHiKv8ei83Me0dOcsrfR8k3VeQCMd9ucqa0Z88lDTnrGe
+    srjClYS0eGfsQslFEyESVolgLpf6RQJhMk9PIp+60KqUhiC9RjsHyWRwMMGHmGuC
+    Z/hJ/ljI+G2Kr8Z+OrE3gJxXqXyjRoaqhW+dZESiqiuzx0Yzqze88zX4ftelqTH5
+    uJNVmhWC2kFr/FKjfP6GCfEeI/lnbTCOMfueiISZbRK2J2tWWOhgc37uPcX8N+XB
+    eWJO40lJb/TDtIqsOWW04hqJx4m5tLQK+YRnf0k=
+    -----END CERTIFICATE-----
+  tls.key: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDbM5U3v2wUc+FS
+    70TWDiHbXam6PIBxUQqwnn2ZRKyPngJOsJkkGA/hTbD0PEBg/AHywThJjuYI0ngw
+    vAYnBRb2uYei8sNAciqEPW6FPscTBjriXkC4uA60a2LAHbJto6w+0nI9tgvPiRhQ
+    bUIC/DOI9+f5Oe1wXNtGwnZgTcGigcjONIHe2dtkbII8eN/D1imcVXSN2dqljYzK
+    GEh8e2qIz1eO8TwD5uQnWa6QG09tBQY+rPmTf+lmQgWN4YloanUeP4a6fwDy5u2+
+    LhkONeuNVJkpGRAv8z2fZbIXwgnlqq9eBzLnEDIUvkFfEXiWm80lnTSnJuVvn92b
+    e3rUbwphAgMBAAECggEBAL/MYsRkui0rN/1ZXuHte7J2Qgyy47BDORdRlpSFgngn
+    yd0QqO7sHvkFAdCy56H037+JUbcLUjxl7MS3wKpjybQYopXx1OaO/qS3G/168LW0
+    vdFUp0z5v+QeEkoHshg9HnnZqhxVLgBp9NxqvVffVTiDsnZgOWIX3cYMYYfigYuu
+    ZUuN6VdtnIB+zZC84qy8zHBgre5DokFbUmzV4l/qyZYaURinkiBr6FSBvVPoieSl
+    fKIEFyVqpY6GaG7zQQ+hdnc+sfBStdLaF03WDvDnEgBU/z8/6vI36EPF5gSMd+Dv
+    m0tcKeIqw7xPVHfrh/AJTkBGY/Vq+zZL2LdOj3fJAAECgYEA8+Ke3Gp5XVwLjPNq
+    HEODJu1yiurYD/jZ2etpMPzz8Xyz1jMAXRgSa7fC1xbsVauo4ISIZndf8Gb48PU4
+    m7tqbUvfnRoCB/OLPlTeNXedL6ygPgzb6TLrd3LMg+snkUSuJQxKWYmIdcAf2Jfo
+    ww5AyQLlcM1kRL+fduSTWH4uDP0CgYEA5hcR+0mz+YqK5TdL9nVTnMRmNLaAAPAk
+    Low34YsvSZ1gL/0d0pmNkwFmwxdM17JKkfq2CKOLo1A7aBKJSRdq3EhsTNh3qNRu
+    EYTS50V/k/zQ7eCHP+hNp+hkbCCp6m0YjqCiCjrd2if2VZpNR/sivPMydd6M+2Vm
+    DGoo9gXb4jUCgYBnXST3Rikp6Fj85C2UzQhI91oUhnQMUOwD8EIlARBiyPdvUS5W
+    Rl2ISdnKT2za4mYwwfsNcoq22O2pMkVLu6Lfr8iWTO+PbykUweNrxcZY7lD7+3c4
+    3tvtRDpprsCWUQV9rjfUuvWa8lKM+dUs1l2e1BtqM6LLgGuVeEr6tn/OAQKBgFGj
+    O+ESHIZczr1Xal9u75S+5pirbC1pBx1w6N7guI2BBkDgqTUxAFd5dtGfsccSXnz/
+    HJliFciDTiC1+vnxEhxIogx9/a7seIVEwGQId6S1XhgYw0Q8k1kRDpiC2mbwAHeS
+    rQu+KTsfVLq4vdTdWUz7aRsDNLh6GMQs4o2wNH1FAoGALN8PNIR/Sl+XoCEyGFmj
+    vhZONbogmL8e4V66bJhs6gRb4df/Fb64HWJnrr+TLoMIFyueR+OcUzD0bcIhaHem
+    5fztFZw2tHDASXvvFBX8q8plRD8pm+0BQfw3Rb088xdounD0TpkRFX8dIWLjpFVx
+    YHRIG5x6bCuy2MPLoeASJzc=
+    -----END PRIVATE KEY-----
+kind: ConfigMap
+metadata:
+  name: kstone-etcd-operator-cert
+  namespace: {{ .Release.Namespace }}
