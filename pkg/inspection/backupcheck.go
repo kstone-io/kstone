@@ -20,16 +20,17 @@ package inspection
 
 import (
 	"context"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
-	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/backup"
-	// import backup provider
-	_ "tkestack.io/kstone/pkg/backup/providers"
-	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
+	_ "tkestack.io/kstone/pkg/backup/providers" // import backup provider
 	"tkestack.io/kstone/pkg/inspection/metrics"
+
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
+	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
 )
 
 // StatBackupFiles counts the number of backup files in the last day and
@@ -54,7 +55,7 @@ func (c *Server) StatBackupFiles(inspection *kstonev1alpha2.EtcdInspection) erro
 	}
 
 	// get backup config
-	backupConfig, err := featureutil.GetBackupConfig(cluster)
+	backupConfig, err := backup.GetBackupConfig(cluster)
 	if err != nil {
 		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		return err

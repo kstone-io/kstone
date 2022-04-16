@@ -3,4 +3,4 @@ data:
   admin: $2y$10$dgolimSP5PywT3yMaRqppeA5GflVmyf/cWaL6bfmXVk6Rsjlmp0ui
 kind: ConfigMap
 metadata:
-  name: {{ include "dashboard-api.fullname" . }}-user
+  name: kstone-api-user

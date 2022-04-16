@@ -40,6 +40,7 @@ import (
 
 	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/controllers/util"
+	"tkestack.io/kstone/pkg/etcd"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 )
 
@@ -240,14 +241,32 @@ func (bak *Server) initEtcdBackup(cluster *kstonev1alpha2.EtcdCluster) (*backupa
 			Labels:    cluster.ObjectMeta.Labels,
 		},
 		Spec: backupapiv2.BackupSpec{
-			EtcdEndpoints:   []string{cluster.Status.ServiceName},
-			StorageType:     backupCfg.StorageType,
-			ClientTLSSecret: secretName,
-			//	InsecureSkipVerify: true,
+			EtcdEndpoints: []string{cluster.Status.ServiceName},
+			StorageType:   backupCfg.StorageType,
+			//ClientTLSSecret: secretName,
+			//InsecureSkipVerify: true,
 			BackupPolicy: backupCfg.StoragePolicy,
 			BackupSource: backupCfg.BackupSource,
+			//BasicAuthSecret: secretName,
 		},
 	}
+	//load secretConfig
+	clientConfigGetter := etcd.NewClientConfigSecretGetter(util.NewSimpleClientBuilder(""))
+	klog.Infof("secretName: %s", secretName)
+	path := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	config, err := clientConfigGetter.New(path, secretName)
+	if err != nil {
+		klog.Errorf("failed to get cluster, namespace is %s, name is %s, err is %v", cluster.Namespace, cluster.Name, err)
+		return nil, err
+	}
+	if config.Username != "" {
+		backup.Spec.BasicAuthSecret = secretName
+	}
+	if config.CaCert != "" {
+		backup.Spec.ClientTLSSecret = secretName
+		backup.Spec.InsecureSkipVerify = true
+	}
+
 	return backup, nil
 }
 

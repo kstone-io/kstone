@@ -58,14 +58,14 @@ func NewS3BackupProvider(config *backup.StorageConfig) backup.Storage {
 
 func (c *StorageS3) List(cluster *v1alpha2.EtcdCluster) (interface{}, error) {
 	// get backup config
-	backupConfig, err := featureutil.GetBackupConfig(cluster)
+	backupConfig, err := backup.GetBackupConfig(cluster)
 	if err != nil {
 		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		return nil, err
 	}
 	klog.V(3).Infof("backup config is %v", backupConfig)
 
-	secret, err := c.kubeCli.CoreV1().Secrets("kstone").Get(context.TODO(), backupConfig.S3.AWSSecret, v1.GetOptions{})
+	secret, err := c.kubeCli.CoreV1().Secrets(cluster.Namespace).Get(context.TODO(), backupConfig.S3.AWSSecret, v1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())
 		return nil, err
@@ -78,7 +78,7 @@ func (c *StorageS3) List(cluster *v1alpha2.EtcdCluster) (interface{}, error) {
 		return nil, err
 	}
 
-	cli, err := NewClientFromSecret(c.kubeCli, "kstone", backupConfig.S3.Endpoint, backupConfig.S3.AWSSecret, backupConfig.S3.ForcePathStyle)
+	cli, err := NewClientFromSecret(c.kubeCli, cluster.Namespace, backupConfig.S3.Endpoint, backupConfig.S3.AWSSecret, backupConfig.S3.ForcePathStyle)
 	if err != nil {
 		klog.Errorf(err.Error())
 		return nil, err
