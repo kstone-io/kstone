@@ -40,16 +40,16 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 
-	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/clusterprovider"
-	// register cluster provider
-	_ "tkestack.io/kstone/pkg/clusterprovider/providers"
+	_ "tkestack.io/kstone/pkg/clusterprovider/providers" // register cluster provider
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
 	"tkestack.io/kstone/pkg/featureprovider"
+
+	_ "tkestack.io/kstone/pkg/featureprovider/providers" // register feature provider
+
+	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
-	// register feature provider
-	_ "tkestack.io/kstone/pkg/featureprovider/providers"
 	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	platformscheme "tkestack.io/kstone/pkg/generated/clientset/versioned/scheme"
 	informers "tkestack.io/kstone/pkg/generated/informers/externalversions/kstone/v1alpha2"
@@ -571,7 +571,8 @@ func (c *ClusterController) handleClusterStatus(
 			secretName = annotations[util.ClusterTLSSecretName]
 		}
 	}
-	clientConfig, err := c.clientConfigGetter.New(cluster.Name, secretName)
+	path := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	clientConfig, err := c.clientConfigGetter.New(path, secretName)
 	if err != nil {
 		return cluster, err
 	}

@@ -20,6 +20,7 @@ package inspection
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -165,7 +166,8 @@ func (c *Server) GetEtcdClusterInfo(namespace, name string) (*kstonev1alpha2.Etc
 			secretName = annotations[util.ClusterTLSSecretName]
 		}
 	}
-	clientConfig, err := c.clientConfigGetter.New(cluster.Name, secretName)
+	path := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	clientConfig, err := c.clientConfigGetter.New(path, secretName)
 	if err != nil {
 		klog.Errorf("failed to get cluster, namespace is %s, name is %s, err is %v", namespace, name, err)
 		return nil, nil, err

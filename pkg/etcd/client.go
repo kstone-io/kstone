@@ -98,7 +98,11 @@ func (t *ClientConfigSecret) New(path string, sc string) (*ClientConfig, error) 
 		return &ClientConfig{}, nil
 	}
 	items := strings.Split(sc, "/")
+	paths := strings.Split(path, "/")
 	namespace := "default"
+	if len(paths) == 2 {
+		namespace = paths[0]
+	}
 	secretName := sc
 	if len(items) > 2 {
 		return nil, errors.New("invalid secretname")

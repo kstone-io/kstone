@@ -148,7 +148,12 @@ func writeFile(dir, file string, data []byte) (string, error) {
 }
 
 func GetTLSConfigPath(clusterName string, certData, keyData, caData []byte) (string, string, string, error) {
-	dir, err := ioutil.TempDir("", clusterName)
+	// empty tlsFiles, return ""
+	if len(certData) == 0 || len(keyData) == 0 || len(caData) == 0 {
+		return "", "", "", nil
+	}
+
+	dir, err := ioutil.TempDir("", strings.ReplaceAll(clusterName, "/", "_"))
 	if err != nil {
 		return "", "", "", err
 	}

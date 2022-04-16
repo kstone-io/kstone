@@ -33,33 +33,37 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	klog "k8s.io/klog/v2"
 
-	// import token and authenticator provider
-	_ "tkestack.io/kstone/pkg/authentication/providers"
+	_ "tkestack.io/kstone/pkg/authentication/providers" // import token and authenticator provider
 	"tkestack.io/kstone/pkg/authentication/request"
 	"tkestack.io/kstone/pkg/backup"
-	// import backup provider
-	_ "tkestack.io/kstone/pkg/backup/providers"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
 	"tkestack.io/kstone/pkg/featureprovider"
-	// import feature provider
-	_ "tkestack.io/kstone/pkg/featureprovider/providers"
-	featureutil "tkestack.io/kstone/pkg/featureprovider/util"
-	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 	"tkestack.io/kstone/pkg/middlewares"
+
+	_ "tkestack.io/kstone/pkg/backup/providers" // import backup provider
+
+	_ "tkestack.io/kstone/pkg/featureprovider/providers" // import feature provider
+
+	clientset "tkestack.io/kstone/pkg/generated/clientset/versioned"
 )
 
 var (
-	KubeScheme = "https"
-	KubeTarget = os.Getenv("KUBE_TARGET")
-	KubeToken  = os.Getenv("KUBE_TOKEN")
+	KubeScheme    = "https"
+	KubeTarget    = os.Getenv("KUBE_TARGET")
+	KubeToken     = os.Getenv("KUBE_TOKEN")
+	WorkNamespace = "kstone"
 )
 
 const (
 	GroupName   = "kstone.tkestack.io"
 	VersionName = "v1alpha2"
-	Namespace   = "kstone"
 )
+
+// SetWorkNamespace sets work namespace
+func SetWorkNamespace(namespace string) {
+	WorkNamespace = namespace
+}
 
 // NewRouter generates router
 func NewRouter() *gin.Engine {
@@ -114,29 +118,25 @@ func ReverseProxy() gin.HandlerFunc {
 			switch resource {
 			case "etcdclusters":
 				if name == "" {
-					if req.Method == http.MethodGet {
-						path = fmt.Sprintf("/apis/%s/%s/%s", GroupName, VersionName, resource)
-					} else if req.Method == http.MethodPost || req.Method == http.MethodPut {
-						path = fmt.Sprintf("/apis/%s/%s/namespaces/%s/%s", GroupName, VersionName, Namespace, resource)
-					}
+					path = fmt.Sprintf("/apis/%s/%s/namespaces/%s/%s", GroupName, VersionName, WorkNamespace, resource)
 				} else {
-					path = fmt.Sprintf("/apis/%s/%s/namespaces/%s/%s/%s", GroupName, VersionName, Namespace, resource, name)
+					path = fmt.Sprintf("/apis/%s/%s/namespaces/%s/%s/%s", GroupName, VersionName, WorkNamespace, resource, name)
 				}
 			case "secrets":
 				if name == "" {
 					if req.Method == http.MethodPost || req.Method == http.MethodGet {
-						path = fmt.Sprintf("/api/v1/namespaces/%s/%s", Namespace, resource)
+						path = fmt.Sprintf("/api/v1/namespaces/%s/%s", WorkNamespace, resource)
 					}
 				} else {
-					path = fmt.Sprintf("/api/v1/namespaces/%s/%s/%s", Namespace, resource, name)
+					path = fmt.Sprintf("/api/v1/namespaces/%s/%s/%s", WorkNamespace, resource, name)
 				}
 			case "configmaps":
 				if name == "" {
 					if req.Method == http.MethodPost || req.Method == http.MethodGet {
-						path = fmt.Sprintf("/api/v1/namespaces/%s/%s", Namespace, resource)
+						path = fmt.Sprintf("/api/v1/namespaces/%s/%s", WorkNamespace, resource)
 					}
 				} else {
-					path = fmt.Sprintf("/api/v1/namespaces/%s/%s/%s", Namespace, resource, name)
+					path = fmt.Sprintf("/api/v1/namespaces/%s/%s/%s", WorkNamespace, resource, name)
 				}
 			}
 
@@ -173,7 +173,7 @@ func EtcdKeyList(ctx *gin.Context) {
 		return
 	}
 
-	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters("kstone").
+	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters(WorkNamespace).
 		Get(context.TODO(), etcdName, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())
@@ -190,7 +190,8 @@ func EtcdKeyList(ctx *gin.Context) {
 	}
 	clientConfigGetter := etcd.NewClientConfigSecretGetter(util.NewSimpleClientBuilder(""))
 	klog.Infof("secretName: %s", secretName)
-	config, err := clientConfigGetter.New(cluster.Name, secretName)
+	path := fmt.Sprintf("%s/%s", cluster.Namespace, cluster.Name)
+	config, err := clientConfigGetter.New(path, secretName)
 	if err != nil {
 		klog.Errorf(err.Error())
 		ctx.JSON(http.StatusInternalServerError, err)
@@ -296,7 +297,7 @@ func BackupList(ctx *gin.Context) {
 	}
 
 	// get cluster
-	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters(Namespace).
+	cluster, err := clusterClient.KstoneV1alpha2().EtcdClusters(WorkNamespace).
 		Get(context.TODO(), etcdName, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorf(err.Error())
@@ -305,7 +306,7 @@ func BackupList(ctx *gin.Context) {
 	}
 
 	// get backup config
-	backupConfig, err := featureutil.GetBackupConfig(cluster)
+	backupConfig, err := backup.GetBackupConfig(cluster)
 	if err != nil {
 		klog.Errorf("failed to get backup config,cluster %s,err is %v", cluster.Name, err)
 		ctx.JSON(http.StatusInternalServerError, err)
