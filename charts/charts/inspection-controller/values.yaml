@@ -7,8 +7,6 @@ replicaCount: 1
 image:
   repository: tkestack/kstone-controller-amd64
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "v0.1.0-alpha.2"
 
 imagePullSecrets: []
 nameOverride: ""

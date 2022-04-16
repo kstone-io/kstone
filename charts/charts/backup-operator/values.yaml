@@ -8,7 +8,7 @@ image:
   repository: ccr.ccs.tencentyun.com/ccs-dev/etcd-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v1.0.6.alpha.10"
+  tag: "v1.0.6-infra.2"
 
 imagePullSecrets: []
 nameOverride: ""

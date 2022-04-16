@@ -33,8 +33,12 @@ spec:
           args:
             - --leader-elect-resource-namespace
             - {{ .Release.Namespace }}
-            - --config-namespace
-            - {{ .Release.Namespace }}
+            - --tls-cert-file
+            - "/etc/certs/tls.crt"
+            - --tls-private-key-file
+            - "/etc/certs/tls.key"
+            - --v
+            - "3"
           env:
             - name: WATCH_NAMESPACE
               value: {{ .Release.Namespace }}
@@ -49,12 +53,20 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - mountPath: /etc/certs
+              name: kstone-etcd-operator-cert
           resources:
             {{- if eq .Values.global.env "production" }}
             {{- toYaml .Values.prodResources | nindent 12 }}
             {{- else }}
             {{- toYaml .Values.testResources | nindent 12 }}
             {{- end }}
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: kstone-etcd-operator-cert
+          name: kstone-etcd-operator-cert
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
