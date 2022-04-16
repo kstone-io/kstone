@@ -5,18 +5,8 @@
 global:
   env: production
   kstone:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     tag: v0.1.0-beta.1
-=======
-    tag: v0.1.0.alpha.1.60.g6f4d4b8.dirty
->>>>>>> 9aa137d (feat: backup support auth)
-=======
-    tag: v0.1.0-beta.1
-=======
-    tag: v0.1.0.alpha.1.64.gc57f64c
->>>>>>> d34b5b0 (fix: update cert dir)
+
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -63,4 +53,3 @@ ingress:
 
 crd:
   create: true
->>>>>>> 82b953e (fix: update crd)
