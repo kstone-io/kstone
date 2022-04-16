@@ -153,7 +153,7 @@ func GetTLSConfigPath(clusterName string, certData, keyData, caData []byte) (str
 		return "", "", "", nil
 	}
 
-	dir, err := ioutil.TempDir("", clusterName)
+	dir, err := ioutil.TempDir("", strings.ReplaceAll(clusterName, "/", "_"))
 	if err != nil {
 		return "", "", "", err
 	}

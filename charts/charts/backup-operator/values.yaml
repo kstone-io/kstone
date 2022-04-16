@@ -1,14 +1,14 @@
-# Default values for dashboard.
+# Default values for backup-operator.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: tkestack/kstone-dashboard
+  repository: ccr.ccs.tencentyun.com/ccs-dev/etcd-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v0.1.0-alpha.1-15-gdc52c79"
+  tag: "v1.0.6-infra.2"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -26,10 +26,6 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
-service:
-  type: NodePort
-  port: 80
 
 prodResources:
   limits:
@@ -52,3 +48,5 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+serviceAccountName: kstone
