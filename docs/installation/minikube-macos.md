@@ -59,7 +59,7 @@ Please refer to [helm installation](https://helm.sh/docs/intro/install/)
 - Download Helm Repo:
 
 ``` shell
-git clone -b release-0.1 git@github.com:tkestack/kstone.git
+git clone -b release-0.2 git@github.com:tkestack/kstone.git
 cd ./charts
 ```
 

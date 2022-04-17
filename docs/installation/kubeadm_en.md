@@ -40,7 +40,7 @@ https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-clu
   - Download Helm Repo:
   
 ```bash
-  git clone -b release-0.1 git@github.com:tkestack/kstone.git
+  git clone -b release-0.2 git@github.com:tkestack/kstone.git
   cd kstone
   cd ./charts
 ```
