@@ -20,7 +20,7 @@ kubectl delete crd etcdclusters.kstone.tkestack.io etcdinspections.kstone.tkesta
 
 echo "==========Starting to re-create crds...=========="
 
-for i in `ls ../../deploy/crds/kstone.tkestack.io_*`;do kubectl create -f $i ;done
+for i in `ls ../deploy/crds/kstone.tkestack.io_*`;do kubectl create -f $i ;done
 
 echo "==========Starting to generate clusters...=========="
 

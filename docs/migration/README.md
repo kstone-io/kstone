@@ -55,3 +55,7 @@ cd charts
 
 helm upgrade kstone . -n kstone -f values.test.yaml
 ```
+
+# 4 Clear browser cache
+
+If your browser is chrome, please refer to [this](https://support.google.com/accounts/answer/32050?hl=en&co=GENIE.Platform%3DDesktop).
