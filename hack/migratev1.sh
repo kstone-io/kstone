@@ -7,12 +7,11 @@ echo "==========Starting to backup...============"
 
 kubectl get cluster -n kstone -oyaml > cluster-v1-backup-${DATE}.yaml
 
-sed 's#apiVersion: kstone.tkestack.io/v1alpha1#apiVersion: kstone.tkestack.io/v1alpha2#g' cluster-v1-backup-${DATE}.yaml > cluster-v2-backup-${DATE}.yaml
+sed 's#apiVersion: kstone.tkestack.io/v1alpha1#apiVersion: kstone.tkestack.io/v1alpha2#g;/ totalCpu/,/ totalMem/d' cluster-v1-backup-${DATE}.yaml > cluster-v2-backup-${DATE}.yaml
 
 for i in `kubectl get cluster -n kstone --no-headers | awk '{print $1}'`;do kubectl get secret ${i} -n kstone -oyaml > secret-backup-${i}-${DATE}.yaml;done
 
 for i in `ls secret-backup-*`;do sed '/ ownerReferences:/,/ uid:/d' ${i} > new-${i} ;done
-
 
 echo "==========Starting to delete clusters, inspections and secrets...=========="
 
