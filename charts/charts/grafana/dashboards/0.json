@@ -17,7 +17,7 @@
   "gnetId": 3070,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1642043560459,
+  "iteration": 1652444252935,
   "links": [],
   "panels": [
     {
@@ -674,6 +674,7 @@
       "steppedLine": true,
       "targets": [
         {
+          "exemplar": true,
           "expr": "histogram_quantile(1, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=\"$job\"}[5m])) by (job,instance,endpoint,le))",
           "format": "time_series",
           "hide": false,
@@ -2359,9 +2360,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "exemplar": true,
           "expr": "go_goroutines{job=\"$job\"}",
           "interval": "",
-          "legendFormat": "{{remark}}_{{etcdResourceName}}_{{instance}}_{{endpoint}}",
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
           "refId": "A"
         }
       ],
@@ -2892,6 +2894,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -2907,7 +2910,7 @@
         "y": 112
       },
       "hiddenSeries": false,
-      "id": 50,
+      "id": 86,
       "legend": {
         "avg": false,
         "current": false,
@@ -2927,7 +2930,7 @@
       "paceLength": 10,
       "percentage": false,
       "pluginVersion": "8.0.3",
-      "pointradius": 2,
+      "pointradius": 5,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
@@ -2936,18 +2939,21 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(etcd_http_received_total{job=\"$job\"}[5m])) by (method,instance,job)",
+          "exemplar": true,
+          "expr": "etcd_debugging_lease_granted_total{job=\"$job\"} - etcd_debugging_lease_revoked_total{job=\"$job\"}",
           "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}_{{method}}",
-          "refId": "A"
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
+          "refId": "A",
+          "step": 30
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "ETCD V2 HTTP QPS",
+      "title": "current lease count",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2963,6 +2969,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:231",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -2971,7 +2978,216 @@
           "show": true
         },
         {
+          "$$hashKey": "object:232",
           "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 112
+      },
+      "hiddenSeries": false,
+      "id": 87,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pluginVersion": "8.0.3",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "histogram_quantile(0.99, sum(rate(etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{job=\"$job\"}[5m])) by (job,instance,endpoint,le))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
+          "refId": "A",
+          "step": 30
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "compaction_pause_duration P99",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:231",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:232",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 121
+      },
+      "hiddenSeries": false,
+      "id": 88,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pluginVersion": "8.0.3",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "histogram_quantile(0.99, sum(rate(etcd_debugging_mvcc_index_compaction_pause_duration_milliseconds_bucket{job=\"$job\"}[5m])) by (job,instance,endpoint,le))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}",
+          "refId": "A",
+          "step": 30
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "mvcc_index_compaction_pause_duration P99",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:231",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:232",
+          "format": "ms",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -3002,7 +3218,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 112
+        "y": 121
       },
       "hiddenSeries": false,
       "id": 8,
@@ -3109,7 +3325,105 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 121
+        "y": 130
+      },
+      "hiddenSeries": false,
+      "id": 50,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pluginVersion": "8.0.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(etcd_http_received_total{job=\"$job\"}[5m])) by (method,instance,job)",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{job}}_{{instance}}_{{endpoint}}_{{method}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "ETCD V2 HTTP QPS",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 130
       },
       "hiddenSeries": false,
       "id": 52,
@@ -3196,7 +3510,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 130
+        "y": 139
       },
       "id": 78,
       "panels": [],
@@ -3302,7 +3616,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 131
+        "y": 140
       },
       "id": 63,
       "interval": null,
@@ -3369,7 +3683,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 131
+        "y": 140
       },
       "hiddenSeries": false,
       "id": 56,
@@ -3471,7 +3785,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 140
+        "y": 149
       },
       "hiddenSeries": false,
       "id": 58,
@@ -3574,7 +3888,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 140
+        "y": 149
       },
       "hiddenSeries": false,
       "id": 54,
@@ -3677,7 +3991,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 149
+        "y": 158
       },
       "hiddenSeries": false,
       "id": 81,
@@ -3850,7 +4164,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 149
+        "y": 158
       },
       "id": 85,
       "options": {
@@ -3939,7 +4253,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 158
+        "y": 167
       },
       "id": 84,
       "options": {
@@ -3965,7 +4279,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": false,
+  "refresh": "",
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
@@ -3974,8 +4288,8 @@
       {
         "current": {
           "selected": false,
-          "text": "KSTONE-PROM",
-          "value": "KSTONE-PROM"
+          "text": "",
+          "value": ""
         },
         "description": null,
         "error": null,
@@ -4002,7 +4316,9 @@
         "datasource": "$datasource",
         "definition": "query_result(sum by (job) (increase(etcd_server_has_leader{}[$__range])))",
         "description": null,
-        "error": null,
+        "error": {
+          "message": "Datasource named  was not found"
+        },
         "hide": 0,
         "includeAll": false,
         "label": "etcd",
@@ -4055,5 +4371,5 @@
   "timezone": "browser",
   "title": "Kstone",
   "uid": "Hw7tu7aZz123123",
-  "version": 3
+  "version": 12
 }
