@@ -127,6 +127,7 @@ func (c *EtcdClusterImported) Status(config *etcd.ClientConfig, cluster *kstonev
 	}
 
 	members, err := clusterprovider.GetRuntimeEtcdMembers(
+		cluster.Spec.StorageBackend,
 		endpoints,
 		cluster.Annotations[util.ClusterExtensionClientURL],
 		config,
