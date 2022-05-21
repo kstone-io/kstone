@@ -84,6 +84,13 @@ const (
 	EtcdClusterImported EtcdClusterType = "imported"
 )
 
+type EtcdStorageBackend string
+
+const (
+	EtcdStorageV2 EtcdStorageBackend = "v2"
+	EtcdStorageV3 EtcdStorageBackend = "v3"
+)
+
 // EtcdClusterSpec defines the desired state of EtcdCluster
 type EtcdClusterSpec struct {
 	Name        string `json:"name" protobuf:"bytes,1,opt,name=name"`               // etcd cluster name，uniqueKey
@@ -95,11 +102,12 @@ type EtcdClusterSpec struct {
 	DiskSize uint   `json:"diskSize" protobuf:"varint,5,opt,name=diskSize"` // single node's disk size, unit: GB
 	Size     uint   `json:"size"  protobuf:"varint,6,opt,name=size"`        // etcd cluster member count: support 1, 3, 5, 7
 
-	Affinity   corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,7,opt,name=affinity"`
-	Args       []string        `json:"args,omitempty" protobuf:"bytes,8,rep,name=args"`
-	Env        []corev1.EnvVar `json:"env,omitempty" protobuf:"bytes,9,rep,name=env"`                // etcd environment variables
-	Version    string          `json:"version" protobuf:"bytes,10,opt,name=version"`                 // etcd version
-	Repository string          `json:"repository,omitempty" protobuf:"bytes,11,opt,name=repository"` // etcd image
+	Affinity       corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,7,opt,name=affinity"`
+	Args           []string        `json:"args,omitempty" protobuf:"bytes,8,rep,name=args"`
+	Env            []corev1.EnvVar `json:"env,omitempty" protobuf:"bytes,9,rep,name=env"` // etcd environment variables
+	StorageBackend string          `json:"storageBackend" protobuf:"bytes,7,opt,name=storageBackend"`
+	Version        string          `json:"version" protobuf:"bytes,10,opt,name=version"`                 // etcd version
+	Repository     string          `json:"repository,omitempty" protobuf:"bytes,11,opt,name=repository"` // etcd image
 
 	ClusterType EtcdClusterType `json:"clusterType" protobuf:"bytes,12,opt,name=clusterType,casttype=EtcdClusterType"` // ClusterType specifies the etcd cluster provider.
 

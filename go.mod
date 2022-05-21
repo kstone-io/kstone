@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/aws/aws-sdk-go v1.13.8
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
+	github.com/coreos/etcd v3.3.13+incompatible
 	github.com/coreos/etcd-operator v0.9.4
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab
