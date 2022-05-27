@@ -39,6 +39,12 @@ type Health interface {
 	// IsHealthy checks etcd health info
 	IsHealthy() error
 
+	// Version returns etcd version
+	Version() (string, error)
+
+	// Stats returns etcd status
+	Stats() (*Stats, error)
+
 	// Close closes etcd healthcheck client
 	Close() error
 }
@@ -125,6 +131,55 @@ func (c *HealthCheckHTTPClient) IsHealthy() error {
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	return c.etcdHealthCheck(body)
+}
+
+func (c *HealthCheckHTTPClient) GetByAPI(path string) ([]byte, error) {
+	target := fmt.Sprintf("%s/%s", c.endpoint, path)
+	resp, err := c.cli.Get(target)
+	if err != nil {
+		klog.Errorf("failed to check etcd healthy,err is %v", err)
+		return make([]byte, 0), err
+	}
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
+}
+
+type Version struct {
+	EtcdServer string `json:"etcdserver"`
+}
+
+func (c *HealthCheckHTTPClient) Version() (string, error) {
+	body, err := c.GetByAPI("version")
+	if err != nil {
+		return "", fmt.Errorf("send request failed:%s", err.Error())
+	}
+	var version Version
+	err = json.Unmarshal(body, &version)
+	if err != nil {
+		return "", fmt.Errorf("version result json failed:%s, body:%s", err.Error(), string(body))
+	}
+	return version.EtcdServer, nil
+}
+
+type Stats struct {
+	Name       string `json:"name"`
+	ID         string `json:"id"`
+	LeaderInfo struct {
+		Leader string `json:"leader"`
+	} `json:"leaderInfo"`
+}
+
+func (c *HealthCheckHTTPClient) Stats() (*Stats, error) {
+	body, err := c.GetByAPI("v2/stats/self")
+	if err != nil {
+		return nil, fmt.Errorf("send request failed:%s", err.Error())
+	}
+	var stats Stats
+	err = json.Unmarshal(body, &stats)
+	if err != nil {
+		return nil, fmt.Errorf("version result json failed:%s, body:%s", err.Error(), string(body))
+	}
+	return &stats, nil
 }
 
 // Close closes etcd healthcheck client

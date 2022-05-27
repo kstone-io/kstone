@@ -289,6 +289,7 @@ func (c *EtcdClusterKstone) Status(config *etcd.ClientConfig, cluster *kstonev1a
 	}
 
 	members, err := clusterprovider.GetRuntimeEtcdMembers(
+		cluster.Spec.StorageBackend,
 		endpoints,
 		cluster.Annotations[util.ClusterExtensionClientURL],
 		config,
