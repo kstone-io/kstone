@@ -20,13 +20,14 @@ package clusterprovider
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"k8s.io/klog/v2"
 
 	kstonev1alpha2 "tkestack.io/kstone/pkg/apis/kstone/v1alpha2"
 	"tkestack.io/kstone/pkg/etcd"
+	versionClient "tkestack.io/kstone/pkg/etcd/client"
+	_ "tkestack.io/kstone/pkg/etcd/client/versions" // import etcd client including v2 and v3
 )
 
 type EtcdAlarm struct {
@@ -68,22 +69,23 @@ func populateExtensionCientURLMap(extensionClientURLs string) (map[string]string
 
 // GetRuntimeEtcdMembers get members of etcd
 func GetRuntimeEtcdMembers(
+	storageBackend string,
 	endpoints []string,
 	extensionClientURLs string,
 	config *etcd.ClientConfig) ([]kstonev1alpha2.MemberStatus, error) {
 	etcdMembers := make([]kstonev1alpha2.MemberStatus, 0)
 
 	config.Endpoints = endpoints
-
-	// GetMemberList
-	client, err := etcd.NewClientv3(config)
+	versioned, err := versionClient.GetEtcdClientProvider(kstonev1alpha2.EtcdStorageBackend(storageBackend),
+		&versionClient.VersionContext{Config: config})
 	if err != nil {
-		klog.Errorf("failed to get new etcd clientv3,err is %v ", err)
+		klog.Errorf("failed get etcd version, err is %v", err)
 		return etcdMembers, err
 	}
-	defer client.Close()
 
-	memberRsp, err := etcd.MemberList(client)
+	defer versioned.Close()
+
+	memberRsp, err := versioned.MemberList()
 	if err != nil {
 		klog.Errorf("failed to get member list, endpoints is %s,err is %v", endpoints, err)
 		return etcdMembers, err
@@ -95,7 +97,7 @@ func GetRuntimeEtcdMembers(
 		return etcdMembers, err
 	}
 
-	for _, m := range memberRsp.Members {
+	for _, m := range memberRsp {
 		// parse url
 		if m.ClientURLs == nil {
 			continue
@@ -122,7 +124,7 @@ func GetRuntimeEtcdMembers(
 		// default info
 		memberVersion, memberStatus, memberRole := "", kstonev1alpha2.MemberPhaseUnStarted, kstonev1alpha2.EtcdMemberUnKnown
 		var errors []string
-		statusRsp, err := etcd.Status(extensionClientURL, client)
+		statusRsp, err := versioned.Status(extensionClientURL)
 		if err == nil && statusRsp != nil {
 			memberStatus = kstonev1alpha2.MemberPhaseRunning
 			memberVersion = statusRsp.Version
@@ -133,7 +135,6 @@ func GetRuntimeEtcdMembers(
 			} else {
 				memberRole = kstonev1alpha2.EtcdMemberFollower
 			}
-			errors = statusRsp.Errors
 		} else {
 			klog.Errorf("failed to get member %s status,err is %v", extensionClientURL, err)
 			errors = append(errors, err.Error())
@@ -141,7 +142,7 @@ func GetRuntimeEtcdMembers(
 
 		etcdMembers = append(etcdMembers, kstonev1alpha2.MemberStatus{
 			Name:               m.Name,
-			MemberId:           strconv.FormatUint(m.ID, 10),
+			MemberId:           m.ID,
 			ClientUrl:          m.ClientURLs[0],
 			ExtensionClientUrl: extensionClientURL,
 			Role:               memberRole,
