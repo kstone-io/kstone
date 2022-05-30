@@ -306,6 +306,13 @@ func (b *Backup) handleBackup(parentContext *context.Context, eb *api.EtcdBackup
 			return nil, err
 		}
 		return bs, nil
+	case api.BackupStorageTypeHostPath:
+		bs, err := handleHostPath(ctx, b.kubecli, spec.HostPath, spec.EtcdEndpoints, spec.ClientTLSSecret, spec.BasicAuthSecret,
+			eb.Namespace, spec.InsecureSkipVerify, isPeriodic, backupMaxCount)
+		if err != nil {
+			return nil, err
+		}
+		return bs, nil	
 	default:
 		logrus.Fatalf("unknown StorageType: %v", spec.StorageType)
 	}
