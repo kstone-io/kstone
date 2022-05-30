@@ -53,6 +53,11 @@ func GetEtcdClientProvider(
 ) (VersionClient, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	// compatible with existing clusters
+	if name == "" {
+		name = kstonev1alpha2.EtcdStorageV3
+	}
 	f, found := providers[name]
 
 	klog.V(1).Infof("get provider name %s,status:%t", name, found)
