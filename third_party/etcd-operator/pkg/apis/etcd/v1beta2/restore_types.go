@@ -75,6 +75,9 @@ type RestoreSource struct {
 
 	// OSS tells where on OSS the backup is saved and how to fetch the backup.
 	OSS *OSSRestoreSource `json:"oss,omitempty"`
+
+	// HostPath tells where on HostPath the backup is saved and how to fetch the backup.
+	HostPath *HostPathRestoreSource `json:"hostPath,omitempty"`
 }
 
 type S3RestoreSource struct {
@@ -167,6 +170,13 @@ type OSSRestoreSource struct {
 	// Details about regions and endpoints, see:
 	//  https://www.alibabacloud.com/help/doc-detail/31837.htm
 	Endpoint string `json:"endpoint,omitempty"`
+}
+
+type HostPathRestoreSource struct {
+	// Path is the full cos path where the backup is saved.
+	// The format of the path must be: "<cos-container-name>/<path-to-backup-file>"
+	// e.g: "mycoscontainer/etcd.backup"
+	Path string `json:"path"`
 }
 
 // RestoreStatus reports the status of this restore operation.
