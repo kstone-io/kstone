@@ -46,7 +46,7 @@ func handleHostPath(ctx context.Context, kubecli kubernetes.Interface, s *api.Ho
 
 	bm := backup.NewBackupManagerFromWriter(kubecli, writer.NewHostPathWriter(hostPath), tlsConfig, endpoints, namespace, username, password)
 
-	rev, etcdVersion, now, err := bm.SaveSnap(ctx, hostPath + etcdBackFilePrefix, true)
+	rev, etcdVersion, now, err := bm.SaveSnap(ctx, hostPath + etcdBackFilePrefix, isPeriodic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save snapshot (%v)", err)
 	}
