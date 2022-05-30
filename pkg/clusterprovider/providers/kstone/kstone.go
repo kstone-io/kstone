@@ -289,6 +289,7 @@ func (c *EtcdClusterKstone) Status(config *etcd.ClientConfig, cluster *kstonev1a
 	}
 
 	members, err := clusterprovider.GetRuntimeEtcdMembers(
+		cluster.Spec.StorageBackend,
 		endpoints,
 		cluster.Annotations[util.ClusterExtensionClientURL],
 		config,
@@ -422,13 +423,19 @@ func (c *EtcdClusterKstone) generateEtcdSpec(cluster *kstonev1alpha2.EtcdCluster
 		spec["repository"] = cluster.Annotations["repository"]
 	}
 
-	affinity := &cluster.Spec.Affinity
+	// TODO: Use struct to replace
+	affinity := make(map[string]interface{})
+	affinityBytes, _ := json.Marshal(cluster.Spec.Affinity)
+	_ = json.Unmarshal(affinityBytes, &affinity)
 	if affinity != nil {
 		spec["template"].(map[string]interface{})["affinity"] = affinity
 	}
 
 	if cluster.Spec.Tolerations != nil && len(cluster.Spec.Tolerations) > 0 {
-		spec["template"].(map[string]interface{})["tolerations"] = cluster.Spec.Tolerations
+		tolerations := make([]interface{}, 0)
+		tolerationsBytes, _ := json.Marshal(cluster.Spec.Tolerations)
+		_ = json.Unmarshal(tolerationsBytes, &tolerations)
+		spec["template"].(map[string]interface{})["tolerations"] = tolerations
 	}
 
 	return spec
