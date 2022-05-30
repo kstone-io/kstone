@@ -44,6 +44,9 @@ const (
 	BackupStorageTypeOSS                         BackupStorageType = "OSS"
 	AlibabaCloudSecretCredentialsAccessKeyID                       = "accessKeyID"
 	AlibabaCloudSecretCredentialsAccessKeySecret                   = "accessKeySecret"
+
+	// Hostpath related consts
+	BackupStorageTypeHostPath BackupStorageType = "HostPath"
 )
 
 type BackupStorageType string
@@ -111,6 +114,8 @@ type BackupSource struct {
 	COS *COSBackupSource `json:"cos,omitempty"`
 	// OSS defines the OSS backup source spec.
 	OSS *OSSBackupSource `json:"oss,omitempty"`
+	// HostPath defines the HostPath backup source spec.
+	HostPath *HostPathBackupSource `json:"hostpath,omitempty"`
 }
 
 // BackupPolicy defines backup policy.
@@ -236,3 +241,11 @@ type OSSBackupSource struct {
 	//  https://www.alibabacloud.com/help/doc-detail/31837.htm
 	Endpoint string `json:"endpoint,omitempty"`
 }
+
+// HostPathBackupSource provides the spec how to store backups on HostPath.
+type HostPathBackupSource struct {
+	// Path is the full Host path where the backup is saved.
+	// The format of the path is relative
+	// e.g: "etcd.backup"
+	Path string `json:"path"`
+} 
