@@ -47,7 +47,6 @@ func NewTLSConfig(certData, keyData, caData []byte) (*tls.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	certFile, err := writeFile(dir, CliCertFile, certData)
 	if err != nil {
 		return nil, err
@@ -59,8 +58,7 @@ func NewTLSConfig(certData, keyData, caData []byte) (*tls.Config, error) {
 	caFile, err := writeFile(dir, CliCAFile, caData)
 	if err != nil {
 		return nil, err
-	}
-
+	}	
 	tlsInfo := transport.TLSInfo{
 		CertFile:      certFile,
 		KeyFile:       keyFile,

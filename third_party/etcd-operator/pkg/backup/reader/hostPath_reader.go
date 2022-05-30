@@ -17,8 +17,8 @@ package reader
 import (
 	"fmt"
 	"io"
-
-	"github.com/coreos/etcd-operator/pkg/backup/util"
+	"bytes"
+	"io/ioutil"
 )
 
 // ensure hostPathReader satisfies reader interface.

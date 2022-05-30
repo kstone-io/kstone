@@ -17,13 +17,14 @@ package writer
 import (
 	"context"
 	"fmt"
-	"github.com/coreos/etcd-operator/pkg/backup/util"
-	"github.com/sirupsen/logrus"
+	"os"
+	//"github.com/coreos/etcd-operator/pkg/backup/util"
+	//"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
+	//"net/http"
+	//"net/url"
+	//"strings"
 )
 
 var _ Writer = &hostPathWriter{}
@@ -53,7 +54,7 @@ func (hostPathw *hostPathWriter) Write(ctx context.Context, path string, r io.Re
 	return n, err
 }
 
-func (cosw *cosWriter) Delete(ctx context.Context, path string) error {
+func (hostPathw *hostPathWriter) Delete(ctx context.Context, path string) error {
 	err := os.Remove(path)
     if err != nil {
 		err = fmt.Errorf("failed to delete deprecated backup file of hostPath: %v", err)	
@@ -63,7 +64,7 @@ func (cosw *cosWriter) Delete(ctx context.Context, path string) error {
 }
 
 // List return the file paths which match the given host path
-func (cosw *cosWriter) List(ctx context.Context, basePath string) ([]string, error) {
+func (hostPathw *hostPathWriter) List(ctx context.Context, basePath string) ([]string, error) {
 	files, err := ioutil.ReadDir(basePath)
     if err != nil {
 		return nil, fmt.Errorf("failed to get backup files under path:%s", basePath)
@@ -72,7 +73,7 @@ func (cosw *cosWriter) List(ctx context.Context, basePath string) ([]string, err
 
 	results := []string{}
 	for _, file := range files {
-		results = append(results, file)
+		results = append(results, basePath + file.Name())
 	}
 	return results, nil
 }
