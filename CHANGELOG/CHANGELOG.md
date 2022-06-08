@@ -1,3 +1,27 @@
+## v0.2.0-beta.2 (2022-06-08)
+<hr>
+
+### Features
+<hr>
+
+support import etcd v2 cluster. (@engow, @seanyan )
+
+add compaction,lease metrics. (@tangcong )
+
+add hostPath type for etcd backup operator. (@GeorgeGuo2018 )
+
+### Bug Fix
+
+failed to add/remove member if affinity and toleration is nil. (@engow )
+
+fixed the issue that the editing page could not display cpu and memory resources. (@engow )
+
+fixed the issue that some paths data could not be viewed visually. (@engow )
+
+fixed the issue of backup management page 504 error.(@engow)
+
+
+
 ## v0.2.0-beta.1 (2022-04-18)
 <hr>
 
