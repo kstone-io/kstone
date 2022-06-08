@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: ccr.ccs.tencentyun.com/ccs-dev/etcd-operator
+  repository: tkestack/etcd-backup-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "v1.0.6-infra.2"

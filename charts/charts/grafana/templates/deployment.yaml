@@ -46,7 +46,7 @@ spec:
             - --flatten
             - --configmap-label=grafana/dashboards=default:/etc/grafana/dashboards
             - --configmap-label=grafana/datasource=default:/etc/grafana/provisioning/datasources
-          image: ccr.ccs.tencentyun.com/tkeimages/configmap-update:v1.0.2
+          image: tkestack/configmap-update:v1.0.2
           imagePullPolicy: IfNotPresent
           name: dashboards-update
           resources: {}
