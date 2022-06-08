@@ -80,10 +80,11 @@ func NewEtcdCluster(
 			},
 		},
 		Spec: kstonev1alpha2.EtcdClusterSpec{
-			ClusterType: clusterType,
-			Size:        replicas,
-			DiskSize:    1,
-			Version:     "3.4.13",
+			ClusterType:    clusterType,
+			Size:           replicas,
+			DiskSize:       1,
+			Version:        "3.4.13",
+			StorageBackend: "v3",
 		},
 	}
 	switch clusterType {
