@@ -175,6 +175,18 @@ func (r *Restore) serveBackup(w http.ResponseWriter, req *http.Request) error {
 
 		backupReader = reader.NewOSSReader(ossCli.OSS)
 		path = ossRestoreSource.Path
+	case api.BackupStorageTypeHostPath:
+		restoreSource := cr.Spec.RestoreSource
+		if restoreSource.HostPath == nil {
+			return errors.New("empty hostPath restore source")
+		}
+		hostPathRestoreSource := restoreSource.HostPath
+		if len(hostPathRestoreSource.Path) == 0 {
+			return errors.New("invalid hostPath restore source field (spec.hostPath), must specify a file path")
+		}
+
+		backupReader = reader.NewHostPathReader(hostPathRestoreSource.Path)
+		path = hostPathRestoreSource.Path
 	default:
 		return fmt.Errorf("unknown backup storage type (%s) for restore CR (%v)", cr.Spec.BackupStorageType, restoreName)
 	}
