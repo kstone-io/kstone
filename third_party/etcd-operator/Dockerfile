@@ -4,7 +4,7 @@ MAINTAINER simotang "simotang@tencent.com"
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-Add . /go/src/github.com/kstone/etcd-operator
+Add . /go/src/github.com/coreos/etcd-operator
 WORKDIR /go/src/github.com/coreos/etcd-operator
 
 RUN make
