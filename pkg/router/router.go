@@ -27,19 +27,22 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	klog "k8s.io/klog/v2"
 
-	_ "tkestack.io/kstone/pkg/authentication/providers" // import token and authenticator provider
+	"tkestack.io/kstone/cmd/kstone-api/config"
 	"tkestack.io/kstone/pkg/authentication/request"
 	"tkestack.io/kstone/pkg/backup"
 	"tkestack.io/kstone/pkg/controllers/util"
 	"tkestack.io/kstone/pkg/etcd"
 	"tkestack.io/kstone/pkg/featureprovider"
 	"tkestack.io/kstone/pkg/middlewares"
+
+	_ "tkestack.io/kstone/pkg/authentication/providers" // import token and authenticator provider
 
 	_ "tkestack.io/kstone/pkg/backup/providers" // import backup provider
 
@@ -58,6 +61,7 @@ var (
 const (
 	GroupName   = "kstone.tkestack.io"
 	VersionName = "v1alpha2"
+	apiPrefix   = "/apis"
 )
 
 // SetWorkNamespace sets work namespace
@@ -68,8 +72,13 @@ func SetWorkNamespace(namespace string) {
 // NewRouter generates router
 func NewRouter() *gin.Engine {
 	r := gin.Default()
-	public := r.Group("/apis")
-	private := r.Group("/apis")
+
+	if config.Cfg.EnableProfiling {
+		pprof.Register(r, fmt.Sprintf("%s/debug/pprof", apiPrefix))
+	}
+
+	public := r.Group(apiPrefix)
+	private := r.Group(apiPrefix)
 
 	private.Use(middlewares.Auth())
 

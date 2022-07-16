@@ -21,8 +21,12 @@ package etcdclustercontroller
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 	"time"
+
+	// import http pprof
+	_ "net/http/pprof"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -47,6 +51,7 @@ type EtcdClusterCommand struct {
 	labelSelector      string
 	leaseLockName      string
 	leaseLockNamespace string
+	enableProfiling    bool
 }
 
 // NewEtcdClusterControllerCommand creates a *cobra.Command object with default parameters
@@ -113,6 +118,14 @@ func (c *EtcdClusterCommand) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	if c.enableProfiling {
+		go func() {
+			addr := "0.0.0.0:6060"
+			klog.Infof("Listen on %s for profiling", addr)
+			klog.Error(http.ListenAndServe(addr, nil))
+		}()
+	}
+
 	go func() {
 		<-stopCh
 		klog.Info("Received termination, signaling shutdown")
@@ -155,6 +168,10 @@ func (c *EtcdClusterCommand) AddFlags(fs *pflag.FlagSet) {
 		"kstone",
 		"the lease lock resource namespace",
 	)
+	fs.BoolVar(&c.enableProfiling,
+		"profiling",
+		true,
+		"enable profiling via web interface host:port/debug/pprof/.")
 }
 
 func (c *EtcdClusterCommand) makeLeaderElectionConfig(kubeClient *kubernetes.Clientset, controller *etcdcluster.ClusterController, stopCh <-chan struct{}) (*leaderelection.LeaderElectionConfig, error) {

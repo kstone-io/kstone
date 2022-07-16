@@ -21,15 +21,17 @@ package config
 var Cfg *Config
 
 type Config struct {
-	Token         string
-	Authenticator string
+	Token           string
+	Authenticator   string
+	EnableProfiling bool
 }
 
 // CreateConfigFromOptions creates a running configuration instance based
 // on a given kstone-api command line or configuration file option.
-func CreateConfigFromFlags(token, authenticator string) {
+func CreateConfigFromFlags(token, authenticator string, enableProfiling bool) {
 	Cfg = &Config{
-		Token:         token,
-		Authenticator: authenticator,
+		Token:           token,
+		Authenticator:   authenticator,
+		EnableProfiling: enableProfiling,
 	}
 }

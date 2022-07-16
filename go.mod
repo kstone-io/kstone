@@ -7,7 +7,8 @@ require (
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/coreos/etcd v3.3.13+incompatible
 	github.com/coreos/etcd-operator v0.9.4
-	github.com/gin-gonic/gin v1.7.2
+	github.com/gin-contrib/pprof v1.4.0
+	github.com/gin-gonic/gin v1.8.1
 	github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab
 	github.com/go-openapi/spec v0.20.3 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
@@ -26,7 +27,7 @@ require (
 	go.etcd.io/etcd/client/pkg/v3 v3.5.0
 	go.etcd.io/etcd/client/v2 v2.305.0-alpha.0
 	go.etcd.io/etcd/client/v3 v3.5.0
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	k8s.io/api v0.21.3
