@@ -30,10 +30,11 @@ import (
 )
 
 type APIServerCommand struct {
-	token         string
-	authenticator string
-	namespace     string
-	authCfg       string
+	token           string
+	authenticator   string
+	namespace       string
+	authCfg         string
+	enableProfiling bool
 }
 
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -66,7 +67,7 @@ other components interact, such as kstone-controller, kstone-dashboard.`,
 
 func (c *APIServerCommand) Run() error {
 	klog.Info("start kstone-api")
-	config.CreateConfigFromFlags(c.token, c.authenticator)
+	config.CreateConfigFromFlags(c.token, c.authenticator, c.enableProfiling)
 	kstoneRouter.SetWorkNamespace(c.namespace)
 	authentication.SetAuthConfigMapName(c.authCfg)
 
@@ -100,4 +101,8 @@ func (c *APIServerCommand) AddFlags(fs *pflag.FlagSet) {
 		"auth",
 		"kstone-api-user",
 		"specify the auth configmap of kstone.")
+	fs.BoolVar(&c.enableProfiling,
+		"profiling",
+		true,
+		"enable profiling via web interface host:port/apis/debug/pprof/.")
 }
