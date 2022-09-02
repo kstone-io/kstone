@@ -99,6 +99,7 @@ func (c *Server) CollectEtcdClusterRequest(inspection *kstonev1alpha2.EtcdInspec
 	)
 	if rErr != nil {
 		klog.Errorf("failed to get all etcd cluster keys,err is %v", rErr)
+		client.Close()
 		return rErr
 	}
 
